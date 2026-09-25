@@ -1,0 +1,196 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Meridian design system — "Swiss editorial index".
+ * White ground with black, magenta, purple, and gray accents inspired by the HTS logo.
+ */
+
+@theme inline {
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+
+  --font-display: "Archivo", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-moss: var(--moss);
+  --color-clay: var(--clay);
+  --color-sand: var(--sand);
+  --color-fog: var(--fog);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --radius: 0px;
+
+  --ink: oklch(0.12 0 0);
+  --paper: oklch(1 0 0);
+  --moss: oklch(0.39 0.2 328);
+  --clay: oklch(0.59 0.29 342);
+  --sand: oklch(0.965 0.018 335);
+  --fog: oklch(0.52 0.01 330);
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --secondary: var(--sand);
+  --secondary-foreground: var(--ink);
+  --muted: var(--sand);
+  --muted-foreground: var(--fog);
+  --accent: var(--clay);
+  --accent-foreground: var(--paper);
+  --destructive: oklch(0.55 0.19 27);
+  --destructive-foreground: var(--paper);
+  --border: oklch(0.12 0 0 / 15%);
+  --input: oklch(0.12 0 0 / 30%);
+  --ring: var(--moss);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-display);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-moss);
+    color: var(--color-paper);
+  }
+}
+
+@utility rule-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+@utility mono-xs {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+@utility panel {
+  border: 2px solid var(--color-ink);
+  background-color: var(--color-paper);
+}
+
+@keyframes lp {
+  0% {
+    transform: translateY(-4px);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes loading-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-orbit-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes loading-core {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.75);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes loading-spark {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateX(-50%) scale(0.75);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+
+@keyframes loading-scan {
+  from {
+    transform: translateX(-140%);
+  }
+  to {
+    transform: translateX(440%);
+  }
+}
+
+.loading-orbit {
+  animation: loading-orbit 1.8s linear infinite;
+}
+
+.loading-orbit-reverse {
+  animation: loading-orbit-reverse 1.2s linear infinite;
+}
+
+.loading-core {
+  animation: loading-core 1.1s ease-in-out infinite;
+}
+
+.loading-spark {
+  animation: loading-spark 1.1s ease-in-out infinite;
+}
+
+.loading-scan > div {
+  animation: loading-scan 1.4s ease-in-out infinite;
+}
+
+@utility lp {
+  animation: lp 0.5s ease both;
+}

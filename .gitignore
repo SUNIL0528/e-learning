@@ -1,0 +1,27 @@
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+firebase-service-account.json
+**/serviceAccountKey.json
+
+# Dependencies and build output
+node_modules/
+client/.output/
+client/.wrangler/
+client/.tanstack/
+client/.nitro/
+dist/
+dist-ssr/
+
+# Local databases, uploaded media, and Python cache
+server/db.sqlite3
+server/media/
+**/__pycache__/
+*.py[cod]
+
+# Logs and local tooling files
+*.log
+.DS_Store
+.idea/
+.vscode/
