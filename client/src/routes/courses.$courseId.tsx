@@ -1094,6 +1094,8 @@ function SlideVideoPlayer({
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioLanguageRef = useRef("en");
   const loadedAudioKeyRef = useRef<string | null>(null);
+  const audioRequestIdRef = useRef(0);
+  const mediaUrlRequestIdRef = useRef(0);
   const seekingRef = useRef(false);
   const advancingRef = useRef(false);
   const autoplayNextRef = useRef(false);
@@ -1112,93 +1114,68 @@ function SlideVideoPlayer({
   const [duration, setDuration] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   const [captionsVisible, setCaptionsVisible] = useState(false);
+  const [mediaTarget, setMediaTarget] = useState<{
+    slideId: string | null;
+    source: string | null;
+  }>({ slideId: null, source: null });
+
+  const cancelPendingAudio = useCallback(() => {
+    audioRequestIdRef.current += 1;
+    loadedAudioKeyRef.current = null;
+
+    const audio = audioRef.current;
+    audio?.pause();
+    audio?.removeAttribute("src");
+    audio?.load();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
     const video = videoRef.current;
-    const audio = audioRef.current;
     setBackendChapter(null);
     setError(null);
     setLoading(Boolean(backendChapterId));
 
     if (!backendChapterId) return;
 
-    fetch(`${API_BASE_URL}/api/chapter/${backendChapterId}/?media=client`)
+    fetch(`${API_BASE_URL}/api/chapter/${backendChapterId}/?media=client`, {
+      signal: controller.signal,
+    })
       .then(async (response) => {
         if (!response.ok) throw new Error(`Chapter request failed (${response.status})`);
         return (await response.json()) as BackendChapterResponse;
       })
-      .then(async (data) => {
+      .then((data) => {
         if (cancelled) return;
         const initialLanguage = data.languages[0]?.code ?? "en";
         audioLanguageRef.current = initialLanguage;
 
-        const chapterNumber = chapterNumberFromBackendId(backendChapterId);
-        let chapterVideoUrl = typeof data.video?.url === "string" ? data.video.url : null;
-
-        if (directS3MediaConfigured && chapterNumber !== null && data.video?.filename) {
-          chapterVideoUrl =
-            (await getTemporaryMediaUrl(
-              chapterMediaPath(chapterNumber, "en", "videos", data.video.filename),
-            )) ?? chapterVideoUrl;
-        }
-
-        const resolvedSlides = await Promise.all(
-          data.slides.map(async (slide) => {
-            const fallbackVideo = typeof slide.video === "string" ? slide.video : null;
-            let video = fallbackVideo;
-            if (directS3MediaConfigured && chapterNumber !== null) {
-              video =
-                (await getTemporaryMediaUrl(
-                  chapterMediaPath(chapterNumber, "en", "videos", `${slide.id}.mp4`),
-                )) ?? fallbackVideo;
-            }
-
-            const audio = Object.fromEntries(
-              await Promise.all(
-                data.languages.map(async (language) => {
-                  const fallbackAudio =
-                    typeof slide[language.code] === "string" ? slide[language.code] : null;
-                  let source = fallbackAudio;
-                  if (
-                    directS3MediaConfigured &&
-                    chapterNumber !== null &&
-                    language.code === "en"
-                  ) {
-                    source =
-                      (await getTemporaryMediaUrl(
-                        chapterMediaPath(
-                          chapterNumber,
-                          language.code,
-                          "audios",
-                          `${slide.id}.${audioExtension(language.code)}`,
-                        ),
-                      )) ?? fallbackAudio;
-                  }
-                  return [language.code, source];
-                }),
-              ),
-            ) as Record<string, string | null>;
-
-            return {
-              id: slide.id,
-              start: slide.start,
-              end: slide.end,
-              video,
-              audio,
-              captions: normalizeCaptions(slide.captions),
-            };
-          }),
-        );
+        const initialSlides = data.slides.map((slide) => ({
+          id: slide.id,
+          start: slide.start,
+          end: slide.end,
+          video: typeof slide.video === "string" ? slide.video : null,
+          audio: Object.fromEntries(
+            data.languages.map((language) => [
+              language.code,
+              typeof slide[language.code] === "string" ? slide[language.code] : null,
+            ]),
+          ) as Record<string, string | null>,
+          captions: normalizeCaptions(slide.captions),
+        }));
 
         setBackendChapter({
           ...data,
-          video: { ...data.video, url: chapterVideoUrl },
-          slides: resolvedSlides,
+          video: {
+            ...data.video,
+            url: typeof data.video?.url === "string" ? data.video.url : null,
+          },
+          slides: initialSlides,
         });
       })
       .catch((requestError: unknown) => {
-        if (!cancelled) {
+        if (!cancelled && !controller.signal.aborted) {
           setError(requestError instanceof Error ? requestError.message : "Unable to load media");
         }
       })
@@ -1208,10 +1185,11 @@ function SlideVideoPlayer({
 
     return () => {
       cancelled = true;
+      controller.abort();
+      cancelPendingAudio();
       video?.pause();
-      audio?.pause();
     };
-  }, [backendChapterId]);
+  }, [backendChapterId, cancelPendingAudio]);
 
   const slides = useMemo<PlayerSlide[]>(
     () =>
@@ -1239,14 +1217,30 @@ function SlideVideoPlayer({
 
   const activeSlide = slides[slideIndex] ?? slides[0];
   const chapterVideoUrl = backendChapter?.video.url ?? null;
-  const videoSource = activeSlide?.videoUrl ?? chapterVideoUrl;
+  const activeVideoSource = activeSlide?.videoUrl ?? chapterVideoUrl;
+  const videoSource = mediaTarget.slideId === activeSlide?.id ? mediaTarget.source : null;
   const usesChapterSegment = Boolean(activeSlide?.videoUrl === null && chapterVideoUrl);
   const segmentStart = usesChapterSegment ? (activeSlide?.start ?? 0) : 0;
   const segmentEnd = usesChapterSegment ? (activeSlide?.end ?? 0) : duration;
 
   useEffect(() => {
-    setMediaLoading(Boolean(videoSource));
-  }, [activeSlide?.id, videoSource]);
+    if (!activeSlide) {
+      setMediaTarget({ slideId: null, source: null });
+      setMediaLoading(false);
+      return;
+    }
+
+    setMediaLoading(Boolean(activeVideoSource));
+
+    // A fast sequence of Prev/Next clicks should mount only the final video
+    // source. This prevents the browser from starting a request for every
+    // intermediate slide before the user settles on one.
+    const timer = window.setTimeout(() => {
+      setMediaTarget({ slideId: activeSlide.id, source: activeVideoSource });
+    }, 120);
+
+    return () => window.clearTimeout(timer);
+  }, [activeSlide, activeVideoSource]);
 
   useEffect(() => {
     videoRetryRef.current = null;
@@ -1275,6 +1269,76 @@ function SlideVideoPlayer({
     return true;
   }, [activeSlide?.id, backendChapterId]);
 
+  useEffect(() => {
+    if (!directS3MediaConfigured || !backendChapter || !activeSlide) return;
+
+    const chapterNumber = chapterNumberFromBackendId(backendChapterId);
+    if (chapterNumber === null) return;
+
+    const requestId = ++mediaUrlRequestIdRef.current;
+    const slideId = activeSlide.id;
+    const resolveActiveMedia = async () => {
+      let chapterUrl = backendChapter.video.url;
+      let slideVideoUrl = activeSlide.videoUrl;
+      let audioUrl = activeSlide.audio.en ?? null;
+
+      if (!chapterUrl && backendChapter.video.filename) {
+        chapterUrl = await getTemporaryMediaUrl(
+          chapterMediaPath(chapterNumber, "en", "videos", backendChapter.video.filename),
+        );
+      }
+
+      if (!slideVideoUrl && !chapterUrl) {
+        slideVideoUrl = await getTemporaryMediaUrl(
+          chapterMediaPath(chapterNumber, "en", "videos", `${slideId}.mp4`),
+        );
+      }
+
+      if (!audioUrl) {
+        audioUrl = await getTemporaryMediaUrl(
+          chapterMediaPath(chapterNumber, "en", "audios", `${slideId}.${audioExtension("en")}`),
+        );
+      }
+
+      if (requestId !== mediaUrlRequestIdRef.current) return;
+
+      setBackendChapter((previous) => {
+        if (!previous) return previous;
+
+        const nextVideo =
+          previous.video.url === chapterUrl
+            ? previous.video
+            : { ...previous.video, url: chapterUrl };
+        let changed = nextVideo !== previous.video;
+        const nextSlides = previous.slides.map((slide) => {
+          if (slide.id !== slideId) return slide;
+
+          const nextSlide = {
+            ...slide,
+            video: slide.video ?? slideVideoUrl,
+            audio: { ...slide.audio, en: slide.audio.en ?? audioUrl },
+          };
+          if (nextSlide.video !== slide.video || nextSlide.audio.en !== slide.audio.en) {
+            changed = true;
+          }
+          return changed ? nextSlide : slide;
+        });
+
+        if (!changed) return previous;
+        return {
+          ...previous,
+          video: nextVideo,
+          slides: nextSlides,
+        };
+      });
+    };
+
+    void resolveActiveMedia();
+    return () => {
+      mediaUrlRequestIdRef.current += 1;
+    };
+  }, [activeSlide, backendChapter, backendChapterId]);
+
   const findAudioSource = (slide: PlayerSlide, language: string) => slide.audio[language] ?? null;
 
   const persistSlideProgress = useCallback(
@@ -1296,6 +1360,9 @@ function SlideVideoPlayer({
       const audio = audioRef.current;
       if (!audio) return;
 
+      const requestId = ++audioRequestIdRef.current;
+      const isCurrentRequest = () => audioRequestIdRef.current === requestId;
+
       const source = findAudioSource(slide, language);
       const audioKey = `${slide.id}_${language}`;
       if (!source) {
@@ -1315,24 +1382,38 @@ function SlideVideoPlayer({
         audio.pause();
         loadedAudioKeyRef.current = audioKey;
         audio.src = source;
-        audio.preload = "auto";
+        // Do not download audio while the user is only browsing paused slides.
+        audio.preload = shouldPlay ? "auto" : "none";
         audio.playbackRate = speed;
+        if (!shouldPlay) return;
+      }
+
+      if (shouldPlay && audio.readyState < 1) {
+        audio.preload = "auto";
         audio.load();
 
         await new Promise<void>((resolve) => {
-          if (audio.readyState >= 1) {
-            resolve();
-            return;
-          }
-          const handleMetadata = () => {
-            audio.removeEventListener("loadedmetadata", handleMetadata);
+          let settled = false;
+          const finish = () => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timeoutId);
+            audio.removeEventListener("loadedmetadata", finish);
+            audio.removeEventListener("error", finish);
+            audio.removeEventListener("abort", finish);
+            audio.removeEventListener("emptied", finish);
             resolve();
           };
-          audio.addEventListener("loadedmetadata", handleMetadata, { once: true });
+
+          const timeoutId = window.setTimeout(finish, 15_000);
+          audio.addEventListener("loadedmetadata", finish);
+          audio.addEventListener("error", finish);
+          audio.addEventListener("abort", finish);
+          audio.addEventListener("emptied", finish);
         });
       }
 
-      if (loadedAudioKeyRef.current !== audioKey) return;
+      if (!isCurrentRequest() || loadedAudioKeyRef.current !== audioKey) return;
       if ((needsSource || forceSeek) && Number.isFinite(audio.duration) && audio.duration > 0) {
         audio.currentTime = Math.min(offset, Math.max(0, audio.duration - 0.05));
       }
@@ -1369,9 +1450,9 @@ function SlideVideoPlayer({
     setHighestCompletedSlideIndex((highest) => Math.max(highest, slideIndex));
     setPlaying(false);
     setSlideComplete(true);
-    audioRef.current?.pause();
+    cancelPendingAudio();
     if (slideIndex === slides.length - 1) onComplete?.();
-  }, [onComplete, persistSlideProgress, slideIndex, slides.length]);
+  }, [cancelPendingAudio, onComplete, persistSlideProgress, slideIndex, slides.length]);
 
   useEffect(() => {
     if (!slides.length || initialSlideIndex === undefined) return;
@@ -1387,13 +1468,11 @@ function SlideVideoPlayer({
     setPlaying(false);
     setCurrentTime(0);
     setDuration(0);
-    loadedAudioKeyRef.current = null;
-    audioRef.current?.pause();
-    audioRef.current?.removeAttribute("src");
-    audioRef.current?.load();
+    cancelPendingAudio();
   }, [
     backendChapterId,
     chapter.id,
+    cancelPendingAudio,
     initialHighestCompletedSlideIndex,
     initialSlideIndex,
   ]);
@@ -1404,11 +1483,8 @@ function SlideVideoPlayer({
     setPlaying(false);
     setCurrentTime(0);
     setDuration(0);
-    loadedAudioKeyRef.current = null;
-    audioRef.current?.pause();
-    audioRef.current?.removeAttribute("src");
-    audioRef.current?.load();
-  }, [activeSlide?.id, videoSource]);
+    cancelPendingAudio();
+  }, [activeSlide?.id, cancelPendingAudio, videoSource]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -1435,8 +1511,8 @@ function SlideVideoPlayer({
     setDuration(slideDuration);
     if (usesChapterSegment && activeSlide?.start !== undefined)
       video.currentTime = activeSlide.start;
-    if (activeSlide) {
-      void loadSlideAudio(activeSlide, audioLanguageRef.current, video.currentTime, false);
+    if (activeSlide && !video.paused) {
+      void loadSlideAudio(activeSlide, audioLanguageRef.current, video.currentTime, !video.paused);
     }
     if (autoplayNextRef.current) {
       autoplayNextRef.current = false;
@@ -1509,12 +1585,14 @@ function SlideVideoPlayer({
 
   const previousSlide = () => {
     if (slideIndex === 0) return;
+    cancelPendingAudio();
     autoplayNextRef.current = true;
     setSlideComplete(false);
     setSlideIndex((index) => Math.max(0, index - 1));
   };
 
   const nextSlide = () => {
+    cancelPendingAudio();
     if (!activeSlide?.videoUrl && !chapterVideoUrl) {
       const resumeIndex = Math.min(slides.length - 1, slideIndex + 1);
       persistSlideProgress(resumeIndex, true, slideIndex);
@@ -1571,7 +1649,7 @@ function SlideVideoPlayer({
             ref={videoRef}
             src={videoSource}
             className="size-full object-contain"
-            preload="auto"
+            preload="metadata"
             playsInline
             muted
             onClick={togglePlayback}
@@ -1635,7 +1713,7 @@ function SlideVideoPlayer({
             No slides available
           </div>
         )}
-        {mediaLoading && videoSource && !loading && (
+        {mediaLoading && activeVideoSource && !loading && (
           <div className="absolute inset-0 z-20 grid place-items-center bg-black/60">
             <div className="flex flex-col items-center gap-3 text-center text-paper">
               <div className="relative size-10" aria-hidden="true">
@@ -1661,7 +1739,7 @@ function SlideVideoPlayer({
         )}
       </div>
 
-      <audio ref={audioRef} preload="auto" className="hidden" />
+      <audio ref={audioRef} preload="none" className="hidden" />
 
       <div className="flex flex-wrap items-center gap-3 border-t border-paper/20 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em]">
         <button
