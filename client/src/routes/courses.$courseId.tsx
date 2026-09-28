@@ -1139,7 +1139,7 @@ function SlideVideoPlayer({
 
     if (!backendChapterId) return;
 
-    fetch(`${API_BASE_URL}/api/chapter/${backendChapterId}/?media=client`, {
+    fetch(`${API_BASE_URL}/api/chapter/${backendChapterId}/?media=cloudfront`, {
       signal: controller.signal,
     })
       .then(async (response) => {

@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
+from pathlib import Path
 from typing import Iterable
+from urllib.parse import quote
 
 from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
 from botocore.config import Config
+from botocore.signers import CloudFrontSigner
 from django.conf import settings
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 
 
 class S3MediaStore:
@@ -18,6 +24,60 @@ class S3MediaStore:
     @property
     def enabled(self):
         return bool(self.bucket)
+
+    @property
+    def cloudfront_enabled(self):
+        return bool(
+            getattr(settings, "AWS_CLOUDFRONT_DOMAIN", "")
+            and getattr(settings, "AWS_CLOUDFRONT_KEY_ID", "")
+            and (
+                getattr(settings, "AWS_CLOUDFRONT_PRIVATE_KEY", "")
+                or getattr(settings, "AWS_CLOUDFRONT_PRIVATE_KEY_PATH", "")
+            )
+        )
+
+    @lru_cache(maxsize=1)
+    def cloudfront_signer(self):
+        private_key = str(getattr(settings, "AWS_CLOUDFRONT_PRIVATE_KEY", ""))
+        private_key_path = str(getattr(settings, "AWS_CLOUDFRONT_PRIVATE_KEY_PATH", ""))
+        if private_key_path:
+            private_key = Path(private_key_path).read_text(encoding="utf-8")
+
+        # JSON secrets often store PEM newlines as the two characters "\\n".
+        private_key = private_key.replace("\\n", "\n")
+        key = serialization.load_pem_private_key(
+            private_key.encode("utf-8"),
+            password=None,
+        )
+
+        def rsa_signer(message: bytes) -> bytes:
+            return key.sign(message, padding.PKCS1v15(), hashes.SHA1())
+
+        return CloudFrontSigner(
+            str(getattr(settings, "AWS_CLOUDFRONT_KEY_ID")),
+            rsa_signer,
+        )
+
+    def cloudfront_url(self, key: str | None) -> str | None:
+        if not self.cloudfront_enabled or not key:
+            return None
+
+        try:
+            domain = str(getattr(settings, "AWS_CLOUDFRONT_DOMAIN")).strip().rstrip("/")
+            resource_url = f"https://{domain}/{quote(key, safe='/~')}"
+            expires_in = int(
+                getattr(
+                    settings,
+                    "AWS_CLOUDFRONT_URL_EXPIRY",
+                    getattr(settings, "AWS_S3_URL_EXPIRY", 3600),
+                )
+            )
+            return self.cloudfront_signer().generate_presigned_url(
+                resource_url,
+                date_less_than=datetime.now(timezone.utc) + timedelta(seconds=expires_in),
+            )
+        except (OSError, TypeError, ValueError):
+            return None
 
     @lru_cache(maxsize=1)
     def client(self):
@@ -114,6 +174,10 @@ class S3MediaStore:
         if client is None or key is None:
             return None
 
+        cloudfront_url = self.cloudfront_url(key)
+        if cloudfront_url:
+            return cloudfront_url
+
         try:
             return client.generate_presigned_url(
                 "get_object",
@@ -124,6 +188,10 @@ class S3MediaStore:
             return None
 
     def presigned_key_url(self, key: str | None) -> str | None:
+        cloudfront_url = self.cloudfront_url(key)
+        if cloudfront_url:
+            return cloudfront_url
+
         client = self.client()
         if client is None or not key:
             return None
