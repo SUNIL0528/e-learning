@@ -24,6 +24,7 @@ class LearnerProfile(models.Model):
     company = models.CharField(max_length=240, blank=True)
     location = models.CharField(max_length=240, blank=True)
     bio = models.TextField(blank=True)
+    active_session_id = models.CharField(max_length=128, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

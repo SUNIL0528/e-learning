@@ -11,7 +11,10 @@ from rest_framework.decorators import (
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .authentication import CognitoJWTAuthentication
+from .authentication import (
+    CognitoJWTAuthentication,
+    CognitoJWTAuthenticationWithoutSession,
+)
 from .models import (
     ChapterProgress,
     Enrollment,
@@ -47,6 +50,37 @@ class LearnerOnlyPermission(IsAuthenticated):
 
 
 PERMISSIONS = [LearnerOnlyPermission]
+
+
+@api_view(["POST"])
+@authentication_classes([CognitoJWTAuthenticationWithoutSession])
+@permission_classes([IsAuthenticated])
+def register_active_session(request):
+    session_id = str(request.data.get("sessionId") or "").strip()
+    if not session_id or len(session_id) > 128:
+        return Response(
+            {"error": "A valid session ID is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    claims = request.auth or {}
+    profile, _ = LearnerProfile.objects.get_or_create(
+        cognito_sub=request.user.user_id,
+        defaults={
+            "email": str(claims.get("email", "")),
+            "name": str(claims.get("name", "")),
+        },
+    )
+    profile.active_session_id = session_id
+    profile.save(update_fields=["active_session_id", "updated_at"])
+    return Response({"status": "active"})
+
+
+@api_view(["GET"])
+@authentication_classes(AUTHENTICATION)
+@permission_classes([IsAuthenticated])
+def validate_active_session(request):
+    return Response({"status": "active"})
 
 
 def _profile_for_request(request):

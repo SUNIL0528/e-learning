@@ -15,6 +15,7 @@ from pathlib import Path
 import json
 import boto3
 from dotenv import load_dotenv
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -208,6 +209,8 @@ CORS_ALLOWED_ORIGINS = [
     for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
     if origin.strip()
 ]
+
+CORS_ALLOW_HEADERS = (*default_headers, "x-session-id")
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()

@@ -6,6 +6,8 @@ from django.conf import settings
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
+from .models import LearnerProfile
+
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +36,7 @@ class CognitoJWTAuthentication(BaseAuthentication):
     # a fresh client is created below if Cognito rotates a key or the pool was
     # changed while Django was still running.
     _jwks_clients = {}
+    enforce_active_session = True
 
     @staticmethod
     def _issuer():
@@ -119,4 +122,21 @@ class CognitoJWTAuthentication(BaseAuthentication):
             username=str(claims.get("username") or claims.get("cognito:username") or ""),
             email=str(claims.get("email", "")),
         )
+
+        if self.enforce_active_session:
+            supplied_session_id = request.headers.get("X-Session-ID", "").strip()
+            profile = LearnerProfile.objects.filter(cognito_sub=user_id).only(
+                "active_session_id"
+            ).first()
+            if not supplied_session_id:
+                raise AuthenticationFailed("ACTIVE_SESSION_REQUIRED")
+            if profile is None or profile.active_session_id != supplied_session_id:
+                raise AuthenticationFailed("ACTIVE_SESSION_REPLACED")
+
         return principal, claims
+
+
+class CognitoJWTAuthenticationWithoutSession(CognitoJWTAuthentication):
+    """JWT verification for the endpoint that creates the active session."""
+
+    enforce_active_session = False

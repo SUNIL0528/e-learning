@@ -11,8 +11,10 @@ from .progress_views import (
     ensure_course_structure,
     learner_enrollments,
     learner_profile,
+    register_active_session,
     quiz_result,
     slide_progress,
+    validate_active_session,
 )
 from .doubts_views import (
     instructor_dashboard,
@@ -74,6 +76,8 @@ urlpatterns = [
     ),
 
     path("me/profile/", learner_profile, name="learner-profile"),
+    path("me/session/", register_active_session, name="register-active-session"),
+    path("me/session/validate/", validate_active_session, name="validate-active-session"),
     path("me/enrollments/", learner_enrollments, name="learner-enrollments"),
     path(
         "me/courses/<str:course_id>/structure/",

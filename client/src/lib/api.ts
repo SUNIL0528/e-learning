@@ -1,4 +1,5 @@
 import { fetchAuthSession } from "aws-amplify/auth";
+import { getActiveSessionId, signOutLocallyFromCognito } from "@/lib/auth";
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
 const TOKEN_REFRESH_WINDOW_MS = 60_000;
@@ -21,6 +22,8 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
     const headers = new Headers(init.headers);
 
     if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+    const activeSessionId = getActiveSessionId();
+    if (activeSessionId) headers.set("X-Session-ID", activeSessionId);
     if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
 
     return fetch(`${API_BASE_URL}${path}`, { ...init, headers });
@@ -32,10 +35,31 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
   // was added after the session was created, refresh once before reporting an
   // authentication failure to the user.
   if (response.status === 401 || response.status === 403) {
-    response = await request(true);
+    let detail = "";
+    try {
+      const errorData = (await response.clone().json()) as { detail?: string };
+      detail = errorData.detail ?? "";
+    } catch {
+      // Retry normal authentication failures even when the response is not JSON.
+    }
+    if (detail !== "ACTIVE_SESSION_REPLACED") {
+      response = await request(true);
+    }
   }
 
   if (!response.ok) {
+    let detail = "";
+    try {
+      const errorData = (await response.clone().json()) as { detail?: string };
+      detail = errorData.detail ?? "";
+    } catch {
+      // Keep the HTTP status message when the response is not JSON.
+    }
+
+    if (detail === "ACTIVE_SESSION_REPLACED") {
+      await signOutLocallyFromCognito();
+    }
+
     let message = `API request failed (${response.status})`;
     try {
       const data = (await response.json()) as { detail?: string; error?: string };
