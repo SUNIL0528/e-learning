@@ -1144,6 +1144,7 @@ function SlideVideoPlayer({
   const audioLanguageRef = useRef("en");
   const loadedAudioKeyRef = useRef<string | null>(null);
   const audioRequestIdRef = useRef(0);
+  const playbackRequestIdRef = useRef(0);
   const mediaUrlRequestIdRef = useRef(0);
   const seekingRef = useRef(false);
   const advancingRef = useRef(false);
@@ -1157,6 +1158,7 @@ function SlideVideoPlayer({
   const [highestCompletedSlideIndex, setHighestCompletedSlideIndex] = useState(-1);
   const [slideComplete, setSlideComplete] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
   const [muted, setMuted] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
@@ -1171,7 +1173,9 @@ function SlideVideoPlayer({
 
   const cancelPendingAudio = useCallback(() => {
     audioRequestIdRef.current += 1;
+    playbackRequestIdRef.current += 1;
     loadedAudioKeyRef.current = null;
+    setAudioLoading(false);
 
     const audio = audioRef.current;
     audio?.pause();
@@ -1438,7 +1442,7 @@ function SlideVideoPlayer({
         if (!shouldPlay) return;
       }
 
-      if (shouldPlay && audio.readyState < 1) {
+      if (shouldPlay && audio.readyState < 3) {
         audio.preload = "auto";
         audio.load();
 
@@ -1448,7 +1452,7 @@ function SlideVideoPlayer({
             if (settled) return;
             settled = true;
             window.clearTimeout(timeoutId);
-            audio.removeEventListener("loadedmetadata", finish);
+            audio.removeEventListener("canplay", finish);
             audio.removeEventListener("error", finish);
             audio.removeEventListener("abort", finish);
             audio.removeEventListener("emptied", finish);
@@ -1456,10 +1460,11 @@ function SlideVideoPlayer({
           };
 
           const timeoutId = window.setTimeout(finish, 15_000);
-          audio.addEventListener("loadedmetadata", finish);
+          audio.addEventListener("canplay", finish);
           audio.addEventListener("error", finish);
           audio.addEventListener("abort", finish);
           audio.addEventListener("emptied", finish);
+          if (audio.readyState >= 3) finish();
         });
       }
 
@@ -1477,6 +1482,29 @@ function SlideVideoPlayer({
     },
     [speed, usesChapterSegment],
   );
+
+  const startPlayback = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const requestId = ++playbackRequestIdRef.current;
+    const slide = activeSlide;
+    const source = slide ? findAudioSource(slide, audioLanguageRef.current) : null;
+
+    if (source) setAudioLoading(true);
+    try {
+      if (slide && source) {
+        await loadSlideAudio(slide, audioLanguageRef.current, video.currentTime, true);
+      }
+
+      if (playbackRequestIdRef.current !== requestId || videoRef.current !== video) return;
+      await video.play();
+    } catch {
+      // Browser autoplay policy or a media error can reject playback.
+    } finally {
+      if (playbackRequestIdRef.current === requestId) setAudioLoading(false);
+    }
+  }, [activeSlide, loadSlideAudio]);
 
   const syncAudio = useCallback(() => {
     const video = videoRef.current;
@@ -1561,12 +1589,9 @@ function SlideVideoPlayer({
     setDuration(slideDuration);
     if (usesChapterSegment && activeSlide?.start !== undefined)
       video.currentTime = activeSlide.start;
-    if (activeSlide && !video.paused) {
-      void loadSlideAudio(activeSlide, audioLanguageRef.current, video.currentTime, !video.paused);
-    }
     if (autoplayNextRef.current) {
       autoplayNextRef.current = false;
-      void video.play().catch(() => undefined);
+      void startPlayback();
     }
   };
 
@@ -1617,8 +1642,13 @@ function SlideVideoPlayer({
   const togglePlayback = () => {
     const video = videoRef.current;
     if (!video) return;
-    if (video.paused) void video.play().catch(() => undefined);
-    else video.pause();
+    if (video.paused) {
+      void startPlayback();
+    } else {
+      playbackRequestIdRef.current += 1;
+      video.pause();
+      audioRef.current?.pause();
+    }
   };
 
   const changeSpeed = () => {
@@ -1724,15 +1754,9 @@ function SlideVideoPlayer({
             onTimeUpdate={handleTimeUpdate}
             onPlay={() => {
               setPlaying(true);
-              if (activeSlide)
-                void loadSlideAudio(
-                  activeSlide,
-                  audioLanguageRef.current,
-                  videoRef.current?.currentTime ?? 0,
-                  true,
-                );
             }}
             onPause={() => {
+              playbackRequestIdRef.current += 1;
               setPlaying(false);
               audioRef.current?.pause();
             }}
@@ -1778,7 +1802,7 @@ function SlideVideoPlayer({
             No slides available
           </div>
         )}
-        {mediaLoading && activeVideoSource && !loading && (
+        {(mediaLoading || audioLoading) && activeVideoSource && !loading && (
           <div className="absolute inset-0 z-20 grid place-items-center bg-black/60">
             <div className="flex flex-col items-center gap-3 text-center text-paper">
               <div className="relative size-10" aria-hidden="true">
