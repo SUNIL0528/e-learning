@@ -10,6 +10,7 @@ export type UserEnrollment = {
   courseTitle: string;
   progressPercent: number;
   status: string;
+  learningSeconds: number;
 };
 
 export type UserProfile = {
@@ -191,6 +192,22 @@ export async function saveSlideProgress({
       completed,
       completedSlideIndex,
     }),
+  });
+}
+
+export async function recordLearningTime({
+  userId,
+  courseId,
+  seconds,
+}: {
+  userId: string;
+  courseId: string;
+  seconds: number;
+}) {
+  void userId;
+  await apiFetch(`/api/me/courses/${encodeURIComponent(courseId)}/progress/time/`, {
+    method: "POST",
+    body: JSON.stringify({ seconds }),
   });
 }
 

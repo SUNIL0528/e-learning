@@ -16,6 +16,7 @@ import {
 } from "@/lib/media";
 import {
   ensureUserCourseStructure,
+  recordLearningTime,
   saveChapterProgress,
   saveModuleQuizResult,
   saveSlideProgress,
@@ -152,6 +153,7 @@ function CoursePage() {
   const [savedHighestSlideIndexes, setSavedHighestSlideIndexes] = useState<Record<string, number>>({});
   const [progressLoading, setProgressLoading] = useState(true);
   const slideSaveQueueRef = useRef(Promise.resolve());
+  const learningTimeSaveRef = useRef(Promise.resolve());
 
   const active =
     course.modules.flatMap((m) => m.chapters).find((c) => c.id === activeId) ?? allChapters[0]!;
@@ -164,6 +166,9 @@ function CoursePage() {
     moduleIndex === 0 || passedModules.has(course.modules[moduleIndex - 1]?.id ?? "");
   const isModuleComplete = (module: (typeof course.modules)[number]) =>
     module.chapters.every((chapter) => completedChapters.has(chapter.id));
+  const courseProgress = Math.round(
+    (completedChapters.size / Math.max(1, allChapters.length)) * 100,
+  );
   const completeChapter = (chapterId: string) => {
     const nextCompleted = new Set(completedChapters).add(chapterId);
     setCompletedChapters(nextCompleted);
@@ -251,6 +256,43 @@ function CoursePage() {
     };
   }, [course]);
 
+  useEffect(() => {
+    const user = getCurrentAuthUser();
+    if (!user) return;
+
+    let visible = document.visibilityState === "visible";
+    let lastTick = performance.now();
+    let pendingSeconds = 0;
+
+    const flushTime = () => {
+      const now = performance.now();
+      if (visible) pendingSeconds += Math.max(0, Math.floor((now - lastTick) / 1000));
+      lastTick = now;
+      if (pendingSeconds < 30) return;
+
+      const seconds = pendingSeconds;
+      pendingSeconds = 0;
+      learningTimeSaveRef.current = learningTimeSaveRef.current
+        .catch(() => undefined)
+        .then(() => recordLearningTime({ userId: user.uid, courseId: course.id, seconds }))
+        .catch((error: unknown) => console.error("Unable to save learning time", error));
+    };
+
+    const handleVisibilityChange = () => {
+      flushTime();
+      visible = document.visibilityState === "visible";
+      lastTick = performance.now();
+    };
+    const interval = window.setInterval(flushTime, 30_000);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      flushTime();
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [course.id]);
+
   const saveCurrentSlide = (
     chapter: Chapter,
     slideIndex: number,
@@ -308,7 +350,7 @@ function CoursePage() {
         </Link>
         <span className="h-px flex-1 bg-ink/15" />
         <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-fog">
-          {course.instructor} · {course.progress}% complete
+          {course.instructor} · {courseProgress}% complete
         </span>
       </div>
 

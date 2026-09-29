@@ -431,7 +431,6 @@ export const student = {
   location: "Accra, Ghana",
   level: "A2",
   streak: 12,
-  hours: 142,
   certificates: 3,
   badges: ["Experimentation", "Design tokens", "Motion craft", "30-day streak"],
 };

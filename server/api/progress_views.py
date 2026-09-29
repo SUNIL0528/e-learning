@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import F, Prefetch
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import (
@@ -151,6 +151,7 @@ def learner_enrollments(request):
                 "courseTitle": enrollment.course_title,
                 "progressPercent": enrollment.progress_percent,
                 "status": enrollment.status,
+                "learningSeconds": enrollment.learning_seconds,
             }
             for enrollment in enrollments
         }
@@ -402,6 +403,32 @@ def slide_progress(request, course_id):
     module.save(update_fields=["current_chapter_id", "current_slide_index", "updated_at"])
     module.enrollment.current_module_id = module_id
     module.enrollment.save(update_fields=["current_module_id", "updated_at"])
+    return Response({"status": "saved"})
+
+
+@api_view(["POST"])
+@authentication_classes(AUTHENTICATION)
+@permission_classes(PERMISSIONS)
+def record_learning_time(request, course_id):
+    """Add a bounded amount of visible course-page time to an enrollment."""
+    try:
+        seconds = int(request.data.get("seconds") or 0)
+    except (TypeError, ValueError):
+        seconds = 0
+
+    # The client sends short heartbeats. Keep the server-side increment small
+    # so a malformed request cannot inflate the learner's total time.
+    seconds = max(0, min(120, seconds))
+    if seconds == 0:
+        return Response({"status": "ignored"})
+
+    profile = _profile_for_request(request)
+    updated = Enrollment.objects.filter(
+        learner=profile,
+        course_id=course_id,
+    ).update(learning_seconds=F("learning_seconds") + seconds)
+    if not updated:
+        return Response({"error": "Enrollment not found."}, status=status.HTTP_404_NOT_FOUND)
     return Response({"status": "saved"})
 
 

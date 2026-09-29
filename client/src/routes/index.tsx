@@ -89,6 +89,11 @@ function Dashboard() {
   );
   const shown = enrolledCourses.filter((course) => filter === "all" || course.status === filter);
   const completed = enrolledCourses.filter((course) => course.status === "completed").length;
+  const learningSeconds = Object.values(enrollments).reduce(
+    (total, enrollment) => total + Math.max(0, enrollment.learningSeconds ?? 0),
+    0,
+  );
+  const learningHours = (learningSeconds / 3600).toFixed(1);
   const resume = enrolledCourses[0];
   const firstName = (profileName || "there").split(" ")[0];
 
@@ -122,7 +127,7 @@ function Dashboard() {
             completed
           </div>
           <div>
-            <span className="block text-2xl font-bold text-ink">{student.hours}</span> hrs
+            <span className="block text-2xl font-bold text-ink">{learningHours}</span> hrs
           </div>
           <div>
             <span className="block text-2xl font-bold text-moss">{student.level}</span> level
