@@ -5,6 +5,7 @@ import { courses, ENABLED_COURSE_ID, recommended, student, type Status } from "@
 import { getUserEnrollments, getUserProfile } from "@/lib/progress";
 import { getCurrentAuthUser, onAuthStateChanged } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
+import { getTotalLearningSeconds } from "@/lib/learning-time";
 import { LoadingScreen } from "@/components/LoadingScreen";
 
 export const Route = createFileRoute("/")({
@@ -40,6 +41,7 @@ function Dashboard() {
     Record<string, { progressPercent: number; status: string }>
   >({});
   const [profileName, setProfileName] = useState(getCurrentAuthUser()?.displayName ?? "");
+  const [learningSeconds, setLearningSeconds] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => onAuthStateChanged(setCurrentUser), []);
@@ -50,6 +52,8 @@ function Dashboard() {
       setDataLoading(false);
       return;
     }
+
+    setLearningSeconds(getTotalLearningSeconds(user.uid));
 
     let cancelled = false;
     void Promise.all([getUserEnrollments(user.uid), getUserProfile(user.uid)])
@@ -70,6 +74,15 @@ function Dashboard() {
     };
   }, [currentUser]);
 
+  useEffect(() => {
+    const refreshLearningTime = () => {
+      const user = getCurrentAuthUser();
+      if (user && !user.isInstructor) setLearningSeconds(getTotalLearningSeconds(user.uid));
+    };
+    window.addEventListener("focus", refreshLearningTime);
+    return () => window.removeEventListener("focus", refreshLearningTime);
+  }, []);
+
   const enrolledCourses = useMemo(
     () =>
       courses
@@ -89,6 +102,7 @@ function Dashboard() {
   );
   const shown = enrolledCourses.filter((course) => filter === "all" || course.status === filter);
   const completed = enrolledCourses.filter((course) => course.status === "completed").length;
+  const learningHours = (learningSeconds / 3600).toFixed(1);
   const resume = enrolledCourses[0];
   const firstName = (profileName || "there").split(" ")[0];
 
@@ -122,7 +136,7 @@ function Dashboard() {
             completed
           </div>
           <div>
-            <span className="block text-2xl font-bold text-ink">{student.hours}</span> hrs
+            <span className="block text-2xl font-bold text-ink">{learningHours}</span> hrs
           </div>
           <div>
             <span className="block text-2xl font-bold text-moss">{student.level}</span> level

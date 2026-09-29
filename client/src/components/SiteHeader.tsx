@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { student } from "@/data/platform";
 import {
   cognitoConfigured,
   getCurrentAuthUser,
@@ -95,9 +94,9 @@ export function SiteHeader({
               Log out
           </button>
           )}
-          <span className="hidden font-mono text-[11px] text-ink/60 lg:block">
-            {currentUser?.isInstructor ? "Instructor" : `${student.streak}-day streak`}
-          </span>
+          {currentUser?.isInstructor && (
+            <span className="hidden font-mono text-[11px] text-ink/60 lg:block">Instructor</span>
+          )}
           <div
             className="flex items-center gap-1 border border-ink/25 px-1 py-1 font-mono text-[10px] uppercase tracking-[0.08em]"
             aria-label="Website text size"
