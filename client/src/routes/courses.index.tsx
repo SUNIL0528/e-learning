@@ -72,7 +72,7 @@ function CatalogPage() {
 
   const userCourses = useMemo(
     () =>
-      courses.map((course) => {
+      courses.filter((course) => course.id === ENABLED_COURSE_ID).map((course) => {
         const enrollment = enrollments[course.id];
         if (!enrollment || course.id !== ENABLED_COURSE_ID) {
           return { ...course, enrolled: false, progress: 0, status: "not-started" as const };

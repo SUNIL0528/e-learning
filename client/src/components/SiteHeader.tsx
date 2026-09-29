@@ -7,6 +7,15 @@ import {
   signOutFromCognito,
   type AuthUser,
 } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
+
+type DoubtNotification = {
+  id: number;
+  title: string;
+  courseTitle: string;
+  reply: string | null;
+  repliedAt: string | null;
+};
 
 const nav = [
   { to: "/doubts", label: "Doubts" },
@@ -33,6 +42,8 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   const [signedIn, setSignedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(getCurrentAuthUser());
+  const [notifications, setNotifications] = useState<DoubtNotification[]>([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -48,6 +59,36 @@ export function SiteHeader({
       setCurrentUser(user);
     });
   }, []);
+
+  useEffect(() => {
+    if (!signedIn || !currentUser || currentUser.isInstructor) {
+      setNotifications([]);
+      return;
+    }
+
+    let cancelled = false;
+    const loadNotifications = () => {
+      void apiFetch("/api/me/doubts/")
+        .then(async (response) => (await response.json()) as DoubtNotification[])
+        .then((tickets) => {
+          if (!cancelled) {
+            setNotifications(
+              tickets.filter((ticket) => ticket.reply && ticket.repliedAt),
+            );
+          }
+        })
+        .catch((error: unknown) => {
+          if (!cancelled) console.error("Unable to load notifications", error);
+        });
+    };
+
+    loadNotifications();
+    const interval = window.setInterval(loadNotifications, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [currentUser, signedIn]);
 
   const visibleNav = currentUser?.isInstructor
     ? nav.filter((item) => item.to === "/doubts")
@@ -84,12 +125,72 @@ export function SiteHeader({
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-4">
+          {signedIn && cognitoConfigured && !currentUser?.isInstructor && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setNotificationsOpen((open) => !open)}
+                aria-label={`Notifications${notifications.length ? ` (${notifications.length})` : ""}`}
+                title="Notifications"
+                className="relative grid size-8 place-items-center text-ink hover:text-clay"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                  <path d="M10 21h4" />
+                </svg>
+                {notifications.length > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-clay px-1 font-mono text-[9px] font-bold text-paper">
+                    {notifications.length > 9 ? "9+" : notifications.length}
+                  </span>
+                )}
+              </button>
+              {notificationsOpen && (
+                <div className="absolute right-0 top-10 z-30 w-72 border-2 border-ink bg-paper p-3 shadow-lg">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-widest">Notifications</span>
+                    <button
+                      type="button"
+                      onClick={() => setNotificationsOpen(false)}
+                      className="font-mono text-[10px] text-fog hover:text-ink"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  {notifications.length ? (
+                    <div className="space-y-2">
+                      {notifications.slice(0, 5).map((notification) => (
+                        <Link
+                          key={notification.id}
+                          to="/doubts"
+                          onClick={() => setNotificationsOpen(false)}
+                          className="block border-t border-ink/10 pt-2 text-left hover:bg-sand"
+                        >
+                          <div className="text-xs font-bold">Instructor replied</div>
+                          <div className="mt-0.5 text-[11px] text-fog">{notification.title}</div>
+                          <div className="mt-1 font-mono text-[9px] uppercase tracking-wider text-clay">
+                            {notification.courseTitle}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-fog">No instructor replies yet.</p>
+                  )}
+                  {notifications.length > 5 && (
+                    <Link to="/doubts" onClick={() => setNotificationsOpen(false)} className="mt-3 block font-mono text-[10px] uppercase underline">
+                      View all replies
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           {signedIn && cognitoConfigured && (
             <button
               type="button"
               onClick={() => void handleSignOut()}
               aria-label="Log out"
-              className="font-mono text-[10px] uppercase tracking-[0.15em] text-fog hover:text-ink"
+              className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-ink hover:text-clay"
             >
               Log out
           </button>

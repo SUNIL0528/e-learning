@@ -8,6 +8,7 @@ import {
   type UserProfile,
 } from "@/lib/progress";
 import { getCurrentAuthUser } from "@/lib/auth";
+import { getLearningActivity, getTotalLearningSeconds } from "@/lib/learning-time";
 import { LoadingScreen } from "@/components/LoadingScreen";
 
 export const Route = createFileRoute("/profile")({
@@ -28,17 +29,22 @@ export const Route = createFileRoute("/profile")({
   component: Profile,
 });
 
-const activity = Array.from({ length: 70 }, (_, i) => (i * 7) % 11);
-
 function Profile() {
   const [notifications, setNotifications] = useState({
     doubtAnswered: true,
-    forumReplies: true,
     weeklyDigest: false,
   });
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [enrollments, setEnrollments] = useState<Record<string, UserEnrollment>>({});
   const [bio, setBio] = useState(student.bio);
+  const [activity, setActivity] = useState<number[]>(() => {
+    const user = getCurrentAuthUser();
+    return user ? getLearningActivity(user.uid) : Array.from({ length: 70 }, () => 0);
+  });
+  const [learningSeconds, setLearningSeconds] = useState(() => {
+    const user = getCurrentAuthUser();
+    return user ? getTotalLearningSeconds(user.uid) : 0;
+  });
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -55,6 +61,8 @@ function Profile() {
         setProfile(nextProfile);
         setEnrollments(nextEnrollments);
         setBio(nextProfile?.bio ?? "");
+        setActivity(getLearningActivity(user.uid));
+        setLearningSeconds(getTotalLearningSeconds(user.uid));
       })
       .catch((error: unknown) => {
         if (!cancelled) console.error("Unable to load profile", error);
@@ -90,6 +98,8 @@ function Profile() {
   const completedCourses = enrolledCourses.filter(
     ({ enrollment }) => enrollment.status === "completed" || enrollment.progressPercent >= 100,
   ).length;
+  const learningHours = (learningSeconds / 3600).toFixed(1);
+  const activityMaximum = Math.max(1, ...activity);
 
   return (
     <>
@@ -138,7 +148,7 @@ function Profile() {
           {[
             ["Enrolled", String(enrolledCourses.length).padStart(2, "0")],
             ["Completed", String(completedCourses).padStart(2, "0")],
-            ["Learning hours", "00"],
+            ["Learning hours", learningHours],
             ["Certificates", "00"],
           ].map(([label, value]) => (
             <div key={label} className="border-2 border-ink bg-paper p-4">
@@ -154,15 +164,15 @@ function Profile() {
               </span>
             </div>
             <div className="mt-3 grid grid-flow-col grid-rows-7 gap-1">
-              {activity.map((v, i) => (
+              {activity.map((seconds, i) => (
                 <span
                   key={i}
                   className="size-3"
                   style={{
                     backgroundColor:
-                      v > 7
+                      seconds / activityMaximum > 0.66
                         ? "var(--moss)"
-                        : v > 4
+                        : seconds / activityMaximum > 0.33
                           ? "color-mix(in oklab, var(--moss) 55%, var(--sand))"
                           : "var(--sand)",
                   }}
@@ -217,7 +227,6 @@ function Profile() {
             {(
               [
                 ["doubtAnswered", "Notify me when an instructor answers a doubt"],
-                ["forumReplies", "Notify me about forum replies"],
                 ["weeklyDigest", "Weekly learning digest"],
               ] as const
             ).map(([key, label]) => (
