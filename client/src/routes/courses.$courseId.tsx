@@ -1089,6 +1089,7 @@ function SlideVideoPlayer({
   ) => void;
   backendChapterId?: string;
 }) {
+  const ZOOM_STEPS = [0.75, 1, 1.25, 1.5, 1.75, 2] as const;
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -1113,6 +1114,7 @@ function SlideVideoPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
+  const [contentZoom, setContentZoom] = useState<(typeof ZOOM_STEPS)[number]>(1);
   const [captionsVisible, setCaptionsVisible] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<{
     slideId: string | null;
@@ -1583,6 +1585,17 @@ function SlideVideoPlayer({
     else void containerRef.current?.requestFullscreen();
   };
 
+  const changeZoom = (direction: -1 | 1) => {
+    setContentZoom((current) => {
+      const currentIndex = ZOOM_STEPS.indexOf(current);
+      const nextIndex = Math.min(
+        ZOOM_STEPS.length - 1,
+        Math.max(0, currentIndex + direction),
+      );
+      return ZOOM_STEPS[nextIndex] ?? 1;
+    });
+  };
+
   const previousSlide = () => {
     if (slideIndex === 0) return;
     cancelPendingAudio();
@@ -1649,6 +1662,7 @@ function SlideVideoPlayer({
             ref={videoRef}
             src={videoSource}
             className="size-full object-contain"
+            style={{ transform: `scale(${contentZoom})` }}
             preload="metadata"
             playsInline
             muted
@@ -1692,7 +1706,10 @@ function SlideVideoPlayer({
             onEnded={advanceSlide}
           />
         ) : activeSlide ? (
-          <div className="size-full bg-paper p-8 text-left text-ink">
+          <div
+            className="size-full bg-paper p-8 text-left text-ink"
+            style={{ transform: `scale(${contentZoom})` }}
+          >
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay">
               Slide {slideIndex + 1} of {slides.length} - video pending
             </div>
@@ -1799,6 +1816,35 @@ function SlideVideoPlayer({
         >
           CC
         </button>
+        <div className="flex items-center gap-1 border border-paper/40 px-1 py-0.5">
+          <span className="px-1 text-paper/60">Zoom</span>
+          <button
+            onClick={() => changeZoom(-1)}
+            disabled={contentZoom === ZOOM_STEPS[0]}
+            className="px-1 disabled:opacity-30"
+            aria-label="Zoom out"
+            title="Zoom out"
+          >
+            -
+          </button>
+          <button
+            onClick={() => setContentZoom(1)}
+            className="min-w-[3.5rem] border-x border-paper/30 px-1"
+            aria-label={`Reset zoom to 100 percent; current zoom is ${Math.round(contentZoom * 100)} percent`}
+            title="Reset zoom"
+          >
+            {Math.round(contentZoom * 100)}%
+          </button>
+          <button
+            onClick={() => changeZoom(1)}
+            disabled={contentZoom === ZOOM_STEPS[ZOOM_STEPS.length - 1]}
+            className="px-1 disabled:opacity-30"
+            aria-label="Zoom in"
+            title="Zoom in"
+          >
+            +
+          </button>
+        </div>
         <button
           onClick={previousSlide}
           disabled={slideIndex === 0}
