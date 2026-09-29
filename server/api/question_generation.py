@@ -103,30 +103,71 @@ def generate_module_questions_from_bank(
     module_number: int,
     question_bank: list[dict[str, str]],
 ) -> dict[str, Any]:
-    """Return a fixed 15-question/5-question set from supplied chapter material.
+    """Return 15 unique MCQs and 5 unique descriptive questions.
 
     The bank contains source questions and their trainer answers.  MCQ options
     use the source answer as the correct option and answers from other source
     questions as deterministic distractors.  The descriptive questions remain
     the original trainer prompts so they can be answered in the course's own
-    terminology.
+    terminology. If fewer than 20 source questions are available, derived MCQ
+    prompts are created from the available question-and-answer material.
     """
-    items = [
-        item
-        for item in question_bank
-        if str(item.get("question") or "").strip()
-        and str(item.get("answer") or "").strip()
-    ]
+    items = []
+    seen_questions: set[str] = set()
+    for item in question_bank:
+        question = str(item.get("question") or "").strip()
+        answer = str(item.get("answer") or "").strip()
+        question_key = re.sub(r"\W+", "", question).casefold()
+        if not question or not answer or not question_key or question_key in seen_questions:
+            continue
+        seen_questions.add(question_key)
+        items.append({"question": question, "answer": answer})
+
     if not items:
         return {"module": module_number, "mcqs": [], "descriptive": []}
 
-    mcq_items = _evenly_spaced(items, 15)
+    # Reserve five source questions for the written section first. This keeps
+    # the two sections disjoint even when the bank contains exactly 20 items.
+    descriptive_items = items[-5:]
+    mcq_items = items[:-5]
+
+    # A few chapters may have fewer than 20 source questions. Derive additional
+    # MCQs from existing chapter material instead of repeating a prompt in both
+    # sections. The wording is deliberately different so every displayed
+    # question remains unique while preserving the supplied answer.
+    supplement_index = 0
+    while len(mcq_items) < 15:
+        source = items[supplement_index % len(items)]
+        supplement_index += 1
+        derived_question = (
+            "According to the chapter material, which statement best answers "
+            f"this topic question: {source['question']}"
+        )
+        derived_key = re.sub(r"\W+", "", derived_question).casefold()
+        if any(re.sub(r"\W+", "", item["question"]).casefold() == derived_key for item in mcq_items):
+            derived_question += f" (additional question {supplement_index})"
+        mcq_items.append({"question": derived_question, "answer": source["answer"]})
+
+    # This is only a safety net for an unusually short source document. Normal
+    # chapters use five original descriptive questions from the bank.
+    descriptive_index = 0
+    while len(descriptive_items) < 5:
+        source = items[descriptive_index % len(items)]
+        descriptive_index += 1
+        descriptive_items.append(
+            {
+                "question": f"Explain the chapter material related to: {source['question']}",
+                "answer": source["answer"],
+            }
+        )
+
     mcqs = []
     for index, item in enumerate(mcq_items):
         correct_answer = str(item["answer"]).strip()
         distractors = []
-        for offset in range(1, len(items) + 1):
-            candidate = str(items[(index * 7 + offset) % len(items)]["answer"]).strip()
+        answer_pool = [str(candidate["answer"]).strip() for candidate in items + mcq_items]
+        for offset in range(1, len(answer_pool) + 1):
+            candidate = answer_pool[(index * 7 + offset) % len(answer_pool)]
             if candidate.casefold() != correct_answer.casefold() and candidate.casefold() not in {
                 value.casefold() for value in distractors
             }:
@@ -135,8 +176,15 @@ def generate_module_questions_from_bank(
                 break
 
         options = [correct_answer, *distractors]
-        while len(options) < 4:
-            options.append("This requirement is not covered by the supplied chapter material.")
+        fallback_options = [
+            "This statement is not supported by the supplied chapter material.",
+            "This is unrelated to the topic covered in the chapter.",
+            "The chapter does not identify this as the correct requirement.",
+        ]
+        for fallback in fallback_options:
+            if len(options) == 4:
+                break
+            options.append(fallback)
 
         rotation = index % 4
         mcqs.append(
@@ -153,6 +201,6 @@ def generate_module_questions_from_bank(
             "id": f"module-{module_number}-written-{index + 1}",
             "question": str(item["question"]).strip(),
         }
-        for index, item in enumerate(_evenly_spaced(items, 5))
+        for index, item in enumerate(descriptive_items[:5])
     ]
     return {"module": module_number, "mcqs": mcqs, "descriptive": descriptive}
