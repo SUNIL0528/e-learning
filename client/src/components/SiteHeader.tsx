@@ -20,7 +20,6 @@ type DoubtNotification = {
 const nav = [
   { to: "/doubts", label: "Doubts" },
   { to: "/profile", label: "Profile" },
-  { to: "/login", label: "Sign in" },
 ] as const;
 
 type SiteHeaderProps = {
@@ -102,27 +101,35 @@ export function SiteHeader({
           <span className="font-mono text-sm font-bold tracking-tight">HTS</span>
         </Link>
         <nav className="hidden items-center gap-6 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70 md:flex">
-          <Link
-            to="/"
-            activeOptions={{ exact: true }}
-            activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}
-          >
-            Dashboard
-          </Link>
-          {!currentUser?.isInstructor && (
-            <Link to="/courses" activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}>
-              Courses
+          {currentUser ? (
+            <>
+              <Link
+                to="/"
+                activeOptions={{ exact: true }}
+                activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}
+              >
+                Dashboard
+              </Link>
+              {!currentUser.isInstructor && (
+                <Link to="/courses" activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}>
+                  Courses
+                </Link>
+              )}
+              {visibleNav.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.to}
+                  activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </>
+          ) : (
+            <Link to="/login" activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}>
+              Sign in
             </Link>
           )}
-          {visibleNav.map((item) => (
-            <Link
-              key={item.label}
-              to={item.to}
-              activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}
-            >
-              {item.label}
-            </Link>
-          ))}
         </nav>
         <div className="ml-auto flex items-center gap-4">
           {signedIn && cognitoConfigured && !currentUser?.isInstructor && (
