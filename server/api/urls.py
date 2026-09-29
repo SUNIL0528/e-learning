@@ -14,7 +14,6 @@ from .progress_views import (
     register_active_session,
     quiz_result,
     slide_progress,
-    record_learning_time,
     validate_active_session,
 )
 from .doubts_views import (
@@ -99,11 +98,6 @@ urlpatterns = [
         "me/courses/<str:course_id>/progress/slide/",
         slide_progress,
         name="slide-progress",
-    ),
-    path(
-        "me/courses/<str:course_id>/progress/time/",
-        record_learning_time,
-        name="record-learning-time",
     ),
     path(
         "me/courses/<str:course_id>/progress/quiz/",

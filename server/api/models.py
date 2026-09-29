@@ -48,7 +48,6 @@ class Enrollment(models.Model):
     course_title = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
     progress_percent = models.PositiveSmallIntegerField(default=0)
-    learning_seconds = models.PositiveIntegerField(default=0)
     current_module_id = models.CharField(max_length=255, blank=True, null=True)
     enrolled_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(blank=True, null=True)
