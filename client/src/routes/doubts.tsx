@@ -80,6 +80,8 @@ function AttachmentList({
   onRemove?: (attachmentId: number) => Promise<void>;
   removingId?: number | null;
 }) {
+  const [failedAttachmentIds, setFailedAttachmentIds] = useState<Set<number>>(() => new Set());
+
   if (!attachments.length) return null;
 
   return (
@@ -88,15 +90,18 @@ function AttachmentList({
       <div className="flex flex-wrap gap-2">
         {attachments.map((attachment) => (
           <div key={attachment.id} className="border border-ink/20 bg-paper p-2">
-            {attachment.url && attachment.kind === "image" ? (
+            {attachment.url && attachment.kind === "image" && !failedAttachmentIds.has(attachment.id) ? (
               <img
                 src={attachment.url}
                 alt={attachment.fileName}
                 draggable={false}
                 onContextMenu={(event) => event.preventDefault()}
+                onError={() =>
+                  setFailedAttachmentIds((previous) => new Set(previous).add(attachment.id))
+                }
                 className="max-h-52 max-w-full select-none object-contain"
               />
-            ) : attachment.url && attachment.kind === "audio" ? (
+            ) : attachment.url && attachment.kind === "audio" && !failedAttachmentIds.has(attachment.id) ? (
               <audio
                 controls
                 preload="metadata"
@@ -104,8 +109,15 @@ function AttachmentList({
                 controlsList="nodownload noplaybackrate"
                 disablePictureInPicture
                 onContextMenu={(event) => event.preventDefault()}
+                onError={() =>
+                  setFailedAttachmentIds((previous) => new Set(previous).add(attachment.id))
+                }
               />
-            ) : null}
+            ) : (
+              <div className="px-2 py-3 font-mono text-[10px] uppercase tracking-wider text-clay">
+                Attachment unavailable
+              </div>
+            )}
             <div className="mt-1 flex items-center justify-between gap-2">
               <div className="font-mono text-[10px] text-fog">{attachment.fileName}</div>
               {canRemove && onRemove && (

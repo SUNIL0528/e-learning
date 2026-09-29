@@ -188,13 +188,22 @@ class S3MediaStore:
             return None
 
     def presigned_key_url(self, key: str | None) -> str | None:
+        client = self.client()
+        if client is None or not key:
+            return None
+
+        # Do not issue a URL for a stale database attachment. CloudFront/S3
+        # otherwise returns an opaque XML error to the browser when the object
+        # has already been removed from the bucket.
+        try:
+            client.head_object(Bucket=self.bucket, Key=key)
+        except (ClientError, BotoCoreError, NoCredentialsError):
+            return None
+
         cloudfront_url = self.cloudfront_url(key)
         if cloudfront_url:
             return cloudfront_url
 
-        client = self.client()
-        if client is None or not key:
-            return None
         try:
             return client.generate_presigned_url(
                 "get_object",
