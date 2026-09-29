@@ -9,6 +9,7 @@ const SUGGESTIONS = ["Recommend a course", "Reset password", "Talk to support"];
 export function AiAssistant() {
   const ask = useServerFn(askAssistant);
   const [open, setOpen] = useState(false);
+  const [comingSoon, setComingSoon] = useState(false);
   const [escalated, setEscalated] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,11 +56,15 @@ export function AiAssistant() {
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setComingSoon(true);
+          window.setTimeout(() => setComingSoon(false), 2000);
+        }}
+        aria-label="HTS Assistant coming soon"
         className="fixed bottom-6 right-6 z-40 flex items-center gap-3 border-2 border-ink bg-ink px-4 py-3 text-[11px] font-bold uppercase tracking-[0.15em] text-paper"
       >
         <span className="grid size-6 place-items-center bg-clay font-black text-paper">AI</span>
-        Ask HTS
+        {comingSoon ? "Coming soon" : "Ask HTS"}
       </button>
     );
   }

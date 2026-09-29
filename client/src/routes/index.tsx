@@ -1,7 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import heroLecture from "@/assets/hero-lecture.jpg";
-import { courses, ENABLED_COURSE_ID, recommended, student, type Status } from "@/data/platform";
+import {
+  courses,
+  ENABLED_COURSE_ID,
+  getLearnerLevel,
+  recommended,
+  student,
+  type Status,
+} from "@/data/platform";
 import { getUserEnrollments, getUserProfile } from "@/lib/progress";
 import { getCurrentAuthUser, onAuthStateChanged } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
@@ -139,7 +146,10 @@ function Dashboard() {
             <span className="block text-2xl font-bold text-ink">{learningHours}</span> hrs
           </div>
           <div>
-            <span className="block text-2xl font-bold text-moss">{student.level}</span> level
+            <span className="block text-2xl font-bold text-moss">
+              {getLearnerLevel(enrolledCourses.length)}
+            </span>{" "}
+            level
           </div>
         </div>
       </div>
