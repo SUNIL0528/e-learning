@@ -24,6 +24,9 @@ import {
   type AuthUser,
 } from "@/lib/auth";
 
+const SITE_ZOOM_STEPS = [0.8, 0.9, 1, 1.1, 1.25, 1.5] as const;
+const SITE_ZOOM_STORAGE_KEY = "hts-site-zoom";
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -135,7 +138,26 @@ function RootComponent() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authReady, setAuthReady] = useState(!cognitoConfigured);
   const [signingOut, setSigningOut] = useState(isSignOutInProgress());
+  const [siteZoom, setSiteZoom] = useState<(typeof SITE_ZOOM_STEPS)[number]>(1);
+  const [siteZoomReady, setSiteZoomReady] = useState(false);
   const isLoginPage = location.pathname === "/login";
+
+  useEffect(() => {
+    const savedZoom = Number(window.localStorage.getItem(SITE_ZOOM_STORAGE_KEY));
+    if (SITE_ZOOM_STEPS.includes(savedZoom as (typeof SITE_ZOOM_STEPS)[number])) {
+      setSiteZoom(savedZoom as (typeof SITE_ZOOM_STEPS)[number]);
+    }
+    setSiteZoomReady(true);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.style.zoom = String(siteZoom);
+    if (siteZoomReady) window.localStorage.setItem(SITE_ZOOM_STORAGE_KEY, String(siteZoom));
+
+    return () => {
+      document.documentElement.style.zoom = "";
+    };
+  }, [siteZoom, siteZoomReady]);
 
   useEffect(() => {
     return onAuthStateChanged((nextUser) => {
@@ -170,7 +192,24 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SiteHeader />
+      <SiteHeader
+        siteZoom={siteZoom}
+        onZoomOut={() => {
+          setSiteZoom((current) => {
+            const currentIndex = SITE_ZOOM_STEPS.indexOf(current);
+            return SITE_ZOOM_STEPS[Math.max(0, currentIndex - 1)] ?? current;
+          });
+        }}
+        onZoomIn={() => {
+          setSiteZoom((current) => {
+            const currentIndex = SITE_ZOOM_STEPS.indexOf(current);
+            return SITE_ZOOM_STEPS[Math.min(SITE_ZOOM_STEPS.length - 1, currentIndex + 1)] ?? current;
+          });
+        }}
+        onResetZoom={() => setSiteZoom(1)}
+        canZoomOut={siteZoom !== SITE_ZOOM_STEPS[0]}
+        canZoomIn={siteZoom !== SITE_ZOOM_STEPS[SITE_ZOOM_STEPS.length - 1]}
+      />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <AiAssistant />

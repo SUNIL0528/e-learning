@@ -15,7 +15,23 @@ const nav = [
   { to: "/login", label: "Sign in" },
 ] as const;
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  siteZoom: number;
+  onZoomOut: () => void;
+  onZoomIn: () => void;
+  onResetZoom: () => void;
+  canZoomOut: boolean;
+  canZoomIn: boolean;
+};
+
+export function SiteHeader({
+  siteZoom,
+  onZoomOut,
+  onZoomIn,
+  onResetZoom,
+  canZoomOut,
+  canZoomIn,
+}: SiteHeaderProps) {
   const [signedIn, setSignedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(getCurrentAuthUser());
 
@@ -82,6 +98,40 @@ export function SiteHeader() {
           <span className="hidden font-mono text-[11px] text-ink/60 lg:block">
             {currentUser?.isInstructor ? "Instructor" : `${student.streak}-day streak`}
           </span>
+          <div
+            className="flex items-center gap-1 border border-ink/25 px-1 py-1 font-mono text-[10px] uppercase tracking-[0.08em]"
+            aria-label="Website text size"
+          >
+            <button
+              type="button"
+              onClick={onZoomOut}
+              disabled={!canZoomOut}
+              className="px-1 text-ink/70 hover:text-ink disabled:cursor-not-allowed disabled:opacity-30"
+              aria-label="Make website text smaller"
+              title="Make website text smaller"
+            >
+              A-
+            </button>
+            <button
+              type="button"
+              onClick={onResetZoom}
+              className="min-w-[3.5rem] border-x border-ink/15 px-1 text-ink"
+              aria-label={`Reset website text size to 100 percent; current size is ${Math.round(siteZoom * 100)} percent`}
+              title="Reset website text size"
+            >
+              {Math.round(siteZoom * 100)}%
+            </button>
+            <button
+              type="button"
+              onClick={onZoomIn}
+              disabled={!canZoomIn}
+              className="px-1 text-ink/70 hover:text-ink disabled:cursor-not-allowed disabled:opacity-30"
+              aria-label="Make website text larger"
+              title="Make website text larger"
+            >
+              A+
+            </button>
+          </div>
           <div className="flex -space-x-2">
             <span className="grid size-8 place-items-center rounded-full bg-sand font-mono text-[10px] text-fog">
               AO
