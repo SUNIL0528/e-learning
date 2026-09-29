@@ -1,0 +1,822 @@
+{
+  "1": [
+    {
+      "question": "Who can be called an inspector in a coating project?",
+      "answer": "An inspector is a person responsible for carrying out inspection activities according to the specification and for verifying conformity with one or more specified requirements."
+    },
+    {
+      "question": "Can an inspector use previous experience to change or replace the project specification?",
+      "answer": "No. The inspector shall follow and enforce the approved specification. Previous experience may help understanding, but it does not give authority to introduce a different solution."
+    },
+    {
+      "question": "What is the role of a technical service inspector or coating adviser from the paint manufacturer?",
+      "answer": "The technical service inspector supports the coating application process for technical or warranty purposes and provides advice and recommendations. The role does not normally include?"
+    },
+    {
+      "question": "What should be checked when assessing the condition of a prepared surface before coating?",
+      "answer": "The inspector should check ambient conditions and assess the prepared surface in accordance with the specified requirements, including visual surface condition under ISO 8501-1 or ISO?"
+    },
+    {
+      "question": "What is Surveillance or Review inspection?",
+      "answer": "Surveillance or review is observation or checking by the client/QA inspector to confirm that the contractor�s activities and records comply with project requirements. It may include?"
+    },
+    {
+      "question": "Describe the normal daily work of a coating inspector.",
+      "answer": "The inspector follows project documents, checks and verifies contractor work, records findings in a log book, transfers them to the daily inspection report, obtains required signatures and?"
+    },
+    {
+      "question": "Why is a daily log book important to the coating inspector?",
+      "answer": "The log book is the original field record used to capture observations, inspection results and site findings during the day. These details are later transferred to the official Daily?"
+    },
+    {
+      "question": "What action may be taken when coating thickness is below the specified requirement?",
+      "answer": "Additional passes or build coats may be applied as permitted to achieve the required NDFT. The finding and correction should be recorded; if the contractor refuses to correct a?"
+    },
+    {
+      "question": "How is a reference area prepared and approved?",
+      "answer": "Select a representative location, perform specified surface preparation, check cleanliness/profile/dust/salts, apply the full coating system, measure WFT/DFT, inspect appearance, perform?"
+    },
+    {
+      "question": "What is the difference between a procedure and a standard?",
+      "answer": "A procedure describes the approved means and methods for carrying out the specification requirements and is normally prepared by the contractor and approved by the client. A standard is a?"
+    },
+    {
+      "question": "What does it mean for an inspector to be quality-conscious throughout the work?",
+      "answer": "It means remaining aware of specified quality requirements at every stage and consistently checking that the work meets the approved criteria."
+    },
+    {
+      "question": "Give examples of independent third-party organizations mentioned in Chapter 1.",
+      "answer": "Examples shown in the chapter are Lloyd�s, RINA, ABS and TUV."
+    },
+    {
+      "question": "Give five examples of Hold Point inspection activities listed in Chapter 1.",
+      "answer": "Examples are the salt test, surface-profile measurement, surface-cleanliness check, holiday test and adhesion test."
+    },
+    {
+      "question": "What should be done with log-book information at the end of each working day?",
+      "answer": "The inspector should transfer the day�s log-book findings, observations and inspection results into the official Daily Inspection Report."
+    },
+    {
+      "question": "Who participates in re-inspection after NCR rectification?",
+      "answer": "The chapter states that the QC inspector at the Hold Point and the QA inspector at the Witness Point jointly inspect the rectified work and accept or reject it against the specification."
+    },
+    {
+      "question": "How are replica tape and a dial micrometer used for surface-profile assessment?",
+      "answer": "Replica tape reproduces the blasted-surface profile, and the dial micrometer is used to measure the replica and determine the profile value."
+    },
+    {
+      "question": "How are certified foils, shims or pre-coated test plates used before DFT measurement?",
+      "answer": "They are used to check and adjust the DFT gauge so that coating-thickness readings are accurate before inspection measurements are taken."
+    },
+    {
+      "question": "Where should a reference area be located when it is required?",
+      "answer": "It should be located on a representative part of the permanent structure where the corrosive stresses are typical of the structure concerned."
+    },
+    {
+      "question": "Which documents are listed for verifying specification requirements?",
+      "answer": "The chapter lists the procedure, ITP, PDS/TDS, MSDS/SDS, abrasive and paint batch certificates, and paint/abrasive laboratory certificates."
+    },
+    {
+      "question": "What process information should be recorded for abrasive blasting in the paint inspection report?",
+      "answer": "Record the blasting equipment, abrasive/media, ambient conditions, surface-cleanliness result, surface roughness/profile verification, soluble-salt test and final visual inspection after?"
+    }
+  ],
+  "2": [
+    {
+      "question": "What are the main groups of construction materials covered in this chapter, and why is material selection important in corrosion-protection work?",
+      "answer": "The chapter covers ferrous metals such as iron and steels, non-ferrous metals such as aluminium, copper, zinc and titanium, composite materials and concrete. Material selection is?"
+    },
+    {
+      "question": "What important factors should be considered when selecting a construction material for an object or structure?",
+      "answer": "Consider strength, flexibility, weight, formability, durability, maintenance needs, initial material cost and life-cycle cost. The material should suit the required service and?"
+    },
+    {
+      "question": "From the AI image, describe how iron is converted into useful steel products and name typical structural forms or applications shown.",
+      "answer": "The image shows pure iron combined with controlled additions of carbon and alloying elements to produce steel. Typical forms shown include I-sections, bars/plates and tubes, with?"
+    },
+    {
+      "question": "Classify carbon steel as low, medium, high and ultra-high carbon steel according to the carbon-content ranges given in the slide.",
+      "answer": "Low carbon steel: 0 to 0.30% C. Medium carbon steel: 0.31 to 0.60% C. High carbon steel: 0.61 to 1.0% C. Ultra-high carbon steel: 1.0 to 2.0% C."
+    },
+    {
+      "question": "What is weathering steel, how does its protective patina form, and why can it remain unpainted in suitable atmospheric exposure?",
+      "answer": "Weathering steel is a low-alloy steel, commonly associated with COR-TEN. During suitable atmospheric exposure it develops a stable protective rust-coloured oxide layer called patina. This?"
+    },
+    {
+      "question": "Using the AI image, explain why climate, wet-dry cycling, fabrication and exposure conditions are important for successful patina performance.",
+      "answer": "A stable patina depends on suitable exposure and wet-dry cycling. Climate and environment control how well the protective oxide develops. Poor exposure conditions, aggressive chlorides or?"
+    },
+    {
+      "question": "What are the important advantages of stainless steel, and how do these advantages influence its service life and maintenance requirements?",
+      "answer": "Important advantages are high corrosion resistance, good strength, heat resistance, toughness, appearance and chemical resistance, with generally low maintenance. Depending on grade it can?"
+    },
+    {
+      "question": "From the AI image, identify the industries and service environments where duplex stainless steel is commonly used and explain why it is selected.",
+      "answer": "It is widely used in oil and gas, petrochemical, marine, chemical and offshore service. It is selected because the combination of phases gives high strength together with high corrosion?"
+    },
+    {
+      "question": "From the AI image, identify typical ductile-cast-iron products and explain why the material is suitable for pipes, valves, gears, pumps and pressure parts.",
+      "answer": "Typical products shown include pipes, valves, gears, pump components and pressure parts. Its combination of strength, toughness and ability to deform without brittle fracture makes it?"
+    },
+    {
+      "question": "Compare hot-rolled and cold-rolled steel in terms of rolling temperature, mill-scale formation, roller size and achievable thickness.",
+      "answer": "Hot-rolled steel is rolled above about 600�C, forms mill scale, uses smaller rollers according to the slide, and can achieve a wide range of thicknesses. Cold-rolled steel is rolled at?"
+    },
+    {
+      "question": "From the AI image, identify common aluminium products or applications and explain how low density, non-magnetic behaviour and good conductivity influence their use.",
+      "answer": "The image shows aluminium metal, extruded sections/building components and conductors/thermal applications. Low density reduces weight, non-magnetic behaviour is useful where ferromagnetic?"
+    },
+    {
+      "question": "Differentiate bronze and brass by their alloying elements and the approximate compositions stated in the slide.",
+      "answer": "Bronze is copper + tin, with about 12% tin stated in the slide. Brass is copper + zinc, with zinc stated in the range of about 5% to 45%."
+    },
+    {
+      "question": "From the AI image, explain how zinc protects steel sacrificially and identify typical zinc-coated or galvanized products shown.",
+      "answer": "The image explains that zinc is more active and corrodes preferentially, supplying sacrificial protection so the steel remains protected while zinc is present. Examples shown include zinc?"
+    },
+    {
+      "question": "What is a composite material, and what are the functions of the matrix and reinforcement in a composite system?",
+      "answer": "A composite combines two or more different materials without dissolving them into one another. The matrix is the continuous material that surrounds, binds and supports the reinforcement?"
+    },
+    {
+      "question": "What inspection and durability limitations of composites are important, especially hidden internal damage, recycling difficulty, UV degradation and moisture absorption?",
+      "answer": "Important limitations are that internal defects may be difficult to detect by simple visual inspection, recycling�especially of thermoset composites�can be difficult, some composites may?"
+    },
+    {
+      "question": "What are the important properties of concrete, including compressive strength, tensile strength, fire resistance, porosity and permeability?",
+      "answer": "Concrete has high compressive strength, low tensile strength, good fire resistance, porosity, low permeability and a strong mechanical and chemical bond with steel reinforcement."
+    },
+    {
+      "question": "What minimum concrete cover is stated for reinforcing steel in flooring and vertical surfaces, and why is adequate cover important?",
+      "answer": "The slide states a minimum concrete cover of 50 mm for flooring and 35 mm for vertical surfaces. Adequate cover protects reinforcing steel and supports durability by keeping the rebar?"
+    },
+    {
+      "question": "Based on the slide and AI image, explain the relationship between rebar corrosion, carbonation, expansion and concrete spalling.",
+      "answer": "The slide explains that carbonation can reduce concrete pH below about 8 and allow corrosion of uncoated reinforcement. Corrosion-related products can increase in volume by about 4 to 6?"
+    },
+    {
+      "question": "What important checks shall be carried out on concrete before painting or coating begins?",
+      "answer": "Before coating, check that the concrete is fully cured, fully dried, free from surface laitance and contamination, and within the specified moisture level."
+    },
+    {
+      "question": "What methods are shown for removing laitance, and how can untreated laitance lead to coating adhesion failure?",
+      "answer": "Removal methods shown include shot blasting, grinding, scrabbling/scarifying, power-tool abrading and water cleaning where specified. The slide also shows abrasive blasting as a possible?"
+    }
+  ],
+  "3": [
+    {
+      "question": "What are the four main learning areas covered in Chapter 3 - Corrosion?",
+      "answer": "The chapter covers corrosion mechanisms, corrosion damage, corrosion protection methods, and corrosion-related design considerations."
+    },
+    {
+      "question": "What is a corrosion cell, and where can the anode and cathode exist?",
+      "answer": "A corrosion cell consists of an anode, cathode, metallic pathway, and electrolyte. The anode and cathode may be different metals in contact or different areas on the same metal having?"
+    },
+    {
+      "question": "How do electro-potential difference and anode-to-cathode area ratio influence corrosion rate?",
+      "answer": "A greater electro-potential difference generally increases galvanic driving force. A small anode connected to a large cathode produces a high corrosion rate at the anode, while a large?"
+    },
+    {
+      "question": "Name the main corrosion-control methods presented in the chapter.",
+      "answer": "Methods shown include protective coatings, soft coatings, cathodic protection, tape wrapping, hot-dip galvanizing, thermal spray, electroplating, and powder coating."
+    },
+    {
+      "question": "What are the main economic and safety consequences of corrosion?",
+      "answer": "Economic effects include replacement, overdesign, preventive maintenance, and shutdowns. Safety effects include loss of structural strength and dangerous failures that can threaten people?"
+    },
+    {
+      "question": "Why must corrosion inhibitors be correctly selected, dosed, and monitored?",
+      "answer": "Their effectiveness depends on correct chemistry, concentration, compatibility, temperature, flow and system conditions. Incorrect selection or under-dosing can fail to control corrosion?"
+    },
+    {
+      "question": "How does pH affect carbon-steel corrosion?",
+      "answer": "Lower, more acidic pH generally increases carbon-steel corrosion. Higher alkaline pH can reduce corrosion and may promote formation of a protective/passive condition."
+    },
+    {
+      "question": "What is general or uniform corrosion, and where can it occur?",
+      "answer": "General corrosion is a relatively uniform loss of metal thickness over the exposed surface. It can occur in atmospheric or submerged service and does not require contact with a different?"
+    },
+    {
+      "question": "How can crevice corrosion be reduced by design?",
+      "answer": "Avoid narrow moisture traps and stagnant gaps. Use good detailing such as continuous welding or suitable sealant/putty filling where required to prevent electrolyte entry."
+    },
+    {
+      "question": "What causes cavitation corrosion, and where is it commonly found?",
+      "answer": "Rapid pressure changes in a liquid form low-pressure cavities or bubbles. When these collapse under higher pressure they create shock waves that damage the surface; ships' propellers and?"
+    },
+    {
+      "question": "Why is aluminium normally corrosion resistant, and under what conditions can it corrode?",
+      "answer": "Aluminium is protected by an aluminium-oxide passive film. Corrosion can increase if this film is damaged, if aluminium contacts a more noble metal, at pH below about 4 or above about 8.5?"
+    },
+    {
+      "question": "Why does corroding reinforcement cause cracking and spalling of concrete?",
+      "answer": "Rust occupies much more volume than the original steel. The slide states that corrosion products can expand about four to six times, creating internal pressure that cracks, loosens and?"
+    },
+    {
+      "question": "What are the key requirements when shaping the repair area and preparing the reinforcement?",
+      "answer": "The repair area should be shaped to sound edges, the reinforcement should be fully exposed where necessary, corrosion products should be removed, and damaged reinforcement should be?"
+    },
+    {
+      "question": "Why is sacrificial cathodic protection mainly used for immersed, buried, or tank-internal areas?",
+      "answer": "These areas provide continuous electrolyte contact that completes the corrosion/CP circuit. Atmospheric areas do not normally provide continuous electrolyte contact, so sacrificial CP is?"
+    },
+    {
+      "question": "Explain the principle of sacrificial-anode cathodic protection (SACP).",
+      "answer": "A more active/less noble metal is electrically connected to the steel. The sacrificial anode corrodes and supplies electrons, causing the protected structure to remain cathodic."
+    },
+    {
+      "question": "What main components are shown in the ICCP operating diagram?",
+      "answer": "The visual shows the protected steel structure, inert/permanent anode, metallic/electrical connections, electrolyte, and an external rectifier/power source that controls protective current?"
+    },
+    {
+      "question": "How can cathodic disbondment be prevented?",
+      "answer": "The CP system should be properly monitored and the protective current controlled so the structure is not over-protected. Coating condition and local anode effects should also be checked."
+    },
+    {
+      "question": "What basic design features reduce corrosion risk on steel structures?",
+      "answer": "Minimize exposed surface area and irregularities, avoid unnecessary overlaps/corners/edges, prefer smooth welded joints over bolted or riveted joints where appropriate, and avoid?"
+    },
+    {
+      "question": "How should open and sealed box/hollow steel sections be designed to control corrosion?",
+      "answer": "Open sections should have drainage and suitable internal corrosion protection. Sealed sections should be fully airtight and watertight using continuous welds and sealed openings so?"
+    },
+    {
+      "question": "What isolation components and control measures are shown in the final visual?",
+      "answer": "The visual shows non-conductive gaskets, insulating sleeves, insulating washers, and sealed joint edges. It also emphasizes isolating both the bolt path and mating faces, sealing against?"
+    }
+  ],
+  "4": [
+    {
+      "question": "What are the four main learning areas covered in Module 4 - Surface Preparation?",
+      "answer": "The module covers cleaning, preparation, testing and verification of surfaces before coating."
+    },
+    {
+      "question": "What are the main visible and non-visible surface contaminants that an inspector should recognize?",
+      "answer": "Visible contaminants include condensation, dust, oil or grease, rust and mill scale, and marine fouling. Soluble salts are an important non-visible contamination."
+    },
+    {
+      "question": "What is solvent cleaning or degreasing, and what should a correctly cleaned surface look like?",
+      "answer": "It is cleaning with an approved liquid or vapour that dissolves or emulsifies visible contamination. The cleaned surface should be free, when viewed normally, from visible oil, grease?"
+    },
+    {
+      "question": "What are preparation grades P1, P2 and P3 in ISO 8501-3, and how are they selected?",
+      "answer": "P1 is minimal preparation, P2 is medium preparation where most imperfections are remedied, and P3 is high preparation where all significant imperfections are remedied. The level is?"
+    },
+    {
+      "question": "Identify the abrasive tool shown in the slide and state its role in pre-treatment.",
+      "answer": "The image shows sanding discs used with a power tool for mechanical abrading, smoothing and local surface preparation."
+    },
+    {
+      "question": "How should a prepared surface be assessed after cleaning, and which ISO series may be used?",
+      "answer": "Its appearance depends on the original condition, substrate and preparation method. Visual cleanliness is assessed using ISO 8501-1, ISO 8501-2 or ISO 8501-4 as applicable; additional?"
+    },
+    {
+      "question": "What conditions must be satisfied after chemical pre-treatment before painting can begin?",
+      "answer": "The treatment must meet the supplier specification, and the workpiece must be completely clean and dry. Any maximum permitted time between treatment and painting must also follow the?"
+    },
+    {
+      "question": "Why is UHP water jetting generally not selected to create a profile on new steel, and how are flash-rust levels classified?",
+      "answer": "Water jetting does not create the specified new anchor profile required for many primers on new steel. ISO 8501-4 uses flash-rust categories L, M and H, assessed visually and by cloth-rub?"
+    },
+    {
+      "question": "How are water-jet preparation grades designated in ISO 8501-4?",
+      "answer": "They use the letters Wa. The slide lists Wa 1, Wa 2, Wa 2 1/2 and Wa 3 as increasing degrees of cleaning."
+    },
+    {
+      "question": "Identify the metallic abrasives shown in the visual reference slide.",
+      "answer": "The visual shows chilled iron grit, high-carbon cast steel grit or shot, low-carbon cast steel shot and cut steel wire."
+    },
+    {
+      "question": "Which abrasives are normally recyclable and which are generally expendable?",
+      "answer": "Metallic abrasives, carborundum and aluminium oxide may be recycled, especially in stationary plants. Most mineral and slag abrasives are normally single-use or expendable, with aluminium?"
+    },
+    {
+      "question": "What are the main advantages and limitations of centrifugal abrasive blasting?",
+      "answer": "Advantages include very high productivity, low dust, electric operation without a compressor and long-term cost savings. Limitations include high initial cost, complex equipment?"
+    },
+    {
+      "question": "What is vapour abrasive blasting and what key benefits are shown?",
+      "answer": "Water and abrasive are mixed in controlled proportions in the blast pot so that enough water is present to suppress dust without flooding the surface. The slide states that productivity is?"
+    },
+    {
+      "question": "What do the ISO 8501-1 designations Sa, St and Fl represent?",
+      "answer": "Sa designates abrasive blast cleaning, St designates hand and power-tool cleaning, and Fl designates flame cleaning."
+    },
+    {
+      "question": "What does the roughness parameter Ra represent?",
+      "answer": "Ra is the arithmetic mean of the absolute profile deviations from the centreline over the measurement length. It represents the average roughness rather than the single highest peak or?"
+    },
+    {
+      "question": "What ambient-condition rules are given for preventing condensation before blasting or painting?",
+      "answer": "The slide references ISO 8502-4 and gives a rule of relative humidity below 85 percent and steel temperature at least 3 degrees C above dew-point temperature. If these conditions are not?"
+    },
+    {
+      "question": "How do abrasive-to-air ratio and nozzle pressure affect dry-blasting productivity?",
+      "answer": "Too much or too little abrasive reduces efficiency, so the metering valve is used to balance the mixture. The slide shows productivity falling as nozzle pressure falls: approximately 100?"
+    },
+    {
+      "question": "What should an inspector check before overcoating an applied prefabrication or shop primer?",
+      "answer": "Review vendor documents, visual contamination, primer condition, compatibility, maximum overcoating interval, DFT and generic type. The slide also states that zinc-rich products should not?"
+    },
+    {
+      "question": "What is duplex coating on hot-dip galvanized steel, and how should damaged galvanizing be treated for long-term protection?",
+      "answer": "Duplex coating means applying an organic coating over hot-dip galvanizing to extend corrosion protection. Small bare-steel damage may receive temporary sacrificial protection from?"
+    },
+    {
+      "question": "How should industrial waste from surface-preparation work be controlled and handled?",
+      "answer": "Dust, noise, solvents, used abrasive, rust and removed coatings should be controlled and managed in line with national safety and environmental rules and project agreements. Spent abrasive?"
+    }
+  ],
+  "5": [
+    {
+      "question": "What are the main subjects covered in Chapter 5 - Environment, and what field activities shown in the cover image are related to environmental control during coating work? [Slide 1]",
+      "answer": "The chapter covers humidity, dew point, environmental measurement and environmental control. The cover visual connects these topics with industrial surface preparation, coating work and?"
+    },
+    {
+      "question": "What are the ISO 12944-2 atmospheric categories C1 to CX and immersion categories Im1 to Im4, and what typical exposure does each represent? [Slide 3]",
+      "answer": "C1 = very low corrosivity; C2 = low; C3 = medium; C4 = high; C5 = very high; CX = extreme, including severe industrial/offshore/salt-spray exposure. Im1 = fresh water, Im2 = sea or?"
+    },
+    {
+      "question": "What climatic thumb rules should an inspector verify before blasting or painting, and why should work be stopped when the limits are not satisfied? [Slide 4]",
+      "answer": "The deck uses two main rules: relative humidity should generally be below 85%, and steel/substrate temperature should be at least 3 degrees C above the dew point. If these limits are not?"
+    },
+    {
+      "question": "What is relative humidity, how is it expressed, and what do high and low RH values indicate? [Slide 6]",
+      "answer": "Relative humidity is the ratio, expressed as a percentage, between the water vapour actually present in air and the maximum amount the air can hold at the same temperature. High RH means?"
+    },
+    {
+      "question": "What RH limit is normally used during blasting and painting, and what coating problems may occur when the specified RH limit is exceeded? [Slide 7]",
+      "answer": "The general teaching limit is RH below 85%, although some owners may specify 75-80%. If the specified humidity is exceeded, condensation and flash rusting can occur and may later?"
+    },
+    {
+      "question": "What is condensation on a steel surface, and what temperature difference between the steel and dew point is required to reduce the risk of condensation? [Slide 9]",
+      "answer": "Condensation is moisture forming on the substrate when local conditions reach the dew point. For surface treatment, the deck requires the steel/substrate temperature to be at least 3?"
+    },
+    {
+      "question": "What is dew point, and what happens to relative humidity and water vapour when air reaches the dew point temperature? [Slide 10]",
+      "answer": "Dew point is the temperature at which air becomes saturated with water vapour. At the dew point, RH reaches 100% and condensation can begin. This is why coating inspection compares steel?"
+    },
+    {
+      "question": "How is a dew point chart used during coating inspection to decide whether the steel surface is safe for blasting or painting? [Slide 12]",
+      "answer": "The inspector uses the measured air temperature and relative humidity to obtain the dew point from the chart, then compares the dew point with the measured steel temperature. Work is?"
+    },
+    {
+      "question": "Using the example of air at 30 degrees C and 50% RH with a dew point of about 18 degrees C, explain what happens as the same air cools. [Slide 14]",
+      "answer": "As the air cools from 30 degrees C, its RH rises. At about 18 degrees C, RH reaches 100%, which is the dew point. If the air or surface temperature falls below about 18 degrees C?"
+    },
+    {
+      "question": "From the ambient-condition relationship diagram, how do air temperature, RH, dew point and steel temperature work together to determine whether coating work is safe? [Slide 15]",
+      "answer": "Air temperature and moisture content determine RH and dew point. The measured steel temperature must then be compared with the dew point. A higher RH or falling temperature increases?"
+    },
+    {
+      "question": "Which instruments are used to measure or determine weather and surface conditions during coating inspection, and what does the instrument image group teach the inspector to check? [Slide 17]",
+      "answer": "The slide lists whirling hygrometer, sling hygrometer, dew point calculator, magnetic thermometer, digital contact thermometer, infrared thermometer, psychrometric chart and electronic dew?"
+    },
+    {
+      "question": "Describe the correct operating procedure for a whirling hygrometer before recording wet-bulb and dry-bulb temperatures. [Slide 18]",
+      "answer": "Fill the reservoir with suitable clean water, ensure the wick fully covers the wet bulb and is saturated, whirl the instrument for about 25 seconds away from the body, quickly read the wet?"
+    },
+    {
+      "question": "What is an IX diagram, and how are wet-bulb and dry-bulb readings used with it during environmental inspection? [Slide 20]",
+      "answer": "An IX diagram is a form of psychrometric chart. The measured dry- and wet-bulb temperatures are plotted or read on the diagram to determine values such as relative humidity and dew point?"
+    },
+    {
+      "question": "How often should ambient conditions be measured during a work shift, and when are additional readings required? [Slide 22]",
+      "answer": "Ambient measurements should be taken at least before the job starts, around the middle of the work period and after the job. Additional readings are required whenever weather conditions?"
+    },
+    {
+      "question": "How is a surface magnetic thermometer used to measure steel temperature correctly? [Slide 23]",
+      "answer": "Check the thermometer for damage, fix it securely to the steel surface, allow about 10-15 minutes for the reading to stabilize, then read and record the temperature. The inspector should?"
+    },
+    {
+      "question": "Describe the cooling-type dehumidification process shown in the slide, from air intake to discharge. [Slide 25]",
+      "answer": "A fan draws warm humid air into the unit. The air passes over a cold evaporator coil below its dew point, causing water vapour to condense. The collected water drains away. The dried air?"
+    },
+    {
+      "question": "How does an adsorption dehumidifier remove moisture from air, and how is the moisture-absorbing rotor regenerated? [Slide 26]",
+      "answer": "Humid air passes through a rotating moisture-adsorbing wheel or rotor, which captures water from the air stream. A separate heated airflow then dries or regenerates the rotor so it can?"
+    },
+    {
+      "question": "Why is forced ventilation important during coating drying and curing, and what problems can be caused by incorrect air temperature, humidity or heater exhaust? [Slide 28]",
+      "answer": "Ventilation supports proper solvent evaporation. Very hot supply air immediately after application can cause skin drying and trap solvent; high temperature can be especially problematic?"
+    },
+    {
+      "question": "Why should solvent vapours be extracted from the lowest points of enclosed areas? [Slide 29]",
+      "answer": "The slide states that solvent vapours are heavier than air, so they tend to collect at low points. Suction or exhaust ventilation should therefore be arranged at the lowest practical?"
+    },
+    {
+      "question": "How do ambient temperature and steel temperature influence paint handling, application, curing and coating service life? [Slide 31]",
+      "answer": "Ambient temperature influences shelf life/storage, pot life of two-pack paints, induction time and viscosity/sprayability. Steel temperature influences condensation risk, solvent?"
+    }
+  ],
+  "6": [
+    {
+      "question": "What are the main paint and coating-material topics covered in Module 6, and why are they important for a coating inspector?",
+    "answer": "Module 6 covers paint and coating materials, paint components and curing, corrosion protection, antifouling, coating systems, surface preparation, application methods, coating defects, inspection and maintenance. These topics matter because an inspector must verify that the specified coating system is selected, prepared, applied and maintained correctly."
+    },
+    {
+      "question": "What is thinner, how is it different from solvent, and what rules should be followed before adding thinner to paint?",
+    "answer": "Thinner is one solvent or a mixture of solvents added by the applicator to reduce paint viscosity. It is not the same as the solvent already in the paint and does not dissolve the binder or increase pot life. Add it only when the manufacturer recommends it, using the same manufacturer's product and the specified amount."
+    },
+    {
+      "question": "What is CPVC, and why does pigment volume concentration influence coating properties such as abrasion resistance, gloss and flexibility?",
+    "answer": "CPVC is the pigment volume concentration at which the binder is just sufficient to fill the spaces between pigment particles in the dry film. Increasing pigment volume concentration changes properties such as abrasion resistance, gloss, flexibility, permeability and overall film performance; crossing CPVC generally produces a more porous, lower-gloss film."
+    },
+    {
+      "question": "How do biocide-free silicone foul-release coatings control fouling, and what characteristics are described for the example shown?",
+    "answer": "Biocide-free foul-release coatings use physical properties rather than toxic biocides. The silicone-based coating forms a very smooth, non-stick, low-surface-energy surface that makes attachment difficult and allows fouling to release as the vessel moves. The module gives International Paint's Intersleek 900 as an amphiphilic foul-release example that can reduce drag and improve fuel savings."
+    },
+    {
+      "question": "Which coating combinations in the second compatibility table are shown as acceptable or unacceptable?",
+    "answer": "The compatibility table must be read as a specified-system check: a new coating is acceptable only when it is compatible with the existing layer and the manufacturer's overcoating guidance. Combinations marked acceptable may be overcoated after the required preparation; combinations marked unacceptable must not be applied directly and require removal, isolation or a compatible tie coat."
+    },
+    {
+      "question": "Which curing agents are associated with epoxy and polyurethane coatings, and why does polyurethane generally weather better than epoxy in sunlight according to the slide?",
+    "answer": "Epoxy systems commonly use amine, polyamide, amidoamine or other epoxy curing agents; polyurethane systems use polyisocyanate crosslinkers. Epoxy has limited resistance to sunlight and can chalk, while polyurethane generally provides better UV and weather resistance, gloss retention and colour stability."
+    },
+    {
+      "question": "What are the benefits and limitations of brush application, and where is brush application especially useful?",
+    "answer": "Brush application wets the substrate well, forces paint into the surface and is useful on corners, rivet heads, bolt heads, angles and other difficult-to-access areas. Its limitations are slow application, low productivity, low film thickness requiring multiple coats and a possible uneven film."
+    },
+    {
+      "question": "Which structural profile is shown as easiest for achieving an even airless-spray film, and why?",
+    "answer": "The closed square profile, including hollow HSS/RSS sections, is the easiest of the profiles shown for even airless-spray application. Its surfaces are readily accessible and it has fewer corners and edges, so a uniform film thickness is easier to achieve than on H-beams or L-profiles."
+    },
+    {
+      "question": "What is the recoating interval, what can happen if the maximum interval is exceeded, and what preparation may then be required?",
+    "answer": "The recoating interval is the manufacturer's minimum and maximum time window for applying the next coat. Recoating before the minimum can damage or disturb the film; exceeding the maximum can cause poor intercoat adhesion, so the surface may need cleaning, roughening or other preparation before recoating."
+    },
+    {
+      "question": "Differentiate the wet-film and dry-film coating defects listed on the slide.",
+    "answer": "Wet-film defects occur while the coating is being applied or before it has dried, such as sagging, runs, poor hiding, solvent entrapment and low wet-film control. Dry-film defects appear after drying or curing, such as orange peel, blistering, pin-point rust, popping, wrinkling, blooming or amine blush."
+    },
+    {
+      "question": "How does amine blush form on a slow-curing epoxy, and what problems can the waxy/cloudy film cause?",
+    "answer": "Amine blush forms when moisture and cool conditions cause amine curing agents at the surface of a slow-curing epoxy to react with carbon dioxide and water. It leaves a waxy, cloudy or sticky surface with poor gloss and can interfere with adhesion and the next coat unless it is removed and the surface is properly prepared."
+    },
+    {
+      "question": "How are artificial ageing/weathering tests assessed under ISO 12944-6 and ISO 4628, and what common laboratory test equipment is listed?",
+    "answer": "Artificial weathering is assessed against the acceptance criteria in ISO 12944-6, while ISO 4628 provides methods for rating coating degradation such as blistering, rusting, cracking, flaking and chalking. Typical laboratory equipment includes UV/condensation or cyclic-weathering cabinets and other controlled exposure equipment."
+    },
+    {
+      "question": "How does flame spraying work, and what flame temperature and gun distance are stated?",
+    "answer": "Flame spraying, or gas spraying, burns oxygen with a fuel gas at the spray-gun tip to create heat. The feedstock is melted or softened and atomized toward the prepared surface. The module specifies a flame temperature of about 3,000 °C and a gun distance of about 100–150 mm."
+    },
+    {
+      "question": "What is electrolysis, and how do ions form when electric current passes through an electrolyte?",
+    "answer": "Electrolysis is the chemical separation caused when direct electric current passes through an electrolyte. The solution separates into positively charged cations and negatively charged anions, which migrate toward the oppositely charged electrodes."
+    },
+    {
+      "question": "What does the Hp/A or heated-perimeter-to-section relationship mean, and how does it influence required PFP thickness?",
+    "answer": "Hp/A is the heated perimeter-to-cross-sectional-area ratio of a structural section. A higher Hp/A ratio means the section heats more quickly in a fire, so a greater passive-fire-protection thickness is generally required to achieve the specified fire-resistance period."
+    },
+    {
+      "question": "What minimum surface preparation and preferred binder types are shown for lining systems?",
+    "answer": "For tank or pipe lining, the minimum surface preparation shown is Sa 2½. Preferred binders include epoxy, phenolic epoxy, inorganic zinc silicate and vinyl ester, selected according to the chemicals or products to which the lining will be exposed."
+    },
+    {
+      "question": "Why is glass-flake reinforced paint used, and what advantages, limitations, surface preparation and recoating requirements are stated for glass-flake vinyl ester?",
+    "answer": "Glass flakes create a barrier-like reinforcement that improves mechanical strength, water resistance and resistance to permeation while reducing shrinkage. Glass-flake vinyl ester requires suitable abrasive-blast preparation and controlled application/recoat conditions; its limitations include higher material and labour cost and the need to observe the manufacturer's compatibility and recoating requirements."
+    },
+    {
+      "question": "From the visual, summarize polyurethane-coating types, curing agents, key properties and typical uses.",
+    "answer": "The polyurethane section describes solvent-based polyisocyanates as two-component crosslinkers that react with hydroxyl groups. Polyurethane coatings offer strong weather, gloss, chemical and solvent resistance and can cure at low temperature, but are two-pack products containing isocyanates and require appropriate health and fire precautions."
+    },
+    {
+      "question": "What limitations and compatibility restrictions are listed for glass-flake reinforced polyester coating?",
+    "answer": "Glass-flake reinforced polyester cures quickly and can provide excellent mechanical strength, reduced shrinkage and improved water resistance. Limitations include sensitivity to application and curing conditions, compatibility restrictions with other coating layers and the need for the specified surface preparation and recoating procedure."
+    },
+    {
+      "question": "From the visual, define dead volume in coating and explain its calculation and effect on primer consumption.",
+    "answer": "Dead volume is the paint remaining in the spray equipment, hose or lines rather than reaching the substrate. It increases apparent paint consumption because that material is lost or requires flushing; it should be considered when estimating primer quantity, along with factors such as wind, pressure and partial mixing."
+    }
+  ],
+  "7": [
+    {
+      "question": "What is the main focus of Chapter 7 regarding execution of coating work and the role of the coating inspector?",
+      "answer": "Chapter 7 focuses on the requirements for executing coating work and on the inspector's role in supervising, checking, testing, documenting and confirming that the work meets the specified?"
+    },
+    {
+      "question": "What is meant by quality, quality control (QC) and quality assurance (QA), and who normally performs QC and QA activities?",
+      "answer": "Quality means performance upon expectations and being fit for function. QC is normally handled by the contractor's quality controller or inspector. QA is normally handled by the company?"
+    },
+    {
+      "question": "What information should be defined in an ISO 9001 quality management document?",
+      "answer": "It should define the organization structure, who records information and what is recorded, employee responsibilities, lines of communication, required actions and how continuity will be?"
+    },
+    {
+      "question": "How is the Plan-Do-Check-Act (PDCA) model used to achieve continual improvement under ISO 9001 and ISO 14001?",
+      "answer": "The slide shows continual improvement as a repeating Plan-Do-Check-Act cycle: plan the work and objectives, do the planned activities, check the results, and act on the findings to improve?"
+    },
+    {
+      "question": "What site checks should an inspector make for stored paints, thinners and abrasives?",
+      "answer": "For paints and thinners, check ambient conditions, coating temperature, inside humidity, shelf life, safety, damaged cans, security and the SDS/TDS. For abrasives, check ambient?"
+    },
+    {
+      "question": "What typical chemical wastes are generated during surface treatment and coating activities?",
+      "answer": "Typical wastes include debris from blast cleaning and grinding, polluted cleaning water, dirty solvents, used paint tins and cans, unused paints or coatings that are not recycled, and?"
+    },
+    {
+      "question": "What main equipment is used for dry abrasive blasting, wet abrasive blasting, water jetting, hand/power tool cleaning and paint application?",
+      "answer": "Dry abrasive blasting uses a compressor, blast pot, blast nozzle and water separator. Wet abrasive blasting uses a compressor, blast pot and water pump. Water jetting uses pressure pumps?"
+    },
+    {
+      "question": "What lighting levels are stated for inspection and for blasting or painting, and why is adequate illumination important?",
+      "answer": "The slide states a minimum of 50 foot-candles for inspection, with 200 foot-candles recommended. For blasting or painting it states a minimum of 20 foot-candles, with 50 foot-candles?"
+    },
+    {
+      "question": "How does an Inspection Test Plan (ITP) help an inspector track progress and document coating work?",
+      "answer": "The ITP shows required inspection checkpoints and allows the inspector to see which checkpoints are completed and which remain. Completed checkpoints should be properly inspected?"
+    },
+    {
+      "question": "Which standards are listed for film-thickness measurement, and what are the four acceptance points of the ISO 19840 80/20 rule shown in the slide?",
+      "answer": "The slide lists ISO 2808, ISO 19840 and SSPC-PA 2. Under the 80/20 rule shown: the mean DFT shall be at least the NDFT; every individual reading shall be at least 80% of NDFT; readings?"
+    },
+    {
+      "question": "How is wet-film thickness measured with a wheel gauge according to ISO 2808 Method 1B?",
+      "answer": "Insert the wheel gauge vertically into the wet coating and roll it through the film. Observe where the picked-up paint breaks on the eccentric middle rim and read the corresponding value?"
+    },
+    {
+      "question": "Compare magnetic pull-off, magnetic induction and eddy-current DFT gauges in terms of operating principle, substrate and practical features.",
+      "answer": "A magnetic pull-off gauge is mechanical, battery-free, simple to operate and used on ferrous substrates, but the slide notes it is not very accurate. A magnetic-induction gauge uses a?"
+    },
+    {
+      "question": "Describe the step-by-step method for using a Paint Inspector Gauge (P.I.G.) to calculate individual coating-layer thicknesses.",
+      "answer": "Mark a line across the coating, make a V-cut at right angles through the marked line down to the substrate, then use the microscope to count divisions across each coating layer at the?"
+    },
+    {
+      "question": "What is the principle of the ISO 2409 cross-cut test, and how is cut spacing selected according to DFT?",
+      "answer": "Six parallel cuts are made through the coating and six more are made perpendicular to form a lattice; loose particles are removed and the area is visually classified. The slide gives 1 mm?"
+    },
+    {
+      "question": "How do the ISO 16276-2 X-cut visual ratings progress from Rating 0 to Rating 5?",
+      "answer": "Rating 0 shows no peeling or removal. Rating 1 shows trace peeling along the cuts or intersection. Rating 2 shows jagged removal extending up to about 1.5 mm on either side; Rating 3 up to?"
+    },
+    {
+      "question": "What is the principle of a pull-off adhesion test, what equipment is required, and what conditions should be checked before testing?",
+      "answer": "A dolly is bonded to the coating with suitable glue and a tensile force is applied until fracture; the force is measured by the pull-off apparatus. Required items include the tester?"
+    },
+    {
+      "question": "How is the low-voltage holiday test carried out, and what coating thickness range is typically associated with it in the slide?",
+      "answer": "The slide associates low-voltage testing with coatings typically below 500 �m DFT. Connect the instrument clamp to bare steel, wet the sponge with conductive water so it barely avoids?"
+    },
+    {
+      "question": "What is the purpose of the ASTM D4752 MEK test for inorganic zinc ethyl silicate, what materials are required, and how is the test performed and graded?",
+      "answer": "The test is used to determine the curing of ethyl-silicate zinc-rich inorganic coating before overcoating. The slide shows MEK, 100% cotton cloth, squeeze bottle and safety equipment?"
+    },
+    {
+      "question": "How can a solvent test be used to identify the curing mechanism or binder type of an existing coating before selecting a repair system?",
+      "answer": "Place cotton or textile on the cured coating, saturate it with strong solvent, cover it to reduce evaporation and observe after about 20 minutes. If the coating dissolves, the slide?"
+    },
+    {
+      "question": "How are intensity, quantity and size used in ISO 4628 assessments, and what information should be included in the report?",
+      "answer": "Intensity is used for uniform deterioration such as chalking. Quantity is used for scattered defects such as blisters, cracking and rust penetration. Size describes the order of magnitude?"
+    }
+  ],
+  "8": [
+    {
+      "question": "What is the main subject of Chapter 8, and why are specifications, procedures and standards important to a coating inspector?",
+      "answer": "Chapter 8 deals with specifications, procedures and standards. These documents define the required coating work, explain how the work is to be carried out, and provide recognized?"
+    },
+    {
+      "question": "Differentiate a coating specification from a coating procedure.",
+      "answer": "The specification defines what is required, including the coating system, DFT, surface preparation, environmental and quality requirements. The procedure defines how those requirements?"
+    },
+    {
+      "question": "Name the common organizations that publish standards used in surface preparation and coating work.",
+      "answer": "The slide lists ISO, IMO, ASTM, SSPC, AS/NZS and NACE as common publishers or standards bodies used by the industry."
+    },
+    {
+      "question": "What are the main contents of the IMO PSPC standard?",
+      "answer": "The slide lists general principles, coating standard, coating-system approval, coating inspection requirements, verification requirements, alternative systems, test methods for?"
+    },
+    {
+      "question": "Differentiate the blast-cleaning grades Sa 1, Sa 2, Sa 2� and Sa 3 shown in ISO 8501-1.",
+      "answer": "Sa 1 is light blast cleaning; Sa 2 is thorough blast cleaning; Sa 2� is very thorough blast cleaning; and Sa 3 is blast cleaning to visually clean steel. The visual shows increasing?"
+    },
+    {
+      "question": "How does the slide classify water-cleaning and water-jetting pressures in ISO 8501-4?",
+      "answer": "It shows low-pressure water cleaning below 34 MPa (5000 psi), high-pressure water cleaning from 34 to 70 MPa (5000�10,000 psi), high-pressure water jetting from 70 to 210 MPa?"
+    },
+    {
+      "question": "What does the ISO 8501-4 DC C pictorial panel demonstrate?",
+      "answer": "It shows the appearance of a DC C initial surface at different water-jetting preparation grades. The inspector uses the reference photographs for visual comparison rather than relying only?"
+    },
+    {
+      "question": "What does the ISO 8502-3 dust tape test assess, and what equipment is required?",
+      "answer": "It assesses both the quantity of dust and the dust-particle size. The slide lists pressure-sensitive adhesive tape, a contrasting display board, a spring-loaded roller where required, and?"
+    },
+    {
+      "question": "Differentiate ISO 8502-6 from ISO 8502-9 in soluble-salt testing.",
+      "answer": "ISO 8502-6 extracts water-soluble contaminants from the surface using a Bresle patch. ISO 8502-9 measures the conductivity of the extract to assess total water-soluble ionic contamination?"
+    },
+    {
+      "question": "What replica-tape grades and ranges are shown in the ISO 8503-5 slide?",
+      "answer": "The slide lists Coarse Minus 12�25 �m, Coarse 20�64 �m, X-Coarse 38�115 �m and X-Coarse Plus 116�127 �m."
+    },
+    {
+      "question": "What do ISO 2808 and ISO 19840 cover, and which film-thickness methods are listed?",
+      "answer": "ISO 2808 covers determination of film thickness, including WFT/DFT and destructive/non-destructive methods. The slide lists Method 1A wet comb, 7A magnetic pull-off, 7C magnetic induction?"
+    },
+    {
+      "question": "Explain the ISO 19840 80/20 rule for DFT acceptance.",
+      "answer": "The average of all individual readings must be at least the NDFT, no individual reading may be below 80% of NDFT, and readings between 80% and 100% of NDFT must be fewer than 20% of all?"
+    },
+    {
+      "question": "Describe the ISO 4624 pull-off adhesion-test procedure.",
+      "answer": "Clean and, where necessary, lightly abrade the coating and dolly face, bond the dolly with suitable adhesive, allow it to cure, cut around the dolly if specified, attach the tester and?"
+    },
+    {
+      "question": "How is rusting assessed visually under ISO 4628-3?",
+      "answer": "The visual shows progressive visible corrosion of the steel substrate. The inspector compares the percentage or extent of rusted area with the ISO reference levels and records the?"
+    },
+    {
+      "question": "Define 'coat' and 'paint' according to the ISO 12944-1 slide.",
+      "answer": "A coat is a continuous layer of metallic material or paint resulting from one application. Paint is a pigmented coating material that forms an opaque dried film with protective, decorative?"
+    },
+    {
+      "question": "What is the purpose of ISO 12944-3 design considerations?",
+      "answer": "ISO 12944-3 gives guidance so steel structures can be prepared, painted, inspected and maintained effectively. The design should provide access, avoid details that trap water or are?"
+    },
+    {
+      "question": "What information should be checked when selecting a paint system from ISO 12944-5 tables?",
+      "answer": "The slide lists surface preparation, corrosivity category, system number, binder type, primer type, number of coats, minimum NDFT and durability."
+    },
+    {
+      "question": "Differentiate a reference area from a reference specimen, and explain Type A and Type B reference areas.",
+      "answer": "A reference area is an approved part of the actual structure coated to the specification; a reference specimen is a representative object coated to the specification. Type A is prepared?"
+    },
+    {
+      "question": "Differentiate DFT and NDFT in the ISO 12944-8 slide, and what should be entered in the daily inspection report?",
+      "answer": "DFT is the actual measured thickness after the coating has dried/cured/hardened, while NDFT is the specified nominal thickness for a coat or system. The slide states that project?"
+    },
+    {
+      "question": "Differentiate a normative reference from an informative reference.",
+      "answer": "A normative reference is mandatory where it is required to apply the main standard correctly and contains essential requirements or methods. An informative reference provides guidance?"
+    }
+  ],
+  "9": [
+    {
+      "question": "What is the main scope of Chapter 9 � Health, Safety and Environment (HSE) for coating inspection? [Slide 1]",
+      "answer": "The chapter focuses on recognizing and controlling health, safety and environmental hazards associated with surface preparation and coating work, including personal exposure?"
+    },
+    {
+      "question": "What is a carcinogenic hazard, and what examples and identifying agencies are shown? [Slide 4]",
+      "answer": "A carcinogen is a material that can cause cancer in humans or animals. The slides identify OSHA, NIOSH and IARC as agencies involved in identifying carcinogens, with examples such as?"
+    },
+    {
+      "question": "What are the three elements of the explosion triangle, and how can an explosion be prevented? [Slide 8]",
+      "answer": "The three elements are fuel, heat and oxygen. Removing any one of these elements breaks the triangle and prevents an explosion from taking place."
+    },
+    {
+      "question": "What are VOCs in paints and coatings, and why are VOC values important? [Slide 11]",
+      "answer": "VOCs are volatile organic compounds that evaporate into the air during paint drying and curing. They can affect worker health and the environment. VOC content is normally expressed in?"
+    },
+    {
+      "question": "What is a Threshold Limit Value (TLV), and how is it expressed? [Slide 15]",
+      "answer": "TLV is a guideline for assessing the hygienic quality of workplace air. In the slide it is described as a concentration intended not to cause harm during an eight-hour working day. Values?"
+    },
+    {
+      "question": "Why can solvent vapours create a serious fire or explosion hazard at lower levels of a work area? [Slide 18]",
+      "answer": "Solvent vapours can be heavier than air and may flow or collect in lower compartments or along floors. If they reach hot work, sparks or another ignition source, a fire or explosion may be?"
+    },
+    {
+      "question": "Why must the correct type of glove be selected for each coating-related task? [Slide 22]",
+      "answer": "Different jobs require different glove protection. The visual distinguishes chemical-resistant gloves for solvent handling, suitable gloves for paintbrush work and heavy-duty?"
+    },
+    {
+      "question": "How does flash point indicate how flammable a paint is, and where is this information found? [Slide 25]",
+      "answer": "The lower the flash point, the easier solvent vapours may ignite. Paint may be classified as extremely flammable, highly flammable or flammable. The relevant flash-point and hazard?"
+    },
+    {
+      "question": "What are the main consequences of limited access in confined spaces, and what controls are required? [Slide 29]",
+      "answer": "Problems include inadequate lighting, oxygen deficiency, trip hazards and restricted entry or exit. Controls include improved lighting, good housekeeping and access planning, ventilation?"
+    },
+    {
+      "question": "What is the purpose of a GHS label on a paint drum, and what main information should it communicate? [Slide 32]",
+      "answer": "A GHS label communicates chemical hazards and safe-use information. The visual shows the product identifier, supplier details, hazard pictograms, signal word, hazard statements and?"
+    },
+    {
+      "question": "What basic information should be displayed on the back label of a paint can? [Slide 36]",
+      "answer": "The slide lists shelf life, product number, product name, quantity and hazard signs. This information helps confirm identity, usability and safe handling before application."
+    },
+    {
+      "question": "What general safety precautions should be completed before surface-treatment work starts? [Slide 39]",
+      "answer": "Do not begin without proper training or experience. Know safety routines and emergency equipment, read the SDS and TDS, understand H- and P-statements, ensure suitable PPE is available?"
+    },
+    {
+      "question": "How do the hazards of surface preparation differ from the hazards of coating application? [Slide 43]",
+      "answer": "Surface preparation hazards include high pressure, high dust, noise and vibration. Coating-application hazards include solvent inhalation, paint mist inhalation, body contact and eye or?"
+    },
+    {
+      "question": "What diseases can be caused by hazardous dust, and why are very small particles especially dangerous? [Slide 46]",
+      "answer": "The slide lists silicosis from silica or quartz, asbestosis from asbestos, siderosis from iron oxide and lung cancer associated with quartz exposure. Particles below about 5 microns can?"
+    },
+    {
+      "question": "When are combination respirator filters such as A2P2 or A2P3 used? [Slide 50]",
+      "answer": "Combination filters protect against both organic solvent vapours and particles. They are especially useful during spray application, where workers can be exposed to solvent vapour together?"
+    },
+    {
+      "question": "What short-term and long-term effects can result from solvent exposure? [Slide 53]",
+      "answer": "Short-term effects shown include headache, tiredness, dizziness and nausea. Long-term effects include organ damage involving the kidneys, liver or central nervous system, memory loss?"
+    },
+    {
+      "question": "What are the main health hazards of epoxy paints, and what protective measures are required? [Slide 57]",
+      "answer": "Epoxy binders and curing agents can cause eczema, skin irritation and irreversible allergic sensitization, especially with some low-molecular-weight liquid epoxies. Protective clothing?"
+    },
+    {
+      "question": "What health effects can arise from metal fumes and dust during hot work, and what general protection is required? [Slide 60]",
+      "answer": "Examples shown include zinc fever and irritation from zinc, metal fever from copper, blood and nervous-system effects from lead, sensitization and cancer risk from chromium, and?"
+    },
+    {
+      "question": "What is the difference between hand-arm vibration (HAV) and whole-body vibration (WBV), and what effects can they cause? [Slide 64]",
+      "answer": "HAV affects the hands and fingers and can reduce feeling, dexterity and grip and contribute to conditions such as carpal-tunnel-related injury. WBV from vehicles, platforms or machinery?"
+    },
+    {
+      "question": "What is the correct approach to waste management and disposal in coating work? [Slide 67]",
+      "answer": "Spent abrasives, used paint cans, unused mixed paint, contaminated thinners and wash water should be segregated and stored in designated areas. Toxic waste such as lead, cadmium or?"
+    }
+  ],
+  "10": [
+    {
+      "question": "What is the main subject of Module 10 and what three practical areas of IMO PSPC does it cover?",
+      "answer": "Module 10 covers IMO PSPC requirements. The training focus is on coating systems, shipyard control and inspection for protective coating work."
+    },
+    {
+      "question": "What is the purpose of IMO PSPC for ballast tanks, and what coating life, coating type and nominal DFT are stated in the slide?",
+      "answer": "The purpose is to improve maritime safety by reducing structural failure caused by corrosion and to achieve a target useful coating life of 15 years in GOOD condition. The slide states an?"
+    },
+    {
+      "question": "What important technical requirements should be clearly stated in the coating specification before IMO PSPC work begins?",
+      "answer": "The specification should state primary and secondary surface-preparation standards, steel-profile range, surface cleanliness, soluble-salt limits, steel condition, coating thickness and?"
+    },
+    {
+      "question": "What documents are required to demonstrate approval of the selected coating system?",
+      "answer": "The coating system should be supported by a type-approval certificate issued by Class or the Administration and Product Technical Data Sheets for all coating products. The product data?"
+    },
+    {
+      "question": "List the main documents and records that should be contained in the Coating Technical File.",
+      "answer": "The CTF contains the type-approval certificate, Technical Data Sheets, shipyard coating-application records, procedures for inspection and repair during construction, the shipyard's?"
+    },
+    {
+      "question": "What four main requirements are defined for shop-primer work before application?",
+      "answer": "The slide identifies the bare-steel surface-preparation standard, the steel surface profile, the maximum water-soluble salt level before application, and the approved shop-primer type. It?"
+    },
+    {
+      "question": "What surface-profile, soluble-salt and shop-primer requirements are stated for shop-primer application?",
+      "answer": "The stated surface profile is 30�75 �m, assessed using the referenced ISO 8503 comparator method. Water-soluble contamination should be no more than 50 mg/m� using ISO 8502-9?"
+    },
+    {
+      "question": "How is shop primer normally applied in a shipyard, and what process-control records are still required?",
+      "answer": "Shop primer is normally applied in an enclosed automated continuous plant. Once the line is set, production may run with spot checks, but coating-application records and process checks are?"
+    },
+    {
+      "question": "What steel-preparation requirements are specified at block stage under ISO 8501-3 grade P2?",
+      "answer": "The block should be prepared so coating can be applied evenly. Sharp edges, weld spatter and similar imperfections are removed, and stiffener edges are rounded to about a 2 mm radius or?"
+    },
+    {
+      "question": "How should welds, damaged shop primer and intact non-prequalified shop primer be prepared at block stage?",
+      "answer": "The slide states Sa 2� preparation for welds and damaged shop primer. Where the shop primer has not passed the pre-qualification test, the slide refers to Sa 2 preparation with removal of?"
+    },
+    {
+      "question": "What surface-profile requirement is stated for block-stage surface preparation?",
+      "answer": "The stated profile is 30�75 �m, or the value recommended by the coating manufacturer, using the referenced ISO 8503-1/3 approach."
+    },
+    {
+      "question": "What additional cleanliness requirement does IACS state for the whole block, and what soluble-salt limit and test frequency are given?",
+      "answer": "Visible dust anywhere on the block should be removed to the inspector's satisfaction, and the whole block should be acceptable to the inspector. Soluble salts should be no more than 50?"
+    },
+    {
+      "question": "From the stripe-coat visual, where should stripe coats be applied, which tools are used, and when are they applied in relation to full coats?",
+      "answer": "The visual shows stripe coating at sharp edges, welds, weld toes, scallops, rat holes and other difficult details. A brush is used for edges, welds and difficult details; a roller is shown?"
+    },
+    {
+      "question": "According to the DFT measurement-location visual, which areas of a ballast-tank block should receive DFT readings and how should the inspection be documented?",
+      "answer": "The visual identifies flat plate fields, stiffeners and web faces, weld seams and adjacent areas, edges/corners/cut-outs, brackets and difficult geometry, and scallops/rat holes. The?"
+    },
+    {
+      "question": "How does IMO PSPC distinguish preparation requirements for butt join-ups, small damage and larger contiguous damage after erection?",
+      "answer": "Butt join-ups are prepared to St 3 or better, or Sa 2� where practical. Small damage up to 2% of the total area is prepared to St 3. Contiguous damage over 25 m� or over 2% of the total?"
+    },
+    {
+      "question": "Using the repair visual, describe the practical sequence for classifying and repairing post-erection coating damage.",
+      "answer": "The visual shows first assessing the damage extent, then classifying it as butt join-up, small damage or contiguous/large damage. The approved preparation grade is selected, sound coating?"
+    },
+    {
+      "question": "What is the purpose of the daily inspection log in an IMO PSPC project?",
+      "answer": "The daily log lists scheduled inspections and records whether each inspection is accepted or rejected. It provides traceability of inspection activity and can include verification?"
+    },
+    {
+      "question": "At what production stages must the approved inspector demonstrate that inspection is carried out according to the CTF?",
+      "answer": "The slide identifies the shop-primer line, block stage, pre-erection stage, and work in the building dock or slipway. Inspection reports should be completed correctly at these stages."
+    },
+    {
+      "question": "What information should be recorded in the in-tank inspection log during ballast-tank preparation and coating?",
+      "answer": "The slide lists contamination before blasting, steel preparation including edge/weld/steel defects to ISO 8501-3 P2, ambient conditions, cleanliness, anchor profile, salt level, dust?"
+    },
+    {
+      "question": "What items are checked during final verification of compliance before delivery?",
+      "answer": "Final verification checks that the coating data sheet and Statement of Compliance or type-approval certificate comply with PSPC, the supplied coating is consistent with the approved?"
+    }
+  ]
+}

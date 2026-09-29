@@ -1876,9 +1876,10 @@ function SlideVideoPlayer({
         <button
           onClick={toggleFullscreen}
           className="border border-paper/40 px-2 py-0.5"
-          aria-label="Fullscreen"
+          aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
         >
-          {fullscreen ? "Exit FS" : "FS"}
+          [ ]
         </button>
       </div>
       <div className="border-t border-paper/20 px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-paper/60">

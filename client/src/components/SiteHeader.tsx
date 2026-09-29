@@ -110,7 +110,7 @@ export function SiteHeader({
               aria-label="Make website text smaller"
               title="Make website text smaller"
             >
-              A-
+              -
             </button>
             <button
               type="button"
@@ -129,7 +129,7 @@ export function SiteHeader({
               aria-label="Make website text larger"
               title="Make website text larger"
             >
-              A+
+              +
             </button>
           </div>
           <div className="flex -space-x-2">

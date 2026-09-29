@@ -97,3 +97,62 @@ def generate_module_questions(module_number: int, module_script: dict[str, Any])
     ]
 
     return {"module": module_number, "mcqs": mcqs, "descriptive": descriptive}
+
+
+def generate_module_questions_from_bank(
+    module_number: int,
+    question_bank: list[dict[str, str]],
+) -> dict[str, Any]:
+    """Return a fixed 15-question/5-question set from supplied chapter material.
+
+    The bank contains source questions and their trainer answers.  MCQ options
+    use the source answer as the correct option and answers from other source
+    questions as deterministic distractors.  The descriptive questions remain
+    the original trainer prompts so they can be answered in the course's own
+    terminology.
+    """
+    items = [
+        item
+        for item in question_bank
+        if str(item.get("question") or "").strip()
+        and str(item.get("answer") or "").strip()
+    ]
+    if not items:
+        return {"module": module_number, "mcqs": [], "descriptive": []}
+
+    mcq_items = _evenly_spaced(items, 15)
+    mcqs = []
+    for index, item in enumerate(mcq_items):
+        correct_answer = str(item["answer"]).strip()
+        distractors = []
+        for offset in range(1, len(items) + 1):
+            candidate = str(items[(index * 7 + offset) % len(items)]["answer"]).strip()
+            if candidate.casefold() != correct_answer.casefold() and candidate.casefold() not in {
+                value.casefold() for value in distractors
+            }:
+                distractors.append(candidate)
+            if len(distractors) == 3:
+                break
+
+        options = [correct_answer, *distractors]
+        while len(options) < 4:
+            options.append("This requirement is not covered by the supplied chapter material.")
+
+        rotation = index % 4
+        mcqs.append(
+            {
+                "id": f"module-{module_number}-mcq-{index + 1}",
+                "question": str(item["question"]).strip(),
+                "options": options[rotation:] + options[:rotation],
+                "answer": (4 - rotation) % 4,
+            }
+        )
+
+    descriptive = [
+        {
+            "id": f"module-{module_number}-written-{index + 1}",
+            "question": str(item["question"]).strip(),
+        }
+        for index, item in enumerate(_evenly_spaced(items, 5))
+    ]
+    return {"module": module_number, "mcqs": mcqs, "descriptive": descriptive}

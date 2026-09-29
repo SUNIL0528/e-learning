@@ -36,7 +36,10 @@ class CognitoJWTAuthentication(BaseAuthentication):
     # a fresh client is created below if Cognito rotates a key or the pool was
     # changed while Django was still running.
     _jwks_clients = {}
-    enforce_active_session = True
+    # Temporarily allow the same account to be used on multiple devices.
+    # The active-session database field and legacy endpoints remain available
+    # so this policy can be re-enabled later without a schema migration.
+    enforce_active_session = False
 
     @staticmethod
     def _issuer():

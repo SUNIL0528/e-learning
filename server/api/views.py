@@ -14,7 +14,10 @@ from .models import User
 
 from .serializers import UserSerializer
 from .storage import S3MediaStore
-from .question_generation import generate_module_questions
+from .question_generation import (
+    generate_module_questions,
+    generate_module_questions_from_bank,
+)
 
 
 
@@ -676,6 +679,17 @@ def module_questions(request, course_id, module_no):
 
     if not isinstance(module_script, dict):
         return JsonResponse({"error": "Invalid module JSON format."}, status=500)
+
+    question_bank_path = settings.BASE_DIR / "question_bank.json"
+    try:
+        with open(question_bank_path, "r", encoding="utf-8") as file:
+            question_bank = json.load(file)
+    except (OSError, json.JSONDecodeError):
+        question_bank = {}
+
+    bank_items = question_bank.get(str(module_no)) if isinstance(question_bank, dict) else None
+    if isinstance(bank_items, list) and bank_items:
+        return JsonResponse(generate_module_questions_from_bank(module_no, bank_items))
 
     return JsonResponse(generate_module_questions(module_no, module_script))
 
