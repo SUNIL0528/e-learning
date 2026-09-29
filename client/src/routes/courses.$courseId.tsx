@@ -715,13 +715,19 @@ function formatTime(seconds: number) {
   return `${minutes}:${remainingSeconds}`;
 }
 
-function CandidateWatermark() {
+function CandidateWatermark({ light = false }: { light?: boolean } = {}) {
   const candidateNumber = getCurrentAuthUser()?.username;
   if (!candidateNumber) return null;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center overflow-hidden" aria-hidden="true">
-      <div className="text-left font-display text-[clamp(1.1rem,2.8vw,2.5rem)] font-black uppercase leading-[0.85] tracking-[0.03em] text-paper/20 [text-shadow:0_1px_2px_rgba(0,0,0,0.25)]">
+      <div
+        className={
+          light
+            ? "text-left font-display text-[clamp(1.1rem,2.8vw,2.5rem)] font-black uppercase leading-[0.85] tracking-[0.03em] text-ink/20 [text-shadow:0_1px_2px_rgba(255,255,255,0.25)]"
+            : "text-left font-display text-[clamp(1.1rem,2.8vw,2.5rem)] font-black uppercase leading-[0.85] tracking-[0.03em] text-paper/20 [text-shadow:0_1px_2px_rgba(0,0,0,0.25)]"
+        }
+      >
         <span className="mt-1 block">{candidateNumber}</span>
       </div>
     </div>
@@ -2733,12 +2739,15 @@ function Resources({ courseId, moduleNumber }: { courseId: string; moduleNumber:
                 Close
               </button>
             </div>
-            <iframe
-              title={ppt.filename}
-              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(ppt.url)}`}
-              className="min-h-0 flex-1"
-              allowFullScreen
-            />
+            <div className="relative min-h-0 flex-1 overflow-hidden">
+              <iframe
+                title={ppt.filename}
+                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(ppt.url)}`}
+                className="size-full"
+                allowFullScreen
+              />
+              <CandidateWatermark light />
+            </div>
           </div>
         </div>
       )}
