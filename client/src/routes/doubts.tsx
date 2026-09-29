@@ -18,6 +18,8 @@ type DoubtTicket = {
   id: number;
   courseId: string;
   courseTitle: string;
+  chapterId: string | null;
+  chapterTitle: string | null;
   title: string;
   body: string;
   status: "pending" | "answered";
@@ -233,6 +235,9 @@ function DoubtCard({
           <p className="font-mono text-[10px] uppercase tracking-widest text-fog">
             {ticket.courseTitle || ticket.courseId} · Asked {formatDate(ticket.askedAt)}
           </p>
+          {ticket.chapterTitle && (
+            <p className="mt-1 font-mono text-[10px] text-fog">Module: {ticket.chapterTitle}</p>
+          )}
           {instructor && (
             <p className="mt-1 font-mono text-[10px] text-clay">
               {ticket.learner.name || "Learner"} · {ticket.learner.candidateNumber} · {ticket.learner.email}

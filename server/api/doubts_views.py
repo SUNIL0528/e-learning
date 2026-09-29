@@ -59,6 +59,8 @@ def _serialize_doubt(ticket):
         "id": ticket.id,
         "courseId": ticket.course_id,
         "courseTitle": ticket.course_title,
+        "chapterId": ticket.chapter_id or None,
+        "chapterTitle": ticket.chapter_title or None,
         "title": ticket.title,
         "body": ticket.body,
         "status": ticket.status,
@@ -97,11 +99,14 @@ def learner_doubts(request):
             DoubtTicket.objects.filter(learner=profile)
             .select_related("learner")
             .prefetch_related("attachments")
+            .order_by("-created_at", "-id")
         )
         return Response([_serialize_doubt(ticket) for ticket in tickets])
 
     course_id = str(request.data.get("courseId") or "").strip()
     course_title = str(request.data.get("courseTitle") or "").strip()
+    chapter_id = str(request.data.get("chapterId") or "").strip()
+    chapter_title = str(request.data.get("chapterTitle") or "").strip()
     title = str(request.data.get("title") or "").strip()
     body = str(request.data.get("body") or "").strip()
     if not course_id or not title or not body:
@@ -114,6 +119,8 @@ def learner_doubts(request):
         learner=profile,
         course_id=course_id,
         course_title=course_title,
+        chapter_id=chapter_id[:255],
+        chapter_title=chapter_title[:255],
         title=title[:255],
         body=body,
         response_due_at=timezone.now() + timedelta(hours=24),
@@ -129,7 +136,11 @@ def instructor_doubts(request):
         return Response({"error": "Instructor access required."}, status=status.HTTP_403_FORBIDDEN)
 
     course_id = str(request.query_params.get("courseId") or "").strip()
-    tickets = DoubtTicket.objects.select_related("learner").prefetch_related("attachments")
+    tickets = (
+        DoubtTicket.objects.select_related("learner")
+        .prefetch_related("attachments")
+        .order_by("-created_at", "-id")
+    )
     if course_id:
         tickets = tickets.filter(course_id=course_id)
     return Response([_serialize_doubt(ticket) for ticket in tickets])

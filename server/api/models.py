@@ -144,6 +144,8 @@ class DoubtTicket(models.Model):
     )
     course_id = models.CharField(max_length=255)
     course_title = models.CharField(max_length=255, blank=True)
+    chapter_id = models.CharField(max_length=255, blank=True, default="")
+    chapter_title = models.CharField(max_length=255, blank=True, default="")
     title = models.CharField(max_length=255)
     body = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
