@@ -42,7 +42,7 @@ def _is_instructor(request):
         "admin",
         "admins",
     }
-    groups = request.auth.get("cognito:groups", []) if request.auth else []
+    groups = (request.auth or {}).get("cognito:groups") or []
     if isinstance(groups, str):
         groups = [groups]
     return any(str(group).casefold() in allowed_groups for group in groups)
@@ -97,6 +97,7 @@ def learner_doubts(request):
             DoubtTicket.objects.filter(learner=profile)
             .select_related("learner")
             .prefetch_related("attachments")
+            .order_by("-created_at", "-id")
         )
         return Response([_serialize_doubt(ticket) for ticket in tickets])
 
@@ -129,7 +130,12 @@ def instructor_doubts(request):
         return Response({"error": "Instructor access required."}, status=status.HTTP_403_FORBIDDEN)
 
     course_id = str(request.query_params.get("courseId") or "").strip()
-    tickets = DoubtTicket.objects.select_related("learner").prefetch_related("attachments")
+    tickets = (
+        DoubtTicket.objects
+        .select_related("learner")
+        .prefetch_related("attachments")
+        .order_by("-created_at", "-id")
+    )
     if course_id:
         tickets = tickets.filter(course_id=course_id)
     return Response([_serialize_doubt(ticket) for ticket in tickets])
@@ -170,7 +176,7 @@ def instructor_dashboard(request):
     recent_doubts = (
         doubts.select_related("learner")
         .prefetch_related("attachments")
-        .order_by("-created_at")[:8]
+        .order_by("-created_at", "-id")[:8]
     )
     return Response(
         {

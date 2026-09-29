@@ -1,5 +1,5 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   courses,
   ENABLED_COURSE_ID,
@@ -8,6 +8,7 @@ import {
   type Question,
 } from "@/data/platform";
 import { getCurrentAuthUser } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 import {
   chapterMediaPath,
   directS3MediaConfigured,
@@ -369,7 +370,12 @@ function CoursePage() {
               </div>
 
               {tab === "qa" ? (
-                <QaSection chapter={active} />
+                <CourseDoubtSection
+                  courseId={course.id}
+                  courseTitle={course.title}
+                  moduleId={activeModule?.id ?? ""}
+                  moduleTitle={activeModule?.title ?? "Module doubt"}
+                />
               ) : (
                 <Resources
                   courseId={course.id}
@@ -2438,77 +2444,145 @@ function ModuleQaSection({ module }: { module: Module }) {
   );
 }
 
-function QaSection({ chapter }: { chapter: Chapter }) {
-  const [questions, setQuestions] = useState<Question[]>(chapter.questions);
-  const [draft, setDraft] = useState("");
+type CourseDoubt = {
+  id: number;
+  courseId: string;
+  title: string;
+  body: string;
+  status: "pending" | "answered";
+  askedAt: string;
+};
 
-  // reset when chapter changes
-  const [seen, setSeen] = useState(chapter.id);
-  if (seen !== chapter.id) {
-    setSeen(chapter.id);
-    setQuestions(chapter.questions);
-  }
+function CourseDoubtSection({
+  courseId,
+  courseTitle,
+  moduleId,
+  moduleTitle,
+}: {
+  courseId: string;
+  courseTitle: string;
+  moduleId: string;
+  moduleTitle: string;
+}) {
+  const doubtHeading = moduleTitle.slice(0, 255);
+  const [doubts, setDoubts] = useState<CourseDoubt[]>([]);
+  const [draft, setDraft] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDraft("");
+    setNotice(null);
+  }, [moduleId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    void apiFetch("/api/me/doubts/")
+      .then(async (response) => (await response.json()) as CourseDoubt[])
+      .then((tickets) => {
+        if (cancelled) return;
+        setDoubts(
+          tickets
+            .filter((ticket) => ticket.courseId === courseId && ticket.title === doubtHeading)
+            .sort(
+              (left, right) =>
+                new Date(right.askedAt).getTime() - new Date(left.askedAt).getTime(),
+            ),
+        );
+      })
+      .catch((requestError: unknown) => {
+        if (!cancelled) {
+          setError(requestError instanceof Error ? requestError.message : "Unable to load doubts");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [courseId, doubtHeading]);
+
+  const submitDoubt = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const body = draft.trim();
+    if (!body || saving) return;
+
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await apiFetch("/api/me/doubts/", {
+        method: "POST",
+        body: JSON.stringify({
+          courseId,
+          courseTitle,
+          title: doubtHeading,
+          body,
+        }),
+      });
+      const saved = (await response.json()) as CourseDoubt;
+      setDoubts((previous) => [saved, ...previous]);
+      setDraft("");
+      setNotice("Your doubt was saved. Open Doubts to read the instructor reply.");
+    } catch (requestError: unknown) {
+      setError(requestError instanceof Error ? requestError.message : "Unable to save doubt");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="mt-3 space-y-3">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!draft.trim()) return;
-          setQuestions([
-            { id: `n${Date.now()}`, author: "You", body: draft.trim(), votes: 0, answers: [] },
-            ...questions,
-          ]);
-          setDraft("");
-        }}
-        className="flex gap-2 border-2 border-ink p-2"
-      >
+      <form onSubmit={submitDoubt} className="flex gap-2 border-2 border-ink p-2">
         <input
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={`Ask about “${chapter.title}”…`}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder={`Ask about “${moduleTitle}”…`}
           className="min-w-0 flex-1 bg-paper px-2 py-1.5 text-sm outline-none"
         />
-        <button className="bg-ink px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-paper">
-          Post
+        <button
+          type="submit"
+          disabled={saving || !draft.trim()}
+          className="bg-ink px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-paper disabled:opacity-40"
+        >
+          {saving ? "Saving..." : "Post"}
         </button>
       </form>
 
-      {questions.length === 0 && (
-        <p className="font-mono text-[11px] text-fog">
-          No questions on this chapter yet. Be the first.
-        </p>
-      )}
+      {error && <p className="border border-clay bg-sand p-2 text-xs text-clay">{error}</p>}
+      {notice && <p className="border border-moss bg-sand p-2 text-xs text-moss">{notice}</p>}
 
-      {questions.map((q) => (
-        <article key={q.id} className="flex gap-3 border border-ink/15 p-3">
-          <button
-            onClick={() =>
-              setQuestions((prev) =>
-                prev.map((x) => (x.id === q.id ? { ...x, votes: x.votes + 1 } : x)),
-              )
-            }
-            className="flex w-9 shrink-0 flex-col items-center border border-ink/15 py-1"
-          >
-            <span className="font-mono text-[11px] font-bold">{q.votes}</span>
-            <span className="text-[10px] text-clay">▲</span>
-          </button>
-          <div className="flex-1">
-            <p className="text-sm font-medium">{q.body}</p>
-            <p className="mt-1 font-mono text-[10px] text-fog">
-              {q.author} · {q.answers.length} {q.answers.length === 1 ? "answer" : "answers"}
-            </p>
-            {q.answers.map((a, i) => (
-              <div key={i} className="mt-2 border-l-2 border-moss bg-sand/60 p-2">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-moss">
-                  {a.author} · {a.role}
-                </div>
-                <p className="mt-1 text-[13px]">{a.body}</p>
-              </div>
+      <section className="border border-ink/15 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="rule-label">{moduleTitle}</div>
+          <span className="font-mono text-[10px] text-fog">Newest first</span>
+        </div>
+        {loading ? (
+          <p className="mt-3 font-mono text-[11px] text-fog">Loading your doubts...</p>
+        ) : doubts.length === 0 ? (
+          <p className="mt-3 font-mono text-[11px] text-fog">No doubts posted for this module yet.</p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {doubts.map((doubt) => (
+              <article key={doubt.id} className="border border-ink/10 p-2">
+                <p className="whitespace-pre-wrap text-sm">{doubt.body}</p>
+                <p className="mt-1 font-mono text-[10px] text-fog">
+                  {doubt.status === "answered"
+                    ? "Answered · Open Doubts to read the reply"
+                    : "Pending instructor reply"}
+                </p>
+              </article>
             ))}
           </div>
-        </article>
-      ))}
+        )}
+      </section>
     </div>
   );
 }
