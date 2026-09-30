@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { courses, getLearnerLevel, student } from "@/data/platform";
+import { courses, getLearnerRank, student } from "@/data/platform";
 import {
   getUserEnrollments,
   getUserProfile,
@@ -160,7 +160,7 @@ function Profile() {
             <div className="flex items-center justify-between">
               <span className="mono-xs text-fog">Activity — last 10 weeks</span>
               <span className="font-mono text-[11px] text-moss">
-                level {getLearnerLevel(enrolledCourses.length)}
+                rank {getLearnerRank(enrolledCourses.length)}
               </span>
             </div>
             <div className="mt-3 grid grid-flow-col grid-rows-7 gap-1">

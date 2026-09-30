@@ -151,10 +151,9 @@ function LoginPage() {
           <div className="relative z-10 flex h-full flex-col justify-between">
             <Link
               to="/"
-              className="flex items-center gap-2 font-mono text-sm font-bold tracking-tight"
+              className="flex items-center gap-2"
             >
-              <span className="size-4 bg-clay" />
-              HTS
+              <img src="/hts-logo.png" alt="HTS" className="size-10 object-contain" />
             </Link>
             <div className="mt-16 max-w-[28rem]">
               <div className="rule-label text-clay">Learning platform</div>

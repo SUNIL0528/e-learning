@@ -434,8 +434,10 @@ export const student = {
   badges: ["Experimentation", "Design tokens", "Motion craft", "30-day streak"],
 };
 
-export function getLearnerLevel(enrolledCourseCount: number) {
-  return enrolledCourseCount > 3 ? "L2" : "L1";
+export function getLearnerRank(enrolledCourseCount: number) {
+  if (enrolledCourseCount >= 7) return "Gold";
+  if (enrolledCourseCount >= 4) return "Silver";
+  return "Bronze";
 }
 
 export const completedHistory: { course: string; date: string; grade: string }[] = [];

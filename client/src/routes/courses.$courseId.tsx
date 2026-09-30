@@ -1830,123 +1830,127 @@ function SlideVideoPlayer({
 
       <audio ref={audioRef} preload="none" className="hidden" />
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-paper/20 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em]">
-        <button
-          onClick={togglePlayback}
-          disabled={!videoSource}
-          className="bg-clay px-3 py-1 text-paper disabled:opacity-40"
-        >
-          {playing ? "Pause" : "Play"}
-        </button>
-        <button
-          onClick={() => seekBy(-10)}
-          disabled={!videoSource}
-          className="border border-paper/40 px-2 py-0.5 disabled:opacity-30"
-          aria-label="Back 10 seconds"
-        >
-          −10s
-        </button>
-        <button
-          onClick={() => seekBy(10)}
-          disabled={!videoSource}
-          className="border border-paper/40 px-2 py-0.5 disabled:opacity-30"
-          aria-label="Forward 10 seconds"
-        >
-          +10s
-        </button>
-        <div
-          className="h-1 min-w-[80px] flex-1 cursor-pointer bg-paper/20"
-          onClick={handleSeek}
-          role="slider"
-          aria-label="Slide video progress"
-          aria-valuemin={0}
-          aria-valuemax={duration}
-          aria-valuenow={currentTime}
-        >
+      <div className="space-y-2 border-t border-paper/20 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em]">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={togglePlayback}
+            disabled={!videoSource}
+            className="order-1 bg-clay px-3 py-1 text-paper disabled:opacity-40"
+          >
+            {playing ? "Pause" : "Play"}
+          </button>
+          <button
+            onClick={() => seekBy(-10)}
+            disabled={!videoSource}
+            className="order-3 border border-paper/40 px-2 py-0.5 disabled:opacity-30"
+            aria-label="Back 10 seconds"
+          >
+            -10s
+          </button>
+          <button
+            onClick={() => seekBy(10)}
+            disabled={!videoSource}
+            className="order-2 border border-paper/40 px-2 py-0.5 disabled:opacity-30"
+            aria-label="Forward 10 seconds"
+          >
+            +10s
+          </button>
           <div
-            className="h-full bg-paper/80"
-            style={{ width: `${duration ? Math.min(100, (currentTime / duration) * 100) : 0}%` }}
-          />
+            className="order-4 h-1 min-w-[80px] flex-1 cursor-pointer bg-paper/20"
+            onClick={handleSeek}
+            role="slider"
+            aria-label="Slide video progress"
+            aria-valuemin={0}
+            aria-valuemax={duration}
+            aria-valuenow={currentTime}
+          >
+            <div
+              className="h-full bg-paper/80"
+              style={{ width: `${duration ? Math.min(100, (currentTime / duration) * 100) : 0}%` }}
+            />
+          </div>
+          <span className="order-5">
+            {formatTime(currentTime)} / {duration ? formatTime(duration) : "0:00"}
+          </span>
         </div>
-        <span>
-          {formatTime(currentTime)} / {duration ? formatTime(duration) : "0:00"}
-        </span>
-        <button onClick={changeSpeed} className="border border-paper/40 px-2 py-0.5">
-          {speed}x
-        </button>
-        <button
-          onClick={() => setMuted((value) => !value)}
-          className="border border-paper/40 px-2 py-0.5"
-        >
-          {muted ? "Unmute" : "Mute"}
-        </button>
-        <button
-          onClick={() => setCaptionsVisible((visible) => !visible)}
-          disabled={!CAPTIONS_ENABLED || !firstCaption(activeSlide?.captions)}
-          className={`border border-paper/40 px-2 py-0.5 disabled:opacity-30 ${captionsVisible ? "bg-paper text-ink" : ""}`}
-          aria-label="Toggle captions"
-        >
-          CC
-        </button>
-        <div className="flex items-center gap-1 border border-paper/40 px-1 py-0.5">
-          <span className="px-1 text-paper/60">Zoom</span>
-          <button
-            onClick={() => changeZoom(-1)}
-            disabled={contentZoom === ZOOM_STEPS[0]}
-            className="px-1 disabled:opacity-30"
-            aria-label="Zoom out"
-            title="Zoom out"
-          >
-            -
+        <div className="flex flex-wrap items-center gap-3">
+          <button onClick={changeSpeed} className="order-7 border border-paper/40 px-2 py-0.5">
+            {speed}x
           </button>
           <button
-            onClick={() => setContentZoom(1)}
-            className="min-w-[3.5rem] border-x border-paper/30 px-1"
-            aria-label={`Reset zoom to 100 percent; current zoom is ${Math.round(contentZoom * 100)} percent`}
-            title="Reset zoom"
+            onClick={() => setMuted((value) => !value)}
+            className="order-1 border border-paper/40 px-2 py-0.5"
           >
-            {Math.round(contentZoom * 100)}%
+            {muted ? "Unmute" : "Mute"}
           </button>
           <button
-            onClick={() => changeZoom(1)}
-            disabled={contentZoom === ZOOM_STEPS[ZOOM_STEPS.length - 1]}
-            className="px-1 disabled:opacity-30"
-            aria-label="Zoom in"
-            title="Zoom in"
+            onClick={() => setCaptionsVisible((visible) => !visible)}
+            disabled={!CAPTIONS_ENABLED || !firstCaption(activeSlide?.captions)}
+            className={`order-2 border border-paper/40 px-2 py-0.5 disabled:opacity-30 ${captionsVisible ? "bg-paper text-ink" : ""}`}
+            aria-label="Toggle captions"
           >
-            +
+            CC
           </button>
-        </div>
-        <button
-          onClick={previousSlide}
-          disabled={slideIndex === 0}
-          className="border border-paper/40 px-2 py-0.5 disabled:opacity-30"
-        >
-          Prev
-        </button>
-        <button
-          onClick={nextSlide}
-          disabled={
-            slideIndex === slides.length - 1 ||
-            Boolean(
-              videoSource &&
+          <div className="order-3 flex items-center gap-1 border border-paper/40 px-1 py-0.5">
+            <span className="px-1 text-paper/60">Zoom</span>
+            <button
+              onClick={() => changeZoom(-1)}
+              disabled={contentZoom === ZOOM_STEPS[0]}
+              className="px-1 disabled:opacity-30"
+              aria-label="Zoom out"
+              title="Zoom out"
+            >
+              -
+            </button>
+            <button
+              onClick={() => setContentZoom(1)}
+              className="min-w-[3.5rem] border-x border-paper/30 px-1"
+              aria-label={`Reset zoom to 100 percent; current zoom is ${Math.round(contentZoom * 100)} percent`}
+              title="Reset zoom"
+            >
+              {Math.round(contentZoom * 100)}%
+            </button>
+            <button
+              onClick={() => changeZoom(1)}
+              disabled={contentZoom === ZOOM_STEPS[ZOOM_STEPS.length - 1]}
+              className="px-1 disabled:opacity-30"
+              aria-label="Zoom in"
+              title="Zoom in"
+            >
+              +
+            </button>
+          </div>
+          <button
+            onClick={previousSlide}
+            disabled={slideIndex === 0}
+            className="order-4 border border-paper/40 px-2 py-0.5 disabled:opacity-30"
+          >
+            Prev
+          </button>
+          <button
+            onClick={nextSlide}
+            disabled={
+              slideIndex === slides.length - 1 ||
+              Boolean(
+                videoSource &&
                 !slideComplete &&
                 !chapterCompleted &&
                 highestCompletedSlideIndex < slideIndex,
-            )
-          }
-          className="border border-paper/40 px-2 py-0.5 disabled:opacity-30"
-        >
-          Next
-        </button>
-        <button
-          onClick={toggleFullscreen}
-          className="border border-paper/40 px-2 py-0.5"
-          aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-        >
-          [ ]
-        </button>
+              )
+            }
+            className="order-5 border border-paper/40 px-2 py-0.5 disabled:opacity-30"
+          >
+            Next
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            className="order-6 border border-paper/40 px-2 py-0.5"
+            aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            [ ]
+          </button>
+        </div>
       </div>
       <div className="border-t border-paper/20 px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-paper/60">
         {slideComplete && slideIndex === slides.length - 1
@@ -2766,7 +2770,7 @@ function Resources({ courseId, moduleNumber }: { courseId: string; moduleNumber:
             <div className="relative min-h-0 flex-1 overflow-hidden">
               <iframe
                 title={ppt.filename}
-                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(ppt.url)}`}
+                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(ppt.url)}&action=embedview&wdDownloadButton=False&wdHideHeaders=True`}
                 className="size-full"
                 allowFullScreen
               />

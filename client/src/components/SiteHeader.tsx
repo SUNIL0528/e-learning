@@ -97,8 +97,7 @@ export function SiteHeader({
     <header className="sticky top-0 z-20 border-b-2 border-ink bg-paper">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-8 px-6">
         <Link to="/" className="flex items-center gap-2">
-          <span className="size-4 bg-moss" />
-          <span className="font-mono text-sm font-bold tracking-tight">HTS</span>
+          <img src="/hts-logo.png" alt="HTS" className="size-7 object-contain" />
         </Link>
         <nav className="hidden items-center gap-6 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70 md:flex">
           {currentUser ? (

@@ -4,7 +4,7 @@ import heroLecture from "@/assets/hero-lecture.jpg";
 import {
   courses,
   ENABLED_COURSE_ID,
-  getLearnerLevel,
+  getLearnerRank,
   recommended,
   student,
   type Status,
@@ -147,9 +147,9 @@ function Dashboard() {
           </div>
           <div>
             <span className="block text-2xl font-bold text-moss">
-              {getLearnerLevel(enrolledCourses.length)}
+              {getLearnerRank(enrolledCourses.length)}
             </span>{" "}
-            level
+            rank
           </div>
         </div>
       </div>
