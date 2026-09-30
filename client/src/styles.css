@@ -191,6 +191,37 @@
   animation: loading-scan 1.4s ease-in-out infinite;
 }
 
+.course-video-player:fullscreen {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  flex-direction: column;
+  border-width: 0;
+}
+
+.course-video-player:fullscreen .course-video-player__media {
+  min-height: 0;
+  flex: 1 1 auto;
+  aspect-ratio: auto;
+}
+
+.course-video-player:fullscreen .course-video-player__controls {
+  position: relative;
+  z-index: 30;
+  flex: 0 0 auto;
+  background: #050505;
+}
+
+.pptx-slide-host > .pptx-preview-wrapper {
+  margin: 0 auto !important;
+}
+
+.pptx-slide-host .pptx-preview-wrapper-next,
+.pptx-slide-host .pptx-preview-wrapper-pagination {
+  display: none !important;
+}
+
 @utility lp {
   animation: lp 0.5s ease both;
 }

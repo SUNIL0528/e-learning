@@ -153,7 +153,7 @@ function LoginPage() {
               to="/"
               className="flex items-center gap-2"
             >
-              <img src="/hts-logo.png" alt="HTS" className="h-24 w-auto max-w-[240px] object-contain" />
+              <img src="/hts-logo-black.png" alt="HTS" className="h-24 w-auto max-w-[240px] object-contain" />
             </Link>
             <div className="mt-16 max-w-[28rem]">
               <div className="rule-label text-clay">Learning platform</div>
