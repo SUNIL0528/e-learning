@@ -43,6 +43,7 @@ export function SiteHeader({
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(getCurrentAuthUser());
   const [notifications, setNotifications] = useState<DoubtNotification[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -95,9 +96,9 @@ export function SiteHeader({
 
   return (
     <header className="sticky top-0 z-20 border-b-2 border-ink bg-paper">
-      <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-8 px-6">
+      <div className="mx-auto flex min-h-14 max-w-[1440px] items-center gap-3 px-3 sm:gap-8 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
-          <img src="/hts-logo-black.png" alt="HTS" className="h-14 w-auto max-w-[180px] object-contain" />
+          <img src="/hts-logo-black.png" alt="HTS" className="h-10 w-auto max-w-[132px] object-contain sm:h-14 sm:max-w-[180px]" />
         </Link>
         <nav className="hidden items-center gap-6 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70 md:flex">
           {currentUser ? (
@@ -130,7 +131,18 @@ export function SiteHeader({
             </Link>
           )}
         </nav>
-        <div className="ml-auto flex items-center gap-4">
+        {currentUser && (
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen((open) => !open)}
+            className="grid size-8 place-items-center border border-ink/25 font-mono text-sm md:hidden"
+            aria-label={mobileNavOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileNavOpen}
+          >
+            {mobileNavOpen ? "×" : "☰"}
+          </button>
+        )}
+        <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-4">
           {signedIn && cognitoConfigured && !currentUser?.isInstructor && (
             <div className="relative">
               <button
@@ -238,7 +250,7 @@ export function SiteHeader({
               +
             </button>
           </div>
-          <div className="flex -space-x-2">
+          <div className="hidden -space-x-2 sm:flex">
             <span className="grid size-8 place-items-center rounded-full bg-sand font-mono text-[10px] text-fog">
               AO
             </span>
@@ -247,6 +259,42 @@ export function SiteHeader({
           </div>
         </div>
       </div>
+      {mobileNavOpen && currentUser && (
+        <nav className="border-t border-ink/15 bg-sand px-3 py-2 md:hidden" aria-label="Mobile navigation">
+          <div className="grid gap-1 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70">
+            <Link
+              to="/"
+              activeOptions={{ exact: true }}
+              onClick={() => setMobileNavOpen(false)}
+              className="border border-transparent px-2 py-2 hover:border-ink/20 hover:bg-paper"
+              activeProps={{ className: "border-ink bg-paper text-ink" }}
+            >
+              Dashboard
+            </Link>
+            {!currentUser.isInstructor && (
+              <Link
+                to="/courses"
+                onClick={() => setMobileNavOpen(false)}
+                className="border border-transparent px-2 py-2 hover:border-ink/20 hover:bg-paper"
+                activeProps={{ className: "border-ink bg-paper text-ink" }}
+              >
+                Courses
+              </Link>
+            )}
+            {visibleNav.map((item) => (
+              <Link
+                key={item.label}
+                to={item.to}
+                onClick={() => setMobileNavOpen(false)}
+                className="border border-transparent px-2 py-2 hover:border-ink/20 hover:bg-paper"
+                activeProps={{ className: "border-ink bg-paper text-ink" }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
     </header>
   );
 }

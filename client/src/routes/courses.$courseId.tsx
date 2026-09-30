@@ -144,6 +144,7 @@ function CoursePage() {
   );
   const [activeQaModuleId, setActiveQaModuleId] = useState<string | null>(null);
   const [openModules, setOpenModules] = useState<string[]>(course.modules.map((m) => m.id));
+  const [moduleSidebarOpen, setModuleSidebarOpen] = useState(true);
   const [tab, setTab] = useState<"qa" | "resources">("qa");
   const [completedChapters, setCompletedChapters] = useState<Set<string>>(
     () => new Set(allChapters.filter((chapter) => chapter.done).map((chapter) => chapter.id)),
@@ -337,8 +338,8 @@ function CoursePage() {
 
   return (
     <>
-      <main className="mx-auto max-w-[1440px] px-6 py-5">
-      <div className="mb-3 flex flex-wrap items-center gap-3 border-b border-ink/15 pb-3">
+      <main className="mx-auto max-w-[1440px] px-3 py-4 sm:px-6 sm:py-5">
+      <div className="mb-3 flex flex-wrap items-center gap-2 border-b border-ink/15 pb-3 sm:gap-3">
         <Link to="/" className="font-mono text-[10px] uppercase tracking-[0.2em] text-fog">
           ← Dashboard
         </Link>
@@ -348,12 +349,22 @@ function CoursePage() {
         </span>
       </div>
 
-      <h1 className="text-3xl font-black leading-[0.9] tracking-tight md:text-4xl">
+      <h1 className="text-3xl font-black leading-[0.9] tracking-tight sm:text-4xl">
         {course.title}
       </h1>
 
-      <div className="mt-4 grid grid-cols-12 gap-3">
-        <section className="col-span-12 lg:col-span-8">
+      <button
+        type="button"
+        onClick={() => setModuleSidebarOpen((open) => !open)}
+        aria-expanded={moduleSidebarOpen}
+        className="mt-4 flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em]"
+      >
+        <span>Course modules</span>
+        <span aria-hidden="true">{moduleSidebarOpen ? "−" : "+"}</span>
+      </button>
+
+      <div className="mt-3 grid min-w-0 grid-cols-12 gap-3 sm:mt-4">
+        <section className={`col-span-12 min-w-0 ${moduleSidebarOpen ? "lg:col-span-8" : "lg:col-span-12"}`}>
           {showModuleQuiz && activeModule ? (
             <ModuleQuiz
               module={activeModule}
@@ -422,8 +433,19 @@ function CoursePage() {
           )}
         </section>
 
-        <aside className="col-span-12 border-2 border-ink bg-paper p-4 lg:col-span-4">
-          <div className="rule-label mb-3">Modules</div>
+        {moduleSidebarOpen && (
+        <aside className="course-modules-sidebar col-span-12 min-w-0 border-2 border-ink bg-paper p-3 sm:p-4 lg:col-span-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="rule-label">Modules</div>
+            <button
+              type="button"
+              onClick={() => setModuleSidebarOpen(false)}
+              className="border border-ink/20 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-ink/70 hover:bg-sand hover:text-ink"
+              aria-label="Collapse course modules"
+            >
+              Hide
+            </button>
+          </div>
           <div className="space-y-3">
             {course.modules.map((m, moduleIndex) => {
               const open = openModules.includes(m.id);
@@ -503,6 +525,7 @@ function CoursePage() {
             })}
           </div>
         </aside>
+        )}
       </div>
       </main>
       {progressLoading && (
@@ -1704,6 +1727,17 @@ function SlideVideoPlayer({
     }
   };
 
+  const jumpToSlide = (index: number) => {
+    const lastAccessibleSlide = Math.max(0, highestCompletedSlideIndex + 1);
+    if (index < 0 || index >= slides.length || (!chapterCompleted && index > lastAccessibleSlide)) return;
+
+    cancelPendingAudio();
+    autoplayNextRef.current = false;
+    setSlideComplete(false);
+    setSlideIndex(index);
+    persistSlideProgress(index);
+  };
+
   const handleVideoError = () => {
     setMediaLoading(false);
     if (!activeSlide || !videoSource) return;
@@ -1826,6 +1860,40 @@ function SlideVideoPlayer({
             Slide {slideIndex + 1} / {slides.length}
           </div>
         )}
+      </div>
+
+      <div className="slide-navigator border-t border-paper/20 px-3 py-2" aria-label="Slide navigator">
+        <div className="mb-1 flex items-center justify-between gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-paper/60">
+          <span>Slides</span>
+          <span>Tap a completed slide to review</span>
+        </div>
+        <div className="slide-navigator__scroller flex gap-2 overflow-x-auto pb-1">
+          {slides.map((slide, index) => {
+            const accessible = chapterCompleted || index <= Math.max(0, highestCompletedSlideIndex + 1);
+            const selected = index === slideIndex;
+            return (
+              <button
+                key={slide.id}
+                type="button"
+                disabled={!accessible}
+                onClick={() => jumpToSlide(index)}
+                className={`slide-navigator__item min-w-24 shrink-0 border px-2 py-1.5 text-left font-mono text-[9px] uppercase tracking-wider transition-colors ${
+                  selected
+                    ? "border-paper bg-paper text-ink"
+                    : accessible
+                      ? "border-paper/30 text-paper hover:border-paper hover:bg-paper/10"
+                      : "cursor-not-allowed border-paper/10 text-paper/30"
+                }`}
+                aria-label={`${accessible ? "Open" : "Locked"} slide ${index + 1}`}
+              >
+                <span className="block font-bold">{String(index + 1).padStart(2, "0")}</span>
+                <span className="mt-0.5 block truncate normal-case tracking-normal">
+                  {slide.title}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <audio ref={audioRef} preload="none" className="hidden" />
@@ -2322,6 +2390,7 @@ function ModuleQuiz({
     (question) => Boolean(writtenAnswers[question.id]?.trim()),
   );
   const allAnswersSelected = Object.keys(answers).length === questions.length;
+  const showCorrectAnswers = passed || (score !== null && score >= 75);
 
   return (
     <div className="border-2 border-ink bg-paper p-6">
@@ -2346,7 +2415,11 @@ function ModuleQuiz({
               {question.options.map((option, optionIndex) => (
                 <label
                   key={option}
-                  className="flex cursor-pointer items-start gap-2 border border-ink/10 p-2 text-sm has-[:checked]:border-ink has-[:checked]:bg-sand"
+                  className={`flex cursor-pointer items-start gap-2 border p-2 text-sm has-[:checked]:border-ink has-[:checked]:bg-sand ${
+                    showCorrectAnswers && optionIndex === question.answer
+                      ? "border-moss bg-moss/10"
+                      : "border-ink/10"
+                  }`}
                 >
                   <input
                     type="radio"
@@ -2359,7 +2432,12 @@ function ModuleQuiz({
                     }}
                     className="mt-0.5"
                   />
-                  <span>{option}</span>
+                  <span className="flex-1">{option}</span>
+                  {showCorrectAnswers && optionIndex === question.answer && (
+                    <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-moss">
+                      Correct
+                    </span>
+                  )}
                 </label>
               ))}
             </div>

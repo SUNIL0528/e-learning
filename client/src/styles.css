@@ -216,3 +216,38 @@
 @utility lp {
   animation: lp 0.5s ease both;
 }
+
+@media (max-width: 640px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .course-video-player__media {
+    min-height: 54vw;
+  }
+
+  .course-video-player__controls {
+    font-size: 9px;
+  }
+
+  .course-video-player__controls > div {
+    gap: 0.5rem;
+  }
+
+  .course-video-player__controls button {
+    min-height: 2rem;
+  }
+
+  .slide-navigator__scroller {
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 45%) transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .slide-navigator__item {
+    scroll-snap-align: start;
+  }
+}
