@@ -1873,84 +1873,90 @@ function SlideVideoPlayer({
             {formatTime(currentTime)} / {duration ? formatTime(duration) : "0:00"}
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button onClick={changeSpeed} className="order-7 border border-paper/40 px-2 py-0.5">
-            {speed}x
-          </button>
-          <button
-            onClick={() => setMuted((value) => !value)}
-            className="order-1 border border-paper/40 px-2 py-0.5"
-          >
-            {muted ? "Unmute" : "Mute"}
-          </button>
-          <button
-            onClick={() => setCaptionsVisible((visible) => !visible)}
-            disabled={!CAPTIONS_ENABLED || !firstCaption(activeSlide?.captions)}
-            className={`order-2 border border-paper/40 px-2 py-0.5 disabled:opacity-30 ${captionsVisible ? "bg-paper text-ink" : ""}`}
-            aria-label="Toggle captions"
-          >
-            CC
-          </button>
-          <div className="order-3 flex items-center gap-1 border border-paper/40 px-1 py-0.5">
-            <span className="px-1 text-paper/60">Zoom</span>
+        <div className="relative flex flex-wrap items-center justify-between gap-3 sm:min-h-10">
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => changeZoom(-1)}
-              disabled={contentZoom === ZOOM_STEPS[0]}
-              className="px-1 disabled:opacity-30"
-              aria-label="Zoom out"
-              title="Zoom out"
+              onClick={() => setMuted((value) => !value)}
+              className="border border-paper/40 px-2 py-1"
             >
-              -
+              {muted ? "Unmute" : "Mute"}
             </button>
-            <button
-              onClick={() => setContentZoom(1)}
-              className="min-w-[3.5rem] border-x border-paper/30 px-1"
-              aria-label={`Reset zoom to 100 percent; current zoom is ${Math.round(contentZoom * 100)} percent`}
-              title="Reset zoom"
-            >
-              {Math.round(contentZoom * 100)}%
-            </button>
-            <button
-              onClick={() => changeZoom(1)}
-              disabled={contentZoom === ZOOM_STEPS[ZOOM_STEPS.length - 1]}
-              className="px-1 disabled:opacity-30"
-              aria-label="Zoom in"
-              title="Zoom in"
-            >
-              +
+            <button onClick={changeSpeed} className="border border-paper/40 px-2 py-1">
+              {speed}x
             </button>
           </div>
-          <button
-            onClick={previousSlide}
-            disabled={slideIndex === 0}
-            className="order-4 border border-paper/40 px-2 py-0.5 disabled:opacity-30"
-          >
-            Prev
-          </button>
-          <button
-            onClick={nextSlide}
-            disabled={
-              slideIndex === slides.length - 1 ||
-              Boolean(
-                videoSource &&
-                !slideComplete &&
-                !chapterCompleted &&
-                highestCompletedSlideIndex < slideIndex,
-              )
-            }
-            className="order-5 border border-paper/40 px-2 py-0.5 disabled:opacity-30"
-          >
-            Next
-          </button>
-          <button
-            onClick={toggleFullscreen}
-            className="order-6 border border-paper/40 px-2 py-0.5"
-            aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-            title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          >
-            [ ]
-          </button>
+          <div className="flex items-center justify-center gap-2 sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+            <button
+              onClick={previousSlide}
+              disabled={slideIndex === 0}
+              className="min-w-20 border-2 border-paper/60 px-5 py-2 text-xs font-bold disabled:opacity-30"
+            >
+              Prev
+            </button>
+            <button
+              onClick={nextSlide}
+              disabled={
+                slideIndex === slides.length - 1 ||
+                Boolean(
+                  videoSource &&
+                    !slideComplete &&
+                    !chapterCompleted &&
+                    highestCompletedSlideIndex < slideIndex,
+                )
+              }
+              className="min-w-20 border-2 border-paper/60 px-5 py-2 text-xs font-bold disabled:opacity-30"
+            >
+              Next
+            </button>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <div className="flex items-center gap-1 border border-paper/40 px-1 py-1">
+              <span className="px-1 text-paper/60">Zoom</span>
+              <button
+                onClick={() => changeZoom(-1)}
+                disabled={contentZoom === ZOOM_STEPS[0]}
+                className="px-1 disabled:opacity-30"
+                aria-label="Zoom out"
+                title="Zoom out"
+              >
+                -
+              </button>
+              <button
+                onClick={() => setContentZoom(1)}
+                className="min-w-[3.5rem] border-x border-paper/30 px-1"
+                aria-label={`Reset zoom to 100 percent; current zoom is ${Math.round(contentZoom * 100)} percent`}
+                title="Reset zoom"
+              >
+                {Math.round(contentZoom * 100)}%
+              </button>
+              <button
+                onClick={() => changeZoom(1)}
+                disabled={contentZoom === ZOOM_STEPS[ZOOM_STEPS.length - 1]}
+                className="px-1 disabled:opacity-30"
+                aria-label="Zoom in"
+                title="Zoom in"
+              >
+                +
+              </button>
+            </div>
+            <button
+              onClick={() => setCaptionsVisible((visible) => !visible)}
+              disabled={!CAPTIONS_ENABLED || !firstCaption(activeSlide?.captions)}
+              className={`border border-paper/40 px-2 py-1 disabled:opacity-30 ${captionsVisible ? "bg-paper text-ink" : ""}`}
+              aria-label="Toggle captions"
+            >
+              CC
+            </button>
+            <button
+              onClick={toggleFullscreen}
+              className="border border-paper/40 px-2 py-1"
+              aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            >
+              [ ]
+            </button>
         </div>
+      </div>
       </div>
       <div className="border-t border-paper/20 px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-paper/60">
         {slideComplete && slideIndex === slides.length - 1
