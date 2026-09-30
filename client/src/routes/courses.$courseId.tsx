@@ -1589,6 +1589,9 @@ function SlideVideoPlayer({
     setPlaying(false);
     setCurrentTime(0);
     setDuration(0);
+    setSpeed(1);
+    if (videoRef.current) videoRef.current.playbackRate = 1;
+    if (audioRef.current) audioRef.current.playbackRate = 1;
     cancelPendingAudio();
   }, [activeSlide?.id, cancelPendingAudio, videoSource]);
 
