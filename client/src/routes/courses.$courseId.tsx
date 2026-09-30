@@ -1510,6 +1510,11 @@ function SlideVideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
+    // A slide change mounts a new video element, so explicitly carry the
+    // selected playback speed over to both synchronized media elements.
+    video.playbackRate = speed;
+    if (audioRef.current) audioRef.current.playbackRate = speed;
+
     const requestId = ++playbackRequestIdRef.current;
     const slide = activeSlide;
     const source = slide ? findAudioSource(slide, audioLanguageRef.current) : null;
@@ -1527,7 +1532,7 @@ function SlideVideoPlayer({
     } finally {
       if (playbackRequestIdRef.current === requestId) setAudioLoading(false);
     }
-  }, [activeSlide, loadSlideAudio]);
+  }, [activeSlide, loadSlideAudio, speed]);
 
   const syncAudio = useCallback(() => {
     const video = videoRef.current;
@@ -1606,6 +1611,8 @@ function SlideVideoPlayer({
 
   const handleLoadedMetadata = (event: React.SyntheticEvent<HTMLVideoElement>) => {
     const video = event.currentTarget;
+    video.playbackRate = speed;
+    if (audioRef.current) audioRef.current.playbackRate = speed;
     const slideDuration = usesChapterSegment
       ? Math.max(0, (activeSlide?.end ?? video.duration) - (activeSlide?.start ?? 0))
       : video.duration;
@@ -1731,8 +1738,14 @@ function SlideVideoPlayer({
     const lastAccessibleSlide = Math.max(0, highestCompletedSlideIndex + 1);
     if (index < 0 || index >= slides.length || (!chapterCompleted && index > lastAccessibleSlide)) return;
 
+    if (index === slideIndex) {
+      autoplayNextRef.current = false;
+      void startPlayback();
+      return;
+    }
+
     cancelPendingAudio();
-    autoplayNextRef.current = false;
+    autoplayNextRef.current = true;
     setSlideComplete(false);
     setSlideIndex(index);
     persistSlideProgress(index);
