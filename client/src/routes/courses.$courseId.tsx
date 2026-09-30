@@ -2666,56 +2666,32 @@ function CourseDoubtSection({
 
 type ModuleResource = {
   filename: string;
-  url: string;
+  slides: Array<{ index: number; url: string }>;
 };
 
 type ModuleResourcesResponse = {
   ppt: ModuleResource | null;
 };
 
-type PptxViewer = {
-  currentIndex: number;
-  slideCount: number;
-  preview: (file: ArrayBuffer) => Promise<unknown>;
-  renderNextSlide: () => void;
-  renderPreSlide: () => void;
-  destroy: () => void;
-};
-
 function Resources({ courseId, moduleNumber }: { courseId: string; moduleNumber: number }) {
   const [ppt, setPpt] = useState<ModuleResource | null>(null);
   const [loading, setLoading] = useState(true);
   const [pptOpen, setPptOpen] = useState(false);
-  const [pptViewerLoading, setPptViewerLoading] = useState(false);
-  const [pptViewerError, setPptViewerError] = useState<string | null>(null);
   const [pptSlideIndex, setPptSlideIndex] = useState(0);
-  const [pptSlideCount, setPptSlideCount] = useState(0);
-  const pptViewerHostRef = useRef<HTMLDivElement>(null);
-  const pptViewerRef = useRef<PptxViewer | null>(null);
+  const [resourceError, setResourceError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
+    setResourceError(null);
 
     const loadPpt = async () => {
-      if (directS3MediaConfigured) {
-        const directUrl = await getTemporaryMediaUrl(
-          chapterMediaPath(moduleNumber, "en", "ppt", `module_${moduleNumber}.pptx`),
-          true,
-        );
-        if (directUrl && !controller.signal.aborted) {
-          setPpt({ filename: `module_${moduleNumber}.pptx`, url: directUrl });
-          setLoading(false);
-          return;
-        }
-      }
-
       const response = await fetch(
         `${API_BASE_URL}/api/course/${encodeURIComponent(courseId)}/module/${moduleNumber}/resources/`,
         { signal: controller.signal },
       );
-      if (!response.ok) throw new Error(`Resource request failed: ${response.status}`);
-      const data = (await response.json()) as ModuleResourcesResponse;
+      const data = (await response.json()) as ModuleResourcesResponse & { error?: string };
+      if (!response.ok) throw new Error(data.error ?? `Resource request failed: ${response.status}`);
       if (!controller.signal.aborted) setPpt(data.ppt);
     };
 
@@ -2723,6 +2699,9 @@ function Resources({ courseId, moduleNumber }: { courseId: string; moduleNumber:
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
         console.error("Unable to load module resources", error);
+        if (!controller.signal.aborted) {
+          setResourceError(error instanceof Error ? error.message : "Unable to load presentation");
+        }
         setPpt(null);
       })
       .finally(() => {
@@ -2748,72 +2727,12 @@ function Resources({ courseId, moduleNumber }: { courseId: string; moduleNumber:
     };
   }, [pptOpen]);
 
-  useEffect(() => {
-    const host = pptViewerHostRef.current;
-    if (!pptOpen || !ppt || !host) return;
-
-    let cancelled = false;
-    const controller = new AbortController();
-    setPptViewerLoading(true);
-    setPptViewerError(null);
-    setPptSlideIndex(0);
-    setPptSlideCount(0);
-    host.replaceChildren();
-
-    const loadPresentation = async () => {
-      const response = await fetch(ppt.url, { signal: controller.signal });
-      if (!response.ok) throw new Error(`Presentation request failed (${response.status})`);
-      const file = await response.arrayBuffer();
-      if (cancelled) return;
-
-      const { init } = await import("pptx-preview");
-      if (cancelled) return;
-
-      const width = Math.min(960, Math.max(320, host.clientWidth || 960));
-      const viewer = init(host, {
-        width,
-        height: Math.round(width * 0.75),
-        mode: "slide",
-      });
-      pptViewerRef.current = viewer;
-      await viewer.preview(file);
-      if (cancelled) return;
-
-      setPptSlideIndex(viewer.currentIndex);
-      setPptSlideCount(viewer.slideCount);
-    };
-
-    void loadPresentation()
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        console.error("Unable to render presentation", error);
-        if (!cancelled) setPptViewerError("This presentation could not be displayed.");
-      })
-      .finally(() => {
-        if (!cancelled) setPptViewerLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-      pptViewerRef.current?.destroy();
-      pptViewerRef.current = null;
-      host.replaceChildren();
-    };
-  }, [pptOpen, ppt?.url]);
-
   const previousPptSlide = () => {
-    const viewer = pptViewerRef.current;
-    if (!viewer || viewer.currentIndex <= 0) return;
-    viewer.renderPreSlide();
-    setPptSlideIndex(viewer.currentIndex);
+    setPptSlideIndex((current) => Math.max(0, current - 1));
   };
 
   const nextPptSlide = () => {
-    const viewer = pptViewerRef.current;
-    if (!viewer || viewer.currentIndex >= viewer.slideCount - 1) return;
-    viewer.renderNextSlide();
-    setPptSlideIndex(viewer.currentIndex);
+    setPptSlideIndex((current) => Math.min((ppt?.slides.length ?? 1) - 1, current + 1));
   };
 
   return (
@@ -2825,15 +2744,20 @@ function Resources({ courseId, moduleNumber }: { courseId: string; moduleNumber:
         <span className="flex-1 text-sm font-medium">
           {loading ? "Loading presentation…" : (ppt?.filename ?? "Presentation not uploaded yet")}
         </span>
-        {ppt && (
+        {ppt?.slides.length ? (
           <button
             type="button"
-            onClick={() => setPptOpen(true)}
+            onClick={() => {
+              setPptSlideIndex(0);
+              setPptOpen(true);
+            }}
             className="bg-ink px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-paper"
           >
             View PPT
           </button>
-        )}
+        ) : resourceError ? (
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-clay">Preview unavailable</span>
+        ) : null}
       </div>
       {pptOpen && ppt && (
         <div
@@ -2857,35 +2781,37 @@ function Resources({ courseId, moduleNumber }: { courseId: string; moduleNumber:
               </button>
             </div>
             <div className="relative min-h-0 flex-1 overflow-auto bg-black p-2">
-              <div ref={pptViewerHostRef} className="pptx-slide-host mx-auto min-h-full w-full" />
+              {ppt.slides[pptSlideIndex] ? (
+                <img
+                  src={ppt.slides[pptSlideIndex].url}
+                  alt={`${ppt.filename}, slide ${pptSlideIndex + 1}`}
+                  className="mx-auto max-h-full max-w-full select-none object-contain"
+                  draggable={false}
+                  onContextMenu={(event) => event.preventDefault()}
+                />
+              ) : (
+                <div className="grid h-full place-items-center font-mono text-[10px] uppercase tracking-[0.15em] text-clay">
+                  Slide unavailable
+                </div>
+              )}
               <CandidateWatermark light />
-              {pptViewerLoading && (
-                <div className="absolute inset-0 grid place-items-center bg-black/70 font-mono text-[10px] uppercase tracking-[0.15em] text-paper">
-                  Loading slides…
-                </div>
-              )}
-              {pptViewerError && (
-                <div className="absolute inset-0 grid place-items-center bg-black/80 px-4 text-center font-mono text-[10px] uppercase tracking-[0.15em] text-clay">
-                  {pptViewerError}
-                </div>
-              )}
             </div>
             <div className="flex items-center justify-between gap-3 border-t-2 border-ink bg-paper px-3 py-2">
               <button
                 type="button"
                 onClick={previousPptSlide}
-                disabled={pptViewerLoading || pptSlideIndex <= 0}
+                disabled={pptSlideIndex <= 0}
                 className="border border-ink px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] disabled:opacity-30"
               >
                 Previous
               </button>
               <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink/70">
-                {pptSlideCount ? `Slide ${pptSlideIndex + 1} of ${pptSlideCount}` : "Loading"}
+                {`Slide ${pptSlideIndex + 1} of ${ppt.slides.length}`}
               </span>
               <button
                 type="button"
                 onClick={nextPptSlide}
-                disabled={pptViewerLoading || !pptSlideCount || pptSlideIndex >= pptSlideCount - 1}
+                disabled={pptSlideIndex >= ppt.slides.length - 1}
                 className="border border-ink px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] disabled:opacity-30"
               >
                 Next

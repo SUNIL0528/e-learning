@@ -213,15 +213,6 @@
   background: #050505;
 }
 
-.pptx-slide-host > .pptx-preview-wrapper {
-  margin: 0 auto !important;
-}
-
-.pptx-slide-host .pptx-preview-wrapper-next,
-.pptx-slide-host .pptx-preview-wrapper-pagination {
-  display: none !important;
-}
-
 @utility lp {
   animation: lp 0.5s ease both;
 }

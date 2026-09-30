@@ -231,6 +231,24 @@ class S3MediaStore:
         except (ClientError, BotoCoreError, NoCredentialsError):
             return None
 
+    def upload_file(self, source, key: str, content_type: str) -> bool:
+        client = self.client()
+        if client is None or not key:
+            return False
+        try:
+            client.upload_file(
+                str(source),
+                self.bucket,
+                key,
+                ExtraArgs={
+                    "ContentType": content_type,
+                    "CacheControl": "private, max-age=3600",
+                },
+            )
+        except (ClientError, BotoCoreError, NoCredentialsError, OSError):
+            return False
+        return True
+
     def delete_key(self, key: str | None) -> bool:
         client = self.client()
         if client is None or not key:

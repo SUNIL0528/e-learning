@@ -14,6 +14,7 @@ from .models import User
 
 from .serializers import UserSerializer
 from .storage import S3MediaStore
+from .presentation_render import PresentationRenderError, render_presentation
 from .question_generation import (
     generate_module_questions,
     generate_module_questions_from_bank,
@@ -728,63 +729,46 @@ def module_resources(request, course_id, module_no):
             status=400
         )
 
-    media_folder = f"chapter{module_no}"
-    module_folder = f"module_{module_no}"
-    ppt_root = Path(settings.MEDIA_ROOT) / media_folder / "ppt"
-    module_ppt_folder = ppt_root / module_folder
-
-    ppt_files = []
-    if module_ppt_folder.is_dir():
-        ppt_files = sorted(
-            [
-                path
-                for path in module_ppt_folder.iterdir()
-                if path.is_file() and path.suffix.lower() in {".ppt", ".pptx"}
-            ],
-            key=_natural_path_key,
-        )
-
-    # Keep compatibility with the older layout, where the file was stored as
-    # chapter1/ppt/module_1.pptx instead of inside chapter1/ppt/module_1/.
-    if not ppt_files:
-        legacy_file = ppt_root / f"{module_folder}.pptx"
-        if legacy_file.is_file():
-            ppt_files = [legacy_file]
-
     base_url = request.build_absolute_uri(settings.MEDIA_URL).rstrip("/")
-    ppt = None
+    try:
+        rendered = render_presentation(module_no)
+    except PresentationRenderError as error:
+        return JsonResponse(
+            {
+                "course_id": course_id,
+                "module": module_no,
+                "ppt": None,
+                "error": str(error),
+            },
+            status=503,
+        )
+
     s3_media = S3MediaStore()
-    s3_url = s3_media.presigned_url(
-        media_folder,
-        "en",
-        "ppt",
-        [f"module_{module_no}.pptx", f"module_{module_no}.ppt"],
-    )
-    if not s3_url:
-        s3_url = s3_media.presigned_key_url(
-            s3_media.first_key_with_suffixes(
-                media_folder,
-                "en",
-                "ppt",
-                (".pptx", ".ppt"),
+    if rendered.s3_keys:
+        slide_urls = [
+            s3_media.presigned_key_url(key)
+            for key in rendered.s3_keys
+        ]
+    else:
+        slide_urls = [
+            _media_url(
+                base_url,
+                f"chapter{module_no}",
+                "ppt-slides",
+                f"module_{module_no}",
+                path.name,
             )
-        )
-    if s3_url:
-        ppt = {
-            "filename": f"module_{module_no}.pptx",
-            "url": s3_url,
-        }
-    elif ppt_files:
-        ppt_file = ppt_files[0]
-        relative_parts = (
-            (media_folder, "ppt", module_folder, ppt_file.name)
-            if ppt_file.parent == module_ppt_folder
-            else (media_folder, "ppt", ppt_file.name)
-        )
-        ppt = {
-            "filename": ppt_file.name,
-            "url": _media_url(base_url, *relative_parts),
-        }
+            for path in rendered.local_paths
+        ]
+
+    ppt = {
+        "filename": rendered.filename,
+        "slides": [
+            {"index": index, "url": url}
+            for index, url in enumerate(slide_urls)
+            if url
+        ],
+    }
 
     return JsonResponse(
         {

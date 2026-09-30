@@ -24,6 +24,7 @@ import re
 from django.conf import settings
 from django.http import (
     HttpResponse,
+    HttpResponseForbidden,
     HttpResponseNotFound,
     HttpResponseNotModified,
     StreamingHttpResponse,
@@ -105,6 +106,11 @@ def serve_media(request, path):
     content_type, _ = mimetypes.guess_type(full_path)
     content_type = content_type or "application/octet-stream"
     is_presentation = os.path.splitext(full_path)[1].lower() in {".ppt", ".pptx"}
+
+    # PPT/PPTX files are converted to slide images before being exposed to
+    # learners. Never serve the original presentation through the media route.
+    if is_presentation:
+        return HttpResponseForbidden("Presentation downloads are disabled.")
 
     # --------------------------------------------------------
     # No Range header: behave like a normal, full-file response
