@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -92,6 +93,8 @@ def _convert_to_png(source: Path, target_dir: Path) -> tuple[Path, ...]:
         work_dir = Path(temp_name)
         profile_dir = work_dir / "libreoffice-profile"
         profile_dir.mkdir()
+        render_dpi = max(72, int(os.getenv("PPT_RENDER_DPI", "96")))
+        render_timeout = max(180, int(os.getenv("PPT_RENDER_TIMEOUT", "600")))
 
         try:
             subprocess.run(
@@ -122,14 +125,14 @@ def _convert_to_png(source: Path, target_dir: Path) -> tuple[Path, ...]:
                     pdftoppm,
                     "-png",
                     "-r",
-                    "120",
+                    str(render_dpi),
                     str(pdf_path),
                     str(image_prefix),
                 ],
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=180,
+                timeout=render_timeout,
             )
         except FileNotFoundError as error:
             raise PresentationRenderError(
