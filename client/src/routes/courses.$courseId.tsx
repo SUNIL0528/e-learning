@@ -1626,7 +1626,7 @@ function SlideVideoPlayer({
         fullscreenControlsTimerRef.current = null;
       }
     };
-  }, [fullscreen, revealFullscreenControls]);
+  }, [fullscreen]);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.muted = muted;
