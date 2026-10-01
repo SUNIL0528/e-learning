@@ -360,7 +360,7 @@ function CoursePage() {
         className="mt-4 flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em]"
       >
         <span>Course modules</span>
-        <span aria-hidden="true">{moduleSidebarOpen ? "−" : "+"}</span>
+        <span aria-hidden="true">{moduleSidebarOpen ? "Hide" : "Show"}</span>
       </button>
 
       <div className="mt-3 grid min-w-0 grid-cols-12 gap-3 sm:mt-4">
@@ -1955,7 +1955,7 @@ function SlideVideoPlayer({
       <audio ref={audioRef} preload="none" className="hidden" />
 
       <div className="course-video-player__controls space-y-2 border-t border-paper/20 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em]">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="course-video-player__transport flex flex-wrap items-center gap-3">
           <button
             onClick={togglePlayback}
             disabled={!videoSource}
@@ -1997,8 +1997,8 @@ function SlideVideoPlayer({
             {formatTime(currentTime)} / {duration ? formatTime(duration) : "0:00"}
           </span>
         </div>
-        <div className="relative flex flex-wrap items-center justify-between gap-3 sm:min-h-10">
-          <div className="flex items-center gap-2">
+        <div className="course-video-player__actions relative flex flex-wrap items-center justify-between gap-3 sm:min-h-10">
+          <div className="course-video-player__basic-controls flex items-center gap-2">
             <button
               onClick={() => setMuted((value) => !value)}
               className="border border-paper/40 px-2 py-1"
@@ -2009,7 +2009,7 @@ function SlideVideoPlayer({
               {speed}x
             </button>
           </div>
-          <div className="flex items-center justify-center gap-2 sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+          <div className="course-video-player__navigation-controls flex items-center justify-center gap-2 sm:absolute sm:left-1/2 sm:-translate-x-1/2">
             <button
               onClick={previousSlide}
               disabled={slideIndex === 0}
@@ -2033,9 +2033,9 @@ function SlideVideoPlayer({
               Next
             </button>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <div className="flex items-center gap-1 border border-paper/40 px-1 py-1">
-              <span className="px-1 text-paper/60">Zoom</span>
+          <div className="course-video-player__utility-controls ml-auto flex items-center gap-2">
+            <div className="course-video-player__zoom-controls flex items-center gap-1 border border-paper/40 px-1 py-1">
+              <span className="course-video-player__zoom-label px-1 text-paper/60">Zoom</span>
               <button
                 onClick={() => changeZoom(-1)}
                 disabled={contentZoom === ZOOM_STEPS[0]}
