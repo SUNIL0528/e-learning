@@ -49,6 +49,8 @@ type ReplyAttachment = {
   kind: "image" | "audio";
 };
 
+const AUDIO_RECORDING_ENABLED = false;
+
 export const Route = createFileRoute("/doubts")({
   head: () => ({
     meta: [
@@ -82,6 +84,7 @@ function AttachmentList({
   removingId?: number | null;
 }) {
   const [failedAttachmentIds, setFailedAttachmentIds] = useState<Set<number>>(() => new Set());
+  const [selectedImage, setSelectedImage] = useState<DoubtAttachment | null>(null);
 
   if (!attachments.length) return null;
 
@@ -92,16 +95,23 @@ function AttachmentList({
         {attachments.map((attachment) => (
           <div key={attachment.id} className="border border-ink/20 bg-paper p-2">
             {attachment.url && attachment.kind === "image" && !failedAttachmentIds.has(attachment.id) ? (
-              <img
-                src={attachment.url}
-                alt={attachment.fileName}
-                draggable={false}
-                onContextMenu={(event) => event.preventDefault()}
-                onError={() =>
-                  setFailedAttachmentIds((previous) => new Set(previous).add(attachment.id))
-                }
-                className="max-h-52 max-w-full select-none object-contain"
-              />
+              <button
+                type="button"
+                onClick={() => setSelectedImage(attachment)}
+                className="block max-w-full cursor-zoom-in"
+                aria-label={`View ${attachment.fileName}`}
+              >
+                <img
+                  src={attachment.url}
+                  alt={attachment.fileName}
+                  draggable={false}
+                  onContextMenu={(event) => event.preventDefault()}
+                  onError={() =>
+                    setFailedAttachmentIds((previous) => new Set(previous).add(attachment.id))
+                  }
+                  className="max-h-52 max-w-full select-none object-contain"
+                />
+              </button>
             ) : attachment.url && attachment.kind === "audio" && !failedAttachmentIds.has(attachment.id) ? (
               <audio
                 controls
@@ -135,6 +145,32 @@ function AttachmentList({
           </div>
         ))}
       </div>
+      {selectedImage?.url && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={selectedImage.fileName}
+          className="fixed inset-0 z-50 grid place-items-center bg-black/85 p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setSelectedImage(null)}
+            className="absolute right-4 top-4 border border-white/60 px-3 py-1 font-mono text-xs uppercase tracking-wider text-white hover:bg-white hover:text-black"
+            aria-label="Close image preview"
+          >
+            Close
+          </button>
+          <img
+            src={selectedImage.url}
+            alt={selectedImage.fileName}
+            draggable={false}
+            onClick={(event) => event.stopPropagation()}
+            onContextMenu={(event) => event.preventDefault()}
+            className="max-h-[90vh] max-w-[95vw] select-none object-contain"
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -359,48 +395,50 @@ function DoubtCard({
             >
               Add images
             </button>
-            <button
-              type="button"
-              onClick={async () => {
-                if (recording) {
-                  stopRecording(false);
-                  return;
-                }
-                let stream: MediaStream | null = null;
-                try {
-                  setRecordingError(null);
-                  discardRecordingRef.current = false;
-                  const microphoneStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                      channelCount: 1,
-                      echoCancellation: false,
-                      noiseSuppression: false,
-                      autoGainControl: false,
-                    },
-                  });
-                  stream = microphoneStream;
-                  const recorder = await createWavRecorder(microphoneStream);
-                  recorderRef.current = recorder;
-                  setRecording(true);
-                  // Keep the stream alive until the WAV recorder has finished
-                  // flushing its final audio process callback.
-                  const originalStop = recorder.stop;
-                  recorder.stop = async () => {
-                    try {
-                      return await originalStop();
-                    } finally {
-                      microphoneStream.getTracks().forEach((track) => track.stop());
-                    }
-                  };
-                } catch (error) {
-                  stream?.getTracks().forEach((track) => track.stop());
-                  setRecordingError(error instanceof Error ? error.message : "Microphone access was denied.");
-                }
-              }}
-              className={`border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] ${recording ? "border-clay text-clay" : "border-ink"}`}
-            >
-              {recording ? "End recording" : "Record voice"}
-            </button>
+            {AUDIO_RECORDING_ENABLED && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (recording) {
+                    stopRecording(false);
+                    return;
+                  }
+                  let stream: MediaStream | null = null;
+                  try {
+                    setRecordingError(null);
+                    discardRecordingRef.current = false;
+                    const microphoneStream = await navigator.mediaDevices.getUserMedia({
+                      audio: {
+                        channelCount: 1,
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false,
+                      },
+                    });
+                    stream = microphoneStream;
+                    const recorder = await createWavRecorder(microphoneStream);
+                    recorderRef.current = recorder;
+                    setRecording(true);
+                    // Keep the stream alive until the WAV recorder has finished
+                    // flushing its final audio process callback.
+                    const originalStop = recorder.stop;
+                    recorder.stop = async () => {
+                      try {
+                        return await originalStop();
+                      } finally {
+                        microphoneStream.getTracks().forEach((track) => track.stop());
+                      }
+                    };
+                  } catch (error) {
+                    stream?.getTracks().forEach((track) => track.stop());
+                    setRecordingError(error instanceof Error ? error.message : "Microphone access was denied.");
+                  }
+                }}
+                className={`border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] ${recording ? "border-clay text-clay" : "border-ink"}`}
+              >
+                {recording ? "End recording" : "Record voice"}
+              </button>
+            )}
             {recording && (
               <button
                 type="button"
