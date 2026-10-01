@@ -370,7 +370,14 @@ function DoubtCard({
                 try {
                   setRecordingError(null);
                   discardRecordingRef.current = false;
-                  const microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                  const microphoneStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                      channelCount: 1,
+                      echoCancellation: false,
+                      noiseSuppression: false,
+                      autoGainControl: false,
+                    },
+                  });
                   stream = microphoneStream;
                   const recorder = await createWavRecorder(microphoneStream);
                   recorderRef.current = recorder;

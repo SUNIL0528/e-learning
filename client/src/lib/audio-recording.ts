@@ -78,7 +78,9 @@ export async function createWavRecorder(stream: MediaStream): Promise<WavRecorde
     let paused = false;
     let stopped = false;
 
-    mute.gain.value = 0;
+    // Keep a virtually inaudible output so browsers continue pulling the
+    // microphone graph. A literal zero can be optimized as a silent graph.
+    mute.gain.value = 0.00001;
     processor.onaudioprocess = (event) => {
       if (!paused && !stopped) {
         chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
