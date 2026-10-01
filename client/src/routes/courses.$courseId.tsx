@@ -1173,6 +1173,7 @@ function SlideVideoPlayer({
   const advancingRef = useRef(false);
   const autoplayNextRef = useRef(false);
   const videoRetryRef = useRef<string | null>(null);
+  const fullscreenControlsTimerRef = useRef<number | null>(null);
   const [backendChapter, setBackendChapter] = useState<BackendChapter | null>(null);
   const [loading, setLoading] = useState(Boolean(backendChapterId));
   const [mediaLoading, setMediaLoading] = useState(Boolean(backendChapterId));
@@ -1187,6 +1188,7 @@ function SlideVideoPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
+  const [fullscreenControlsVisible, setFullscreenControlsVisible] = useState(true);
   const [contentZoom, setContentZoom] = useState<(typeof ZOOM_STEPS)[number]>(1);
   const [captionsVisible, setCaptionsVisible] = useState(false);
   const [mediaTarget, setMediaTarget] = useState<{
@@ -1603,10 +1605,28 @@ function SlideVideoPlayer({
   }, [activeSlide, backendChapter, usesChapterSegment]);
 
   useEffect(() => {
-    const handleFullscreenChange = () => setFullscreen(Boolean(document.fullscreenElement));
+    const handleFullscreenChange = () => {
+      const isFullscreen = Boolean(document.fullscreenElement);
+      setFullscreen(isFullscreen);
+      setFullscreenControlsVisible(!isFullscreen);
+    };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
+
+  useEffect(() => {
+    if (!fullscreen && fullscreenControlsTimerRef.current !== null) {
+      window.clearTimeout(fullscreenControlsTimerRef.current);
+      fullscreenControlsTimerRef.current = null;
+    }
+
+    return () => {
+      if (fullscreenControlsTimerRef.current !== null) {
+        window.clearTimeout(fullscreenControlsTimerRef.current);
+        fullscreenControlsTimerRef.current = null;
+      }
+    };
+  }, [fullscreen, revealFullscreenControls]);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.muted = muted;
@@ -1696,6 +1716,19 @@ function SlideVideoPlayer({
     else void containerRef.current?.requestFullscreen();
   };
 
+  const revealFullscreenControls = useCallback(() => {
+    if (!fullscreen) return;
+
+    setFullscreenControlsVisible(true);
+    if (fullscreenControlsTimerRef.current !== null) {
+      window.clearTimeout(fullscreenControlsTimerRef.current);
+    }
+    fullscreenControlsTimerRef.current = window.setTimeout(() => {
+      setFullscreenControlsVisible(false);
+      fullscreenControlsTimerRef.current = null;
+    }, 2500);
+  }, [fullscreen]);
+
   const changeZoom = (direction: -1 | 1) => {
     setContentZoom((current) => {
       const currentIndex = ZOOM_STEPS.indexOf(current);
@@ -1778,7 +1811,14 @@ function SlideVideoPlayer({
   };
 
   return (
-    <div ref={containerRef} className="course-video-player border-2 border-ink bg-ink text-paper">
+    <div
+      ref={containerRef}
+      onMouseMove={revealFullscreenControls}
+      onTouchStart={revealFullscreenControls}
+      className={`course-video-player border-2 border-ink bg-ink text-paper ${
+        fullscreen && !fullscreenControlsVisible ? "fullscreen-controls-hidden" : ""
+      }`}
+    >
       <div className="course-video-player__media relative grid aspect-video place-items-center overflow-hidden bg-black">
         {loading ? (
           <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper/70">

@@ -213,6 +213,16 @@
   background: #050505;
 }
 
+.course-video-player__controls {
+  transition: opacity 180ms ease, visibility 180ms ease;
+}
+
+.course-video-player.fullscreen-controls-hidden .course-video-player__controls {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
 @utility lp {
   animation: lp 0.5s ease both;
 }
