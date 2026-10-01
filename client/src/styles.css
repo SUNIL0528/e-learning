@@ -217,10 +217,10 @@
   transition: opacity 180ms ease, visibility 180ms ease;
 }
 
-.course-video-player.fullscreen-controls-hidden .course-video-player__controls {
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
+.course-video-player.fullscreen-controls-hidden .slide-navigator,
+.course-video-player.fullscreen-controls-hidden .course-video-player__controls,
+.course-video-player.fullscreen-controls-hidden .course-video-player__status {
+  display: none;
 }
 
 @utility lp {

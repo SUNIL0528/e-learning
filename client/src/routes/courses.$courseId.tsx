@@ -2082,7 +2082,7 @@ function SlideVideoPlayer({
         </div>
       </div>
       </div>
-      <div className="border-t border-paper/20 px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-paper/60">
+      <div className="course-video-player__status border-t border-paper/20 px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-paper/60">
         {slideComplete && slideIndex === slides.length - 1
           ? "Module complete"
           : `Slide ${slideIndex + 1} of ${slides.length} - click Next to continue`}
