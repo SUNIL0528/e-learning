@@ -78,11 +78,18 @@
 }
 
 @layer base {
+  html {
+    min-width: 0;
+    scrollbar-gutter: stable;
+  }
+
   * {
     border-color: var(--color-border);
   }
 
   body {
+    min-width: 0;
+    overflow-x: clip;
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-display);

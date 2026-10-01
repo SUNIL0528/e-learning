@@ -6,6 +6,7 @@ import {
   signIn,
   signOut,
   signUp,
+  updatePassword,
 } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 
@@ -122,6 +123,10 @@ export async function signInWithCognito(username: string, password: string) {
   const result = await signIn({ username, password });
   await readUser(true);
   return result;
+}
+
+export async function changePasswordWithCognito(oldPassword: string, newPassword: string) {
+  return updatePassword({ oldPassword, newPassword });
 }
 
 export async function signUpWithCognito(

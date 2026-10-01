@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { courses, getLearnerRank, student } from "@/data/platform";
 import {
   getUserEnrollments,
@@ -7,7 +7,7 @@ import {
   type UserEnrollment,
   type UserProfile,
 } from "@/lib/progress";
-import { getCurrentAuthUser } from "@/lib/auth";
+import { changePasswordWithCognito, getCurrentAuthUser } from "@/lib/auth";
 import { getLearningActivity, getTotalLearningSeconds } from "@/lib/learning-time";
 import { LoadingScreen } from "@/components/LoadingScreen";
 
@@ -46,6 +46,13 @@ function Profile() {
     return user ? getTotalLearningSeconds(user.uid) : 0;
   });
   const [dataLoading, setDataLoading] = useState(true);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   useEffect(() => {
     const user = getCurrentAuthUser();
@@ -100,6 +107,44 @@ function Profile() {
   ).length;
   const learningHours = (learningSeconds / 3600).toFixed(1);
   const activityMaximum = Math.max(1, ...activity);
+
+  const closePasswordDialog = () => {
+    if (passwordSaving) return;
+    setPasswordOpen(false);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError(null);
+    setPasswordSuccess(false);
+  };
+
+  const submitPasswordChange = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    if (newPassword.length < 8) {
+      setPasswordError("Your new password must contain at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("The new passwords do not match.");
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      await changePasswordWithCognito(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordSuccess(true);
+    } catch (error) {
+      setPasswordError(error instanceof Error ? error.message : "Unable to change your password.");
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
 
   return (
     <>
@@ -245,7 +290,15 @@ function Profile() {
                 </span>
               </button>
             ))}
-            <button className="w-full border-2 border-ink px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em]">
+            <button
+              type="button"
+              onClick={() => {
+                setPasswordError(null);
+                setPasswordSuccess(false);
+                setPasswordOpen(true);
+              }}
+              className="w-full border-2 border-ink px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em]"
+            >
               Change password
             </button>
           </div>
@@ -254,6 +307,111 @@ function Profile() {
       </main>
       {dataLoading && (
         <LoadingScreen label="Loading your profile" detail="Fetching your learner record…" />
+      )}
+      {passwordOpen && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-ink/60 px-4 py-6"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closePasswordDialog();
+          }}
+        >
+          <form
+            onSubmit={submitPasswordChange}
+            className="w-full max-w-md border-2 border-ink bg-paper p-5 shadow-[10px_10px_0_var(--color-ink)]"
+            aria-labelledby="change-password-title"
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-ink/15 pb-3">
+              <div>
+                <div className="rule-label">Account security</div>
+                <h2 id="change-password-title" className="mt-1 text-xl font-black">
+                  Change password
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={closePasswordDialog}
+                className="font-mono text-xs text-fog hover:text-ink"
+                aria-label="Close change password dialog"
+              >
+                Close
+              </button>
+            </div>
+
+            {passwordSuccess ? (
+              <div className="mt-5 space-y-4">
+                <p className="border border-moss bg-sand p-3 text-sm text-moss">
+                  Your password was changed successfully.
+                </p>
+                <button
+                  type="button"
+                  onClick={closePasswordDialog}
+                  className="border-2 border-ink bg-ink px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-paper"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="mt-4 space-y-3">
+                  <label className="block">
+                    <span className="mono-xs text-fog">Current password</span>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(event) => setCurrentPassword(event.target.value)}
+                      autoComplete="current-password"
+                      required
+                      className="mt-1 w-full border border-ink/25 bg-paper px-2 py-2 text-sm outline-none focus:border-ink"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mono-xs text-fog">New password</span>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
+                      className="mt-1 w-full border border-ink/25 bg-paper px-2 py-2 text-sm outline-none focus:border-ink"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mono-xs text-fog">Confirm new password</span>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
+                      className="mt-1 w-full border border-ink/25 bg-paper px-2 py-2 text-sm outline-none focus:border-ink"
+                    />
+                  </label>
+                </div>
+                {passwordError && <p className="mt-3 text-xs text-clay">{passwordError}</p>}
+                <div className="mt-5 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={closePasswordDialog}
+                    disabled={passwordSaving}
+                    className="border border-ink px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] disabled:opacity-40"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={passwordSaving}
+                    className="border-2 border-ink bg-ink px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-paper disabled:opacity-40"
+                  >
+                    {passwordSaving ? "Changing..." : "Change password"}
+                  </button>
+                </div>
+              </>
+            )}
+          </form>
+        </div>
       )}
     </>
   );
