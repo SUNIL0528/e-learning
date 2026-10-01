@@ -13,6 +13,7 @@ import {
   type AuthUser,
 } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
+import { createWavRecorder, type WavRecorder } from "@/lib/audio-recording";
 
 type DoubtTicket = {
   id: number;
@@ -196,14 +197,37 @@ function DoubtCard({
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [removingAttachmentId, setRemovingAttachmentId] = useState<number | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const recordingChunksRef = useRef<Blob[]>([]);
+  const recorderRef = useRef<WavRecorder | null>(null);
   const discardRecordingRef = useRef(false);
 
   const stopRecording = (discard: boolean) => {
     discardRecordingRef.current = discard;
-    recorderRef.current?.stop();
+    const recorder = recorderRef.current;
+    if (!recorder) return;
+    recorderRef.current = null;
+    void recorder.stop()
+      .then((file) => {
+        if (!discardRecordingRef.current) {
+          setAttachments((previous) => [...previous, { file, kind: "audio" }]);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!discardRecordingRef.current) {
+          setRecordingError(error instanceof Error ? error.message : "Unable to capture audio.");
+        }
+      })
+      .finally(() => {
+        discardRecordingRef.current = false;
+        setRecording(false);
+        setRecordingPaused(false);
+      });
   };
+
+  useEffect(() => () => {
+    const recorder = recorderRef.current;
+    recorderRef.current = null;
+    if (recorder) void recorder.stop().catch(() => undefined);
+  }, []);
 
   const cancelComposer = () => {
     if (recording) stopRecording(true);
@@ -342,56 +366,27 @@ function DoubtCard({
                   stopRecording(false);
                   return;
                 }
+                let stream: MediaStream | null = null;
                 try {
                   setRecordingError(null);
                   discardRecordingRef.current = false;
-                  const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                      echoCancellation: true,
-                      noiseSuppression: true,
-                      autoGainControl: true,
-                    },
-                  });
-                  const supportedTypes = [
-                    "audio/webm;codecs=opus",
-                    "audio/webm",
-                    "audio/ogg;codecs=opus",
-                    "audio/mp4",
-                  ];
-                  const mimeType = supportedTypes.find((type) => MediaRecorder.isTypeSupported(type));
-                  const recorder = mimeType
-                    ? new MediaRecorder(stream, { mimeType })
-                    : new MediaRecorder(stream);
-                  recordingChunksRef.current = [];
-                  recorder.ondataavailable = (event) => {
-                    if (event.data.size) recordingChunksRef.current.push(event.data);
-                  };
-                  recorder.onstop = () => {
-                    if (!discardRecordingRef.current) {
-                      const type = recorder.mimeType || mimeType || "audio/webm";
-                      const extension = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
-                      const blob = new Blob(recordingChunksRef.current, { type });
-                      if (!blob.size) {
-                        setRecordingError("No audio was captured. Check your microphone permission and input device.");
-                      } else {
-                      const file = new File(
-                        [blob],
-                        `instructor-reply-${Date.now()}.${extension}`,
-                        { type },
-                      );
-                      setAttachments((previous) => [...previous, { file, kind: "audio" }]);
-                      }
-                    }
-                    discardRecordingRef.current = false;
-                    stream.getTracks().forEach((track) => track.stop());
-                    recorderRef.current = null;
-                    setRecording(false);
-                    setRecordingPaused(false);
-                  };
+                  const microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                  stream = microphoneStream;
+                  const recorder = await createWavRecorder(microphoneStream);
                   recorderRef.current = recorder;
-                  recorder.start(250);
                   setRecording(true);
+                  // Keep the stream alive until the WAV recorder has finished
+                  // flushing its final audio process callback.
+                  const originalStop = recorder.stop;
+                  recorder.stop = async () => {
+                    try {
+                      return await originalStop();
+                    } finally {
+                      microphoneStream.getTracks().forEach((track) => track.stop());
+                    }
+                  };
                 } catch (error) {
+                  stream?.getTracks().forEach((track) => track.stop());
                   setRecordingError(error instanceof Error ? error.message : "Microphone access was denied.");
                 }
               }}
