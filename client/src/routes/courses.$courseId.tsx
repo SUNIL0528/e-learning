@@ -85,6 +85,30 @@ type ModuleQuestionSet = {
   descriptive: ModuleDescriptiveQuestion[];
 };
 
+type WrittenAnswer = {
+  id: number;
+  questionId: string;
+  question: string;
+  answer: string;
+  status: "pending" | "reviewed";
+  score: number | null;
+  maxScore: number;
+  feedback: string;
+  reviewerName: string | null;
+  reviewedAt: string | null;
+};
+
+type WrittenAnswerSubmission = {
+  submissionId: string;
+  courseId: string;
+  courseTitle: string;
+  moduleId: string;
+  moduleTitle: string;
+  submittedAt: string;
+  status: "pending" | "reviewed";
+  answers: WrittenAnswer[];
+};
+
 function normalizeCaptions(value: unknown): Record<string, string> {
   if (typeof value === "string" && value.trim()) return { en: value.trim() };
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
@@ -367,6 +391,8 @@ function CoursePage() {
         <section className={`col-span-12 min-w-0 ${moduleSidebarOpen ? "lg:col-span-8" : "lg:col-span-12"}`}>
           {showModuleQuiz && activeModule ? (
             <ModuleQuiz
+              courseId={course.id}
+              courseTitle={course.title}
               module={activeModule}
               moduleNumber={course.modules.indexOf(activeModule) + 1}
               moduleComplete={isModuleComplete(activeModule)}
@@ -2334,12 +2360,16 @@ function LegacyModuleQuiz({
 }
 
 function ModuleQuiz({
+  courseId,
+  courseTitle,
   module,
   moduleNumber,
   moduleComplete,
   passed,
   onResult,
 }: {
+  courseId: string;
+  courseTitle: string;
   module: Module;
   moduleNumber: number;
   moduleComplete: boolean;
@@ -2351,15 +2381,20 @@ function ModuleQuiz({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [writtenAnswers, setWrittenAnswers] = useState<Record<string, string>>({});
+  const [writtenSubmission, setWrittenSubmission] = useState<WrittenAnswerSubmission | null>(null);
   const [score, setScore] = useState<number | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setQuestionSet(null);
     setAnswers({});
     setWrittenAnswers({});
+    setWrittenSubmission(null);
     setScore(null);
     setLoadError(null);
+    setSubmissionError(null);
 
     if (!moduleComplete) {
       setLoading(false);
@@ -2393,7 +2428,35 @@ function ModuleQuiz({
     };
   }, [moduleComplete, moduleNumber]);
 
-  const submitQuiz = () => {
+  useEffect(() => {
+    if (!moduleComplete || !questionSet) return;
+    let cancelled = false;
+    const query = new URLSearchParams({ moduleId: module.id });
+    void apiFetch(
+      `/api/me/courses/${encodeURIComponent(courseId)}/written-answers/?${query.toString()}`,
+    )
+      .then(async (response) => (await response.json()) as { submission: WrittenAnswerSubmission | null })
+      .then((data) => {
+        if (cancelled) return;
+        setWrittenSubmission(data.submission);
+        if (data.submission) {
+          setWrittenAnswers(
+            Object.fromEntries(data.submission.answers.map((answer) => [answer.questionId, answer.answer])),
+          );
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setSubmissionError(error instanceof Error ? error.message : "Unable to load written answers.");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [courseId, module.id, moduleComplete, questionSet]);
+
+  const submitQuiz = async () => {
     if (!questionSet || passed || !questionSet.mcqs.length) return;
     if (
       Object.keys(answers).length !== questionSet.mcqs.length ||
@@ -2401,12 +2464,40 @@ function ModuleQuiz({
     )
       return;
 
-    const correctAnswers = questionSet.mcqs.filter(
-      (question) => answers[question.id] === question.answer,
-    );
-    const percentage = Math.round((correctAnswers.length / questionSet.mcqs.length) * 100);
-    setScore(percentage);
-    onResult(percentage, percentage >= 75);
+    setSubmitting(true);
+    setSubmissionError(null);
+    try {
+      const response = await apiFetch(
+        `/api/me/courses/${encodeURIComponent(courseId)}/written-answers/`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            courseId,
+            courseTitle,
+            moduleId: module.id,
+            moduleTitle: module.title,
+            answers: questionSet.descriptive.map((question) => ({
+              questionId: question.id,
+              question: question.question,
+              answer: writtenAnswers[question.id]?.trim() ?? "",
+            })),
+          }),
+        },
+      );
+      const data = (await response.json()) as { submission: WrittenAnswerSubmission };
+      setWrittenSubmission(data.submission);
+
+      const correctAnswers = questionSet.mcqs.filter(
+        (question) => answers[question.id] === question.answer,
+      );
+      const percentage = Math.round((correctAnswers.length / questionSet.mcqs.length) * 100);
+      setScore(percentage);
+      onResult(percentage, percentage >= 75);
+    } catch (error: unknown) {
+      setSubmissionError(error instanceof Error ? error.message : "Unable to submit the assessment.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!moduleComplete) {
@@ -2447,6 +2538,10 @@ function ModuleQuiz({
   );
   const allAnswersSelected = Object.keys(answers).length === questions.length;
   const showCorrectAnswers = passed || (score !== null && score >= 75);
+
+  const writtenReviewByQuestion = new Map(
+    (writtenSubmission?.answers ?? []).map((answer) => [answer.questionId, answer]),
+  );
 
   return (
     <div className="border-2 border-ink bg-paper p-6">
@@ -2526,6 +2621,24 @@ function ModuleQuiz({
                 className="mt-2 w-full resize-y border border-ink/20 bg-paper p-2 text-sm outline-none focus:border-ink disabled:opacity-60"
                 placeholder="Write your answer here..."
               />
+              {writtenReviewByQuestion.get(question.id)?.status === "pending" && (
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-clay">
+                  Submitted — awaiting instructor review
+                </p>
+              )}
+              {writtenReviewByQuestion.get(question.id)?.status === "reviewed" && (
+                <div className="mt-2 border-l-2 border-moss bg-sand/60 p-2 text-sm">
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-moss">
+                    Instructor score: {writtenReviewByQuestion.get(question.id)?.score ?? 0}/
+                    {writtenReviewByQuestion.get(question.id)?.maxScore ?? 10}
+                  </div>
+                  {writtenReviewByQuestion.get(question.id)?.feedback && (
+                    <p className="mt-1 whitespace-pre-wrap">
+                      {writtenReviewByQuestion.get(question.id)?.feedback}
+                    </p>
+                  )}
+                </div>
+              )}
             </label>
           ))}
         </div>
@@ -2534,16 +2647,17 @@ function ModuleQuiz({
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           onClick={submitQuiz}
-          disabled={passed || !allAnswersSelected || !allWrittenAnswered}
+          disabled={passed || submitting || !allAnswersSelected || !allWrittenAnswered}
           className="bg-ink px-4 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-paper disabled:opacity-40"
         >
-          Submit assessment
+          {submitting ? "Submitting..." : writtenSubmission?.status === "pending" ? "Resubmit assessment" : "Submit assessment"}
         </button>
         {score !== null && (
           <span className={`font-mono text-[11px] ${score >= 75 ? "text-moss" : "text-clay"}`}>
             MCQ score: {score}% {score >= 75 ? "— next module unlocked" : "— 75% required, try again"}
           </span>
         )}
+        {submissionError && <span className="text-xs text-clay">{submissionError}</span>}
       </div>
     </div>
   );

@@ -25,6 +25,11 @@ from .doubts_views import (
     instructor_reply,
     learner_doubts,
 )
+from .assessment_views import (
+    instructor_review_written_answers,
+    instructor_written_answers,
+    learner_written_answers,
+)
 from .translation.views import translate_ppt_api, translate_ppt_status
 
 
@@ -104,7 +109,22 @@ urlpatterns = [
         quiz_result,
         name="quiz-result",
     ),
+    path(
+        "me/courses/<str:course_id>/written-answers/",
+        learner_written_answers,
+        name="learner-written-answers",
+    ),
     path("me/doubts/", learner_doubts, name="learner-doubts"),
+    path(
+        "instructor/written-answers/",
+        instructor_written_answers,
+        name="instructor-written-answers",
+    ),
+    path(
+        "instructor/written-answers/<uuid:submission_id>/",
+        instructor_review_written_answers,
+        name="instructor-review-written-answers",
+    ),
     path("instructor/doubts/", instructor_doubts, name="instructor-doubts"),
     path(
         "instructor/doubts/<int:doubt_id>/attachments/upload/",

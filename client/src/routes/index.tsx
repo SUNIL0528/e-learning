@@ -491,6 +491,194 @@ function InstructorDashboard() {
           </div>
         )}
       </section>
+
+      <WrittenAnswerReviewPanel />
     </main>
+  );
+}
+
+type InstructorWrittenAnswer = {
+  id: number;
+  questionId: string;
+  question: string;
+  answer: string;
+  status: "pending" | "reviewed";
+  score: number | null;
+  maxScore: number;
+  feedback: string;
+};
+
+type InstructorWrittenSubmission = {
+  submissionId: string;
+  courseTitle: string;
+  moduleTitle: string;
+  submittedAt: string;
+  status: "pending" | "reviewed";
+  learner: {
+    candidateNumber: string;
+    name: string;
+    email: string;
+  };
+  answers: InstructorWrittenAnswer[];
+};
+
+type WrittenAnswerDraft = {
+  score: string;
+  feedback: string;
+};
+
+function WrittenAnswerReviewPanel() {
+  const [submissions, setSubmissions] = useState<InstructorWrittenSubmission[]>([]);
+  const [drafts, setDrafts] = useState<Record<number, WrittenAnswerDraft>>({});
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const loadSubmissions = () => {
+    setLoading(true);
+    setError(null);
+    void apiFetch("/api/instructor/written-answers/?status=pending")
+      .then(async (response) => (await response.json()) as { submissions: InstructorWrittenSubmission[] })
+      .then((data) => {
+        setSubmissions(data.submissions);
+        setDrafts((previous) => {
+          const next = { ...previous };
+          for (const submission of data.submissions) {
+            for (const answer of submission.answers) {
+              next[answer.id] ??= {
+                score: answer.score === null ? "" : String(answer.score),
+                feedback: answer.feedback,
+              };
+            }
+          }
+          return next;
+        });
+      })
+      .catch((requestError: unknown) => {
+        setError(requestError instanceof Error ? requestError.message : "Unable to load written answers.");
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadSubmissions();
+  }, []);
+
+  const updateDraft = (answerId: number, patch: Partial<WrittenAnswerDraft>) => {
+    setDrafts((previous) => ({
+      ...previous,
+      [answerId]: {
+        score: previous[answerId]?.score ?? "",
+        feedback: previous[answerId]?.feedback ?? "",
+        ...patch,
+      },
+    }));
+  };
+
+  const reviewSubmission = async (submission: InstructorWrittenSubmission) => {
+    setError(null);
+    setNotice(null);
+    const reviews = submission.answers.map((answer) => ({
+      id: answer.id,
+      score: Number(drafts[answer.id]?.score),
+      feedback: drafts[answer.id]?.feedback ?? "",
+    }));
+    if (reviews.some((review) => !Number.isInteger(review.score) || review.score < 0 || review.score > 10)) {
+      setError("Enter a score from 0 to 10 for every written answer.");
+      return;
+    }
+
+    setSavingId(submission.submissionId);
+    try {
+      await apiFetch(`/api/instructor/written-answers/${submission.submissionId}/`, {
+        method: "PATCH",
+        body: JSON.stringify({ answers: reviews }),
+      });
+      setSubmissions((previous) => previous.filter((item) => item.submissionId !== submission.submissionId));
+      setNotice("Written answers reviewed successfully.");
+    } catch (requestError: unknown) {
+      setError(requestError instanceof Error ? requestError.message : "Unable to save the review.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  return (
+    <section className="mt-6 border-2 border-ink bg-paper p-4">
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <span className="rule-label">Written answer review</span>
+        <span className="h-px flex-1 bg-ink/15" />
+        <span className="font-mono text-[10px] text-clay">{submissions.length} pending</span>
+      </div>
+      {error && <div className="mb-3 border border-clay bg-sand p-2 text-sm text-clay">{error}</div>}
+      {notice && <div className="mb-3 border border-moss bg-sand p-2 text-sm text-moss">{notice}</div>}
+      {loading ? (
+        <p className="font-mono text-[11px] text-fog">Loading written submissions...</p>
+      ) : submissions.length === 0 ? (
+        <p className="text-sm text-fog">No written answers are waiting for review.</p>
+      ) : (
+        <div className="space-y-4">
+          {submissions.map((submission) => (
+            <article key={submission.submissionId} className="border border-ink/20 p-3">
+              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-ink/10 pb-2">
+                <div>
+                  <h2 className="font-bold">{submission.moduleTitle || "Module written answers"}</h2>
+                  <p className="font-mono text-[10px] text-fog">
+                    {submission.courseTitle} · {submission.learner.name || submission.learner.candidateNumber} · {submission.learner.candidateNumber}
+                  </p>
+                </div>
+                <span className="font-mono text-[10px] uppercase text-clay">
+                  Submitted {new Date(submission.submittedAt).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="mt-3 space-y-3">
+                {submission.answers.map((answer, index) => (
+                  <div key={answer.id} className="border border-ink/10 p-3">
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-fog">
+                      Written answer {index + 1} of {submission.answers.length}
+                    </div>
+                    <p className="mt-1 text-sm font-bold">{answer.question}</p>
+                    <p className="mt-2 whitespace-pre-wrap bg-sand/60 p-2 text-sm">{answer.answer}</p>
+                    <div className="mt-2 grid gap-2 md:grid-cols-[7rem_1fr]">
+                      <label className="font-mono text-[10px] uppercase tracking-wider text-fog">
+                        Score / 10
+                        <input
+                          type="number"
+                          min={0}
+                          max={10}
+                          step={1}
+                          value={drafts[answer.id]?.score ?? ""}
+                          onChange={(event) => updateDraft(answer.id, { score: event.target.value })}
+                          className="mt-1 w-full border border-ink/25 bg-paper px-2 py-2 text-sm text-ink outline-none focus:border-ink"
+                        />
+                      </label>
+                      <label className="font-mono text-[10px] uppercase tracking-wider text-fog">
+                        Feedback
+                        <textarea
+                          rows={2}
+                          value={drafts[answer.id]?.feedback ?? ""}
+                          onChange={(event) => updateDraft(answer.id, { feedback: event.target.value })}
+                          placeholder="Explain the score or suggest improvements..."
+                          className="mt-1 w-full border border-ink/25 bg-paper px-2 py-2 text-sm font-display normal-case tracking-normal text-ink outline-none focus:border-ink"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => void reviewSubmission(submission)}
+                disabled={savingId === submission.submissionId}
+                className="mt-3 bg-moss px-4 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-paper disabled:opacity-40"
+              >
+                {savingId === submission.submissionId ? "Saving review..." : "Submit review"}
+              </button>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

@@ -18,7 +18,7 @@
     },
     {
       "question": "What is Surveillance or Review inspection?",
-      "answer": "Surveillance or review is observation or checking by the client/QA inspector to confirm that the contractor�s activities and records comply with project requirements. It may include?"
+      "answer": "Surveillance or review is observation or checking by the client/QA inspector to confirm that the contractor’s activities and records comply with project requirements. It may include?"
     },
     {
       "question": "Describe the normal daily work of a coating inspector.",
@@ -46,7 +46,7 @@
     },
     {
       "question": "Give examples of independent third-party organizations mentioned in Chapter 1.",
-      "answer": "Examples shown in the chapter are Lloyd�s, RINA, ABS and TUV."
+      "answer": "Examples shown in the chapter are Lloyd’s, RINA, ABS and TUV."
     },
     {
       "question": "Give five examples of Hold Point inspection activities listed in Chapter 1.",
@@ -54,7 +54,7 @@
     },
     {
       "question": "What should be done with log-book information at the end of each working day?",
-      "answer": "The inspector should transfer the day�s log-book findings, observations and inspection results into the official Daily Inspection Report."
+      "answer": "The inspector should transfer the day’s log-book findings, observations and inspection results into the official Daily Inspection Report."
     },
     {
       "question": "Who participates in re-inspection after NCR rectification?",
@@ -120,7 +120,7 @@
     },
     {
       "question": "Compare hot-rolled and cold-rolled steel in terms of rolling temperature, mill-scale formation, roller size and achievable thickness.",
-      "answer": "Hot-rolled steel is rolled above about 600�C, forms mill scale, uses smaller rollers according to the slide, and can achieve a wide range of thicknesses. Cold-rolled steel is rolled at?"
+      "answer": "Hot-rolled steel is rolled above about 600°C, forms mill scale, uses smaller rollers according to the slide, and can achieve a wide range of thicknesses. Cold-rolled steel is rolled at?"
     },
     {
       "question": "From the AI image, identify common aluminium products or applications and explain how low density, non-magnetic behaviour and good conductivity influence their use.",
@@ -140,7 +140,7 @@
     },
     {
       "question": "What inspection and durability limitations of composites are important, especially hidden internal damage, recycling difficulty, UV degradation and moisture absorption?",
-      "answer": "Important limitations are that internal defects may be difficult to detect by simple visual inspection, recycling�especially of thermoset composites�can be difficult, some composites may?"
+      "answer": "Important limitations are that internal defects may be difficult to detect by simple visual inspection, recycling—especially of thermoset composites—can be difficult, some composites may?"
     },
     {
       "question": "What are the important properties of concrete, including compressive strength, tensile strength, fire resistance, porosity and permeability?",
@@ -558,7 +558,7 @@
     },
     {
       "question": "How is the low-voltage holiday test carried out, and what coating thickness range is typically associated with it in the slide?",
-      "answer": "The slide associates low-voltage testing with coatings typically below 500 �m DFT. Connect the instrument clamp to bare steel, wet the sponge with conductive water so it barely avoids?"
+      "answer": "The slide associates low-voltage testing with coatings typically below 500 µm DFT. Connect the instrument clamp to bare steel, wet the sponge with conductive water so it barely avoids?"
     },
     {
       "question": "What is the purpose of the ASTM D4752 MEK test for inorganic zinc ethyl silicate, what materials are required, and how is the test performed and graded?",
@@ -591,12 +591,12 @@
       "answer": "The slide lists general principles, coating standard, coating-system approval, coating inspection requirements, verification requirements, alternative systems, test methods for?"
     },
     {
-      "question": "Differentiate the blast-cleaning grades Sa 1, Sa 2, Sa 2� and Sa 3 shown in ISO 8501-1.",
-      "answer": "Sa 1 is light blast cleaning; Sa 2 is thorough blast cleaning; Sa 2� is very thorough blast cleaning; and Sa 3 is blast cleaning to visually clean steel. The visual shows increasing?"
+      "question": "Differentiate the blast-cleaning grades Sa 1, Sa 2, Sa 2½ and Sa 3 shown in ISO 8501-1.",
+      "answer": "Sa 1 is light blast cleaning; Sa 2 is thorough blast cleaning; Sa 2½ is very thorough blast cleaning; and Sa 3 is blast cleaning to visually clean steel. The visual shows increasing?"
     },
     {
       "question": "How does the slide classify water-cleaning and water-jetting pressures in ISO 8501-4?",
-      "answer": "It shows low-pressure water cleaning below 34 MPa (5000 psi), high-pressure water cleaning from 34 to 70 MPa (5000�10,000 psi), high-pressure water jetting from 70 to 210 MPa?"
+      "answer": "It shows low-pressure water cleaning below 34 MPa (5000 psi), high-pressure water cleaning from 34 to 70 MPa (5000–10,000 psi), high-pressure water jetting from 70 to 210 MPa?"
     },
     {
       "question": "What does the ISO 8501-4 DC C pictorial panel demonstrate?",
@@ -612,7 +612,7 @@
     },
     {
       "question": "What replica-tape grades and ranges are shown in the ISO 8503-5 slide?",
-      "answer": "The slide lists Coarse Minus 12�25 �m, Coarse 20�64 �m, X-Coarse 38�115 �m and X-Coarse Plus 116�127 �m."
+      "answer": "The slide lists Coarse Minus 12–25 µm, Coarse 20–64 µm, X-Coarse 38–115 µm and X-Coarse Plus 116–127 µm."
     },
     {
       "question": "What do ISO 2808 and ISO 19840 cover, and which film-thickness methods are listed?",
@@ -657,7 +657,7 @@
   ],
   "9": [
     {
-      "question": "What is the main scope of Chapter 9 � Health, Safety and Environment (HSE) for coating inspection? [Slide 1]",
+      "question": "What is the main scope of Chapter 9 – Health, Safety and Environment (HSE) for coating inspection? [Slide 1]",
       "answer": "The chapter focuses on recognizing and controlling health, safety and environmental hazards associated with surface preparation and coating work, including personal exposure?"
     },
     {
@@ -764,7 +764,7 @@
     },
     {
       "question": "What surface-profile, soluble-salt and shop-primer requirements are stated for shop-primer application?",
-      "answer": "The stated surface profile is 30�75 �m, assessed using the referenced ISO 8503 comparator method. Water-soluble contamination should be no more than 50 mg/m� using ISO 8502-9?"
+      "answer": "The stated surface profile is 30–75 µm, assessed using the referenced ISO 8503 comparator method. Water-soluble contamination should be no more than 50 mg/m² using ISO 8502-9?"
     },
     {
       "question": "How is shop primer normally applied in a shipyard, and what process-control records are still required?",
@@ -776,11 +776,11 @@
     },
     {
       "question": "How should welds, damaged shop primer and intact non-prequalified shop primer be prepared at block stage?",
-      "answer": "The slide states Sa 2� preparation for welds and damaged shop primer. Where the shop primer has not passed the pre-qualification test, the slide refers to Sa 2 preparation with removal of?"
+      "answer": "The slide states Sa 2½ preparation for welds and damaged shop primer. Where the shop primer has not passed the pre-qualification test, the slide refers to Sa 2 preparation with removal of?"
     },
     {
       "question": "What surface-profile requirement is stated for block-stage surface preparation?",
-      "answer": "The stated profile is 30�75 �m, or the value recommended by the coating manufacturer, using the referenced ISO 8503-1/3 approach."
+      "answer": "The stated profile is 30–75 µm, or the value recommended by the coating manufacturer, using the referenced ISO 8503-1/3 approach."
     },
     {
       "question": "What additional cleanliness requirement does IACS state for the whole block, and what soluble-salt limit and test frequency are given?",
@@ -796,7 +796,7 @@
     },
     {
       "question": "How does IMO PSPC distinguish preparation requirements for butt join-ups, small damage and larger contiguous damage after erection?",
-      "answer": "Butt join-ups are prepared to St 3 or better, or Sa 2� where practical. Small damage up to 2% of the total area is prepared to St 3. Contiguous damage over 25 m� or over 2% of the total?"
+      "answer": "Butt join-ups are prepared to St 3 or better, or Sa 2½ where practical. Small damage up to 2% of the total area is prepared to St 3. Contiguous damage over 25 m² or over 2% of the total?"
     },
     {
       "question": "Using the repair visual, describe the practical sequence for classifying and repairing post-erection coating damage.",

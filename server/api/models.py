@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 class User(models.Model):
@@ -129,6 +131,49 @@ class QuizAttempt(models.Model):
     score = models.PositiveSmallIntegerField()
     passed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class WrittenAnswerSubmission(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending review"),
+        ("reviewed", "Reviewed"),
+    ]
+
+    submission_id = models.UUIDField(default=uuid.uuid4, db_index=True)
+    learner = models.ForeignKey(
+        LearnerProfile,
+        on_delete=models.CASCADE,
+        related_name="written_answer_submissions",
+    )
+    course_id = models.CharField(max_length=255)
+    course_title = models.CharField(max_length=255, blank=True)
+    module_id = models.CharField(max_length=255)
+    module_title = models.CharField(max_length=255, blank=True)
+    question_id = models.CharField(max_length=255)
+    question = models.TextField()
+    answer = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    score = models.PositiveSmallIntegerField(blank=True, null=True)
+    max_score = models.PositiveSmallIntegerField(default=10)
+    feedback = models.TextField(blank=True)
+    reviewer_cognito_sub = models.CharField(max_length=255, blank=True)
+    reviewer_name = models.CharField(max_length=240, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-submitted_at", "-id"]
+        indexes = [
+            models.Index(
+                fields=["course_id", "module_id", "status", "submitted_at"],
+                name="api_written_course_module_idx",
+            ),
+            models.Index(
+                fields=["learner", "course_id", "module_id", "submitted_at"],
+                name="api_written_learner_module_idx",
+            ),
+        ]
 
 
 class DoubtTicket(models.Model):
