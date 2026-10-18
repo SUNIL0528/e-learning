@@ -284,6 +284,26 @@ def chapter_detail(request, chapter_id):
         },
 
         {
+            "code": "es",
+            "name": "Spanish"
+        },
+
+        {
+            "code": "fr",
+            "name": "French"
+        },
+
+        {
+            "code": "ar",
+            "name": "Arabic"
+        },
+
+        {
+            "code": "el",
+            "name": "Greek"
+        },
+
+        {
             "code": "zh",
             "name": "中文"
         }
@@ -537,52 +557,50 @@ def chapter_detail(request, chapter_id):
         if not slide_id:
             continue
 
-        # ====================================================
-        # English audio
-        # ====================================================
-
-        en_audio_path = (
-            chapter_media_path
-            / "audio"
-            / "en"
-            / f"{slide_id}.wav"
-        )
-        slide["en"] = (
-            s3_media.presigned_url(
-                media_folder,
-                "en",
-                "audios",
-                [f"{slide_id}.wav", f"{slide_id}.mp3"],
+        # Resolve every advertised track from the matching language folder,
+        # e.g. chapter8/fr/audios/slide_001.wav. WAV is preferred for the
+        # translated tracks, while MP3 remains supported for older uploads.
+        for language in languages:
+            language_code = language["code"]
+            audio_filenames = [f"{slide_id}.wav", f"{slide_id}.mp3"]
+            slide[language_code] = (
+                s3_media.presigned_url(
+                    media_folder,
+                    language_code,
+                    "audios",
+                    audio_filenames,
+                )
+                if s3_media
+                else None
             )
-            if s3_media
-            else None
-        )
-        if slide["en"] is None and en_audio_path.exists():
-            slide["en"] = _media_url(base_url, media_folder, "audio", "en", en_audio_path.name)
 
-        # ====================================================
-        # Chinese audio
-        # ====================================================
+            if slide[language_code] is not None:
+                continue
 
-        zh_audio_path = (
-            chapter_media_path
-            / "audio"
-            / "zh"
-            / f"{slide_id}.mp3"
-        )
-
-        slide["zh"] = (
-            s3_media.presigned_url(
-                media_folder,
-                "zh",
-                "audios",
-                [f"{slide_id}.mp3", f"{slide_id}.wav"],
+            local_audio_path = next(
+                (
+                    chapter_media_path
+                    / "audio"
+                    / language_code
+                    / filename
+                    for filename in audio_filenames
+                    if (
+                        chapter_media_path
+                        / "audio"
+                        / language_code
+                        / filename
+                    ).exists()
+                ),
+                None,
             )
-            if s3_media
-            else None
-        )
-        if slide["zh"] is None and zh_audio_path.exists():
-            slide["zh"] = _media_url(base_url, media_folder, "audio", "zh", zh_audio_path.name)
+            if local_audio_path:
+                slide[language_code] = _media_url(
+                    base_url,
+                    media_folder,
+                    "audio",
+                    language_code,
+                    local_audio_path.name,
+                )
 
         # ====================================================
         # Optional per-slide video
