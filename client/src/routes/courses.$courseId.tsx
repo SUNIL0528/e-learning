@@ -29,6 +29,15 @@ const CAPTIONS_ENABLED = false;
 
 type BackendLanguage = { code: string; name: string };
 
+const DEFAULT_AUDIO_LANGUAGES: BackendLanguage[] = [
+  { code: "en", name: "English" },
+  { code: "es", name: "Spanish" },
+  { code: "fr", name: "French" },
+  { code: "ar", name: "Arabic" },
+  { code: "el", name: "Greek" },
+  { code: "zh", name: "Chinese" },
+];
+
 type BackendSlide = {
   id: string;
   start: number;
@@ -129,8 +138,23 @@ function chapterNumberFromBackendId(backendChapterId: string): number | null {
   return match ? Number(match[1]) : null;
 }
 
-function audioExtension(languageCode: string): string {
-  return languageCode === "en" ? "wav" : "mp3";
+function audioExtensions(languageCode: string): string[] {
+  return languageCode === "zh" ? ["mp3", "wav"] : ["wav", "mp3"];
+}
+
+async function getTemporaryAudioUrl(
+  chapterNumber: number,
+  languageCode: string,
+  slideId: string,
+): Promise<string | null> {
+  for (const extension of audioExtensions(languageCode)) {
+    const url = await getTemporaryMediaUrl(
+      chapterMediaPath(chapterNumber, languageCode, "audios", `${slideId}.${extension}`),
+      true,
+    );
+    if (url) return url;
+  }
+  return null;
 }
 
 export const Route = createFileRoute("/courses/$courseId")({
@@ -598,14 +622,11 @@ function VideoPlayer({
 }
 
 function LegacyVideoPlayer({ chapter }: { chapter: Chapter }) {
-  const audioLanguages = [
-    { code: "en", label: "English" },
-    { code: "zh", label: "Chinese" },
-  ] as const;
+  const audioLanguages = DEFAULT_AUDIO_LANGUAGES;
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState("1×");
   const [captions, setCaptions] = useState(true);
-  const [audioLanguage, setAudioLanguage] = useState<(typeof audioLanguages)[number]["code"]>("en");
+  const [audioLanguage, setAudioLanguage] = useState("en");
   // step 0..slides.length-1 shows slides; the final step shows the video
   const [step, setStep] = useState(0);
 
@@ -621,7 +642,8 @@ function LegacyVideoPlayer({ chapter }: { chapter: Chapter }) {
   const total = chapter.slides.length;
   const onVideo = step >= total;
   const slide = chapter.slides[Math.min(step, total - 1)];
-  const selectedAudio = audioLanguages.find(({ code }) => code === audioLanguage)!;
+  const selectedAudio =
+    audioLanguages.find(({ code }) => code === audioLanguage) ?? DEFAULT_AUDIO_LANGUAGES[0]!;
 
   return (
     <div className="border-2 border-ink bg-ink text-paper">
@@ -635,7 +657,7 @@ function LegacyVideoPlayer({ chapter }: { chapter: Chapter }) {
               {chapter.title}
             </div>
             <div className="mt-3 font-mono text-[10px] uppercase tracking-[0.15em] text-paper/60">
-              Audio track - {selectedAudio.label}
+              Audio track - {selectedAudio.name}
             </div>
             {captions && (
               <div className="mx-auto mt-4 max-w-[36ch] bg-ink/70 px-2 py-1 text-[12px] text-paper/80">
@@ -744,7 +766,7 @@ function LegacyVideoPlayer({ chapter }: { chapter: Chapter }) {
           >
             {audioLanguages.map((language) => (
               <option key={language.code} value={language.code} className="bg-ink text-paper">
-                {language.label}
+                {language.name}
               </option>
             ))}
           </select>
@@ -1209,6 +1231,7 @@ function SlideVideoPlayer({
   const [slideComplete, setSlideComplete] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [audioLoading, setAudioLoading] = useState(false);
+  const [audioLanguage, setAudioLanguage] = useState("en");
   const [muted, setMuted] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
@@ -1255,6 +1278,7 @@ function SlideVideoPlayer({
         if (cancelled) return;
         const initialLanguage = data.languages[0]?.code ?? "en";
         audioLanguageRef.current = initialLanguage;
+        setAudioLanguage(initialLanguage);
 
         const initialSlides = data.slides.map((slide) => ({
           id: slide.id,
@@ -1321,6 +1345,8 @@ function SlideVideoPlayer({
   );
 
   const activeSlide = slides[slideIndex] ?? slides[0];
+  const audioLanguages = backendChapter?.languages ?? DEFAULT_AUDIO_LANGUAGES;
+  const activeAudioSource = activeSlide?.audio[audioLanguage] ?? null;
   const chapterVideoUrl = backendChapter?.video.url ?? null;
   const activeVideoSource = activeSlide?.videoUrl ?? chapterVideoUrl;
   const videoSource = mediaTarget.slideId === activeSlide?.id ? mediaTarget.source : null;
@@ -1385,7 +1411,7 @@ function SlideVideoPlayer({
     const resolveActiveMedia = async () => {
       let chapterUrl = backendChapter.video.url;
       let slideVideoUrl = activeSlide.videoUrl;
-      let audioUrl = activeSlide.audio.en ?? null;
+      let audioUrl = activeAudioSource;
 
       if (!chapterUrl && backendChapter.video.filename) {
         chapterUrl = await getTemporaryMediaUrl(
@@ -1400,9 +1426,7 @@ function SlideVideoPlayer({
       }
 
       if (!audioUrl) {
-        audioUrl = await getTemporaryMediaUrl(
-          chapterMediaPath(chapterNumber, "en", "audios", `${slideId}.${audioExtension("en")}`),
-        );
+        audioUrl = await getTemporaryAudioUrl(chapterNumber, audioLanguage, slideId);
       }
 
       if (requestId !== mediaUrlRequestIdRef.current) return;
@@ -1421,9 +1445,15 @@ function SlideVideoPlayer({
           const nextSlide = {
             ...slide,
             video: slide.video ?? slideVideoUrl,
-            audio: { ...slide.audio, en: slide.audio.en ?? audioUrl },
+            audio: {
+              ...slide.audio,
+              [audioLanguage]: slide.audio[audioLanguage] ?? audioUrl,
+            },
           };
-          if (nextSlide.video !== slide.video || nextSlide.audio.en !== slide.audio.en) {
+          if (
+            nextSlide.video !== slide.video ||
+            nextSlide.audio[audioLanguage] !== slide.audio[audioLanguage]
+          ) {
             changed = true;
           }
           return changed ? nextSlide : slide;
@@ -1442,7 +1472,7 @@ function SlideVideoPlayer({
     return () => {
       mediaUrlRequestIdRef.current += 1;
     };
-  }, [activeSlide, backendChapter, backendChapterId]);
+  }, [activeAudioSource, activeSlide, audioLanguage, backendChapter, backendChapterId]);
 
   const findAudioSource = (slide: PlayerSlide, language: string) => slide.audio[language] ?? null;
 
@@ -1533,6 +1563,18 @@ function SlideVideoPlayer({
     },
     [speed, usesChapterSegment],
   );
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !activeSlide || !activeAudioSource) return;
+
+    void loadSlideAudio(
+      activeSlide,
+      audioLanguage,
+      video.currentTime,
+      !video.paused,
+    );
+  }, [activeAudioSource, activeSlide, audioLanguage, loadSlideAudio]);
 
   const startPlayback = useCallback(async () => {
     const video = videoRef.current;
@@ -2034,6 +2076,27 @@ function SlideVideoPlayer({
             <button onClick={changeSpeed} className="border border-paper/40 px-2 py-1">
               {speed}x
             </button>
+            <label className="flex items-center gap-2 border border-paper/40 px-2 py-1">
+              <span className="text-paper/60">Audio</span>
+              <select
+                value={audioLanguage}
+                disabled={loading}
+                onChange={(event) => {
+                  const nextLanguage = event.target.value;
+                  audioLanguageRef.current = nextLanguage;
+                  cancelPendingAudio();
+                  setAudioLanguage(nextLanguage);
+                }}
+                aria-label="Audio language"
+                className="max-w-[110px] cursor-pointer bg-transparent text-paper outline-none disabled:cursor-not-allowed"
+              >
+                {audioLanguages.map((language) => (
+                  <option key={language.code} value={language.code} className="bg-ink text-paper">
+                    {language.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <div className="course-video-player__navigation-controls flex items-center justify-center gap-2 sm:absolute sm:left-1/2 sm:-translate-x-1/2">
             <button
