@@ -38,6 +38,14 @@ const DEFAULT_AUDIO_LANGUAGES: BackendLanguage[] = [
   { code: "zh", name: "Chinese" },
 ];
 
+function mergeAudioLanguages(languages: BackendLanguage[] | undefined): BackendLanguage[] {
+  const merged = new Map(DEFAULT_AUDIO_LANGUAGES.map((language) => [language.code, language]));
+  for (const language of languages ?? []) {
+    if (language.code.trim()) merged.set(language.code, language);
+  }
+  return Array.from(merged.values());
+}
+
 type BackendSlide = {
   id: string;
   start: number;
@@ -1276,7 +1284,8 @@ function SlideVideoPlayer({
       })
       .then((data) => {
         if (cancelled) return;
-        const initialLanguage = data.languages[0]?.code ?? "en";
+        const availableLanguages = mergeAudioLanguages(data.languages);
+        const initialLanguage = availableLanguages[0]?.code ?? "en";
         audioLanguageRef.current = initialLanguage;
         setAudioLanguage(initialLanguage);
 
@@ -1286,7 +1295,7 @@ function SlideVideoPlayer({
           end: slide.end,
           video: typeof slide.video === "string" ? slide.video : null,
           audio: Object.fromEntries(
-            data.languages.map((language) => [
+            availableLanguages.map((language) => [
               language.code,
               typeof slide[language.code] === "string" ? slide[language.code] : null,
             ]),
@@ -1296,6 +1305,7 @@ function SlideVideoPlayer({
 
         setBackendChapter({
           ...data,
+          languages: availableLanguages,
           video: {
             ...data.video,
             url: typeof data.video?.url === "string" ? data.video.url : null,
@@ -2066,7 +2076,7 @@ function SlideVideoPlayer({
           </span>
         </div>
         <div className="course-video-player__actions relative flex flex-wrap items-center justify-between gap-3 sm:min-h-10">
-          <div className="course-video-player__basic-controls flex items-center gap-2">
+          <div className="course-video-player__basic-controls flex min-w-0 flex-wrap items-center gap-2">
             <button
               onClick={() => setMuted((value) => !value)}
               className="border border-paper/40 px-2 py-1"
@@ -2076,7 +2086,7 @@ function SlideVideoPlayer({
             <button onClick={changeSpeed} className="border border-paper/40 px-2 py-1">
               {speed}x
             </button>
-            <label className="flex items-center gap-2 border border-paper/40 px-2 py-1">
+            <label className="flex min-w-0 items-center gap-2 border border-paper/40 px-2 py-1">
               <span className="text-paper/60">Audio</span>
               <select
                 value={audioLanguage}
@@ -2088,7 +2098,7 @@ function SlideVideoPlayer({
                   setAudioLanguage(nextLanguage);
                 }}
                 aria-label="Audio language"
-                className="max-w-[110px] cursor-pointer bg-transparent text-paper outline-none disabled:cursor-not-allowed"
+                className="w-[110px] max-w-full min-w-0 cursor-pointer bg-transparent text-paper outline-none disabled:cursor-not-allowed"
               >
                 {audioLanguages.map((language) => (
                   <option key={language.code} value={language.code} className="bg-ink text-paper">
