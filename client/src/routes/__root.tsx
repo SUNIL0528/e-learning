@@ -176,7 +176,8 @@ function RootComponent() {
       user?.isInstructor &&
       !isLoginPage &&
       location.pathname !== "/" &&
-      !location.pathname.startsWith("/doubts")
+      !location.pathname.startsWith("/doubts") &&
+      !(user.isAdmin && location.pathname.startsWith("/admin"))
     ) {
       void navigate({ to: "/" });
     }

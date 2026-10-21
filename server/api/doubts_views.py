@@ -35,8 +35,10 @@ MAX_AUDIO_BYTES = 50 * 1024 * 1024
 
 def _is_instructor(request):
     configured_group = str(getattr(settings, "COGNITO_INSTRUCTOR_GROUP", "instructors"))
+    configured_admin_group = str(getattr(settings, "COGNITO_ADMIN_GROUP", "admins"))
     allowed_groups = {
         configured_group.casefold(),
+        configured_admin_group.casefold(),
         "instructor",
         "instructors",
         "admin",
@@ -178,6 +180,52 @@ def instructor_dashboard(request):
         .prefetch_related("attachments")
         .order_by("-created_at", "-id")[:8]
     )
+
+    learner_enrollments = (
+        Enrollment.objects.select_related("learner")
+        .prefetch_related("modules__quiz_attempts")
+        .order_by("course_title", "course_id", "learner__name", "learner__email")
+    )
+    course_learners = {}
+    for enrollment in learner_enrollments:
+        course = course_learners.setdefault(
+            enrollment.course_id,
+            {
+                "courseId": enrollment.course_id,
+                "courseTitle": enrollment.course_title or enrollment.course_id,
+                "learners": [],
+            },
+        )
+        course["learners"].append(
+            {
+                "uid": enrollment.learner.cognito_sub,
+                "name": enrollment.learner.name or "",
+                "candidateNumber": enrollment.learner.candidate_number or "",
+                "email": enrollment.learner.email or "",
+                "progressPercent": enrollment.progress_percent,
+                "status": enrollment.status,
+                "modules": [
+                    {
+                        "moduleId": module.module_id,
+                        "title": module.title or module.module_id,
+                        "progressPercent": module.progress_percent,
+                        "score": module.qa_score,
+                        "passed": module.qa_passed,
+                        "attempts": module.attempts,
+                        "quizAttempts": [
+                            {
+                                "score": attempt.score,
+                                "passed": attempt.passed,
+                                "createdAt": attempt.created_at.isoformat(),
+                            }
+                            for attempt in module.quiz_attempts.all()
+                        ],
+                    }
+                    for module in enrollment.modules.all()
+                ],
+            }
+        )
+
     return Response(
         {
             "stats": {
@@ -189,6 +237,7 @@ def instructor_dashboard(request):
                 "answeredDoubts": doubts.filter(status="answered").count(),
             },
             "courses": course_stats,
+            "courseLearners": list(course_learners.values()),
             "recentDoubts": [_serialize_doubt(ticket) for ticket in recent_doubts],
         }
     )

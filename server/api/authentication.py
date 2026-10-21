@@ -3,6 +3,7 @@ import logging
 
 import jwt
 from django.conf import settings
+from django.utils import timezone
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
@@ -125,6 +126,15 @@ class CognitoJWTAuthentication(BaseAuthentication):
             username=str(claims.get("username") or claims.get("cognito:username") or ""),
             email=str(claims.get("email", "")),
         )
+
+        profile = LearnerProfile.objects.filter(cognito_sub=user_id).only(
+            "is_enabled", "account_expires_at"
+        ).first()
+        if profile is not None:
+            if not profile.is_enabled:
+                raise AuthenticationFailed("ACCOUNT_DISABLED")
+            if profile.account_expires_at and profile.account_expires_at <= timezone.now():
+                raise AuthenticationFailed("ACCOUNT_EXPIRED")
 
         if self.enforce_active_session:
             supplied_session_id = request.headers.get("X-Session-ID", "").strip()

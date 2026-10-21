@@ -351,12 +351,34 @@ type InstructorDashboardData = {
     completed: number;
     pendingDoubts: number;
   }>;
+  courseLearners: Array<{
+    courseId: string;
+    courseTitle: string;
+    learners: Array<{
+      uid: string;
+      name: string;
+      candidateNumber: string;
+      email: string;
+      progressPercent: number;
+      status: string;
+      modules: Array<{
+        moduleId: string;
+        title: string;
+        progressPercent: number;
+        score: number | null;
+        passed: boolean;
+        attempts: number;
+        quizAttempts: Array<{ score: number; passed: boolean; createdAt: string }>;
+      }>;
+    }>;
+  }>;
   recentDoubts: InstructorDoubtSummary[];
 };
 
 function InstructorDashboard() {
   const [data, setData] = useState<InstructorDashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -394,6 +416,10 @@ function InstructorDashboard() {
     ["Pending doubts", data.stats.pendingDoubts],
     ["Answered doubts", data.stats.answeredDoubts],
   ] as const;
+  const courseLearnerRows = data.courseLearners ?? [];
+  const visibleCourseLearners = selectedCourseId === "all"
+    ? courseLearnerRows
+    : courseLearnerRows.filter((course) => course.courseId === selectedCourseId);
 
   return (
     <main className="mx-auto max-w-[1440px] px-6 py-5">
@@ -461,6 +487,82 @@ function InstructorDashboard() {
             Open doubt inbox →
           </Link>
         </div>
+      </section>
+
+      <section className="mt-6 border-2 border-ink bg-paper p-4">
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <span className="rule-label">Learner progress & quiz scores</span>
+          <span className="h-px flex-1 bg-ink/15" />
+          <select
+            value={selectedCourseId}
+            onChange={(event) => setSelectedCourseId(event.target.value)}
+            className="border border-ink/30 bg-paper px-2 py-1 font-mono text-[10px] uppercase tracking-wider"
+            aria-label="Filter learner progress by course"
+          >
+            <option value="all">All courses</option>
+            {courseLearnerRows.map((course) => (
+              <option key={course.courseId} value={course.courseId}>{course.courseTitle}</option>
+            ))}
+          </select>
+        </div>
+        {visibleCourseLearners.length === 0 ? (
+          <p className="text-sm text-fog">No learner progress is available yet.</p>
+        ) : (
+          <div className="space-y-5">
+            {visibleCourseLearners.map((course) => (
+              <div key={course.courseId}>
+                <div className="mb-2 border-b border-ink/15 pb-2 font-bold">{course.courseTitle}</div>
+                <div className="space-y-3">
+                  {course.learners.map((learner) => (
+                    <div key={`${course.courseId}-${learner.uid}`} className="border border-ink/15 bg-sand/40 p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <div className="font-bold">{learner.name || learner.candidateNumber || "Unnamed learner"}</div>
+                          <div className="mt-1 font-mono text-[10px] text-fog">
+                            {learner.candidateNumber || learner.email}
+                          </div>
+                        </div>
+                        <div className="min-w-40 text-right">
+                          <div className="font-mono text-[10px] uppercase tracking-wider text-fog">Course progress</div>
+                          <div className="mt-1 flex items-center justify-end gap-2">
+                            <div className="h-1.5 w-24 border border-ink/10 bg-paper">
+                              <div className="h-full bg-moss" style={{ width: `${learner.progressPercent}%` }} />
+                            </div>
+                            <span className="font-mono text-[11px]">{learner.progressPercent}%</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        {learner.modules.length === 0 ? (
+                          <div className="text-xs text-fog">No modules started.</div>
+                        ) : learner.modules.map((module) => (
+                          <div key={module.moduleId} className="border border-ink/15 bg-paper p-2">
+                            <div className="truncate text-xs font-bold" title={module.title}>{module.title}</div>
+                            <div className="mt-2 flex justify-between font-mono text-[10px] text-fog">
+                              <span>{module.progressPercent}% progress</span>
+                              <span>{module.attempts} attempt{module.attempts === 1 ? "" : "s"}</span>
+                            </div>
+                            {module.quizAttempts.length > 0 && (
+                              <div className="mt-1 truncate font-mono text-[10px] text-fog" title="All quiz attempt scores">
+                                Scores: {module.quizAttempts.map((attempt) => `${attempt.score}%`).join(" · ")}
+                              </div>
+                            )}
+                            <div className="mt-2 flex items-center justify-between border-t border-ink/10 pt-2">
+                              <span className="font-mono text-[10px] uppercase tracking-wider text-fog">Quiz score</span>
+                              <span className={`font-mono text-xs font-bold ${module.passed ? "text-moss" : "text-clay"}`}>
+                                {module.score === null ? "—" : `${module.score}%`}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="mt-6 border-2 border-ink bg-paper p-4">

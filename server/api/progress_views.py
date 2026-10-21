@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Prefetch
@@ -35,8 +37,10 @@ class LearnerOnlyPermission(IsAuthenticated):
             return False
 
         configured_group = str(getattr(settings, "COGNITO_INSTRUCTOR_GROUP", "instructors"))
+        configured_admin_group = str(getattr(settings, "COGNITO_ADMIN_GROUP", "admins"))
         instructor_groups = {
             configured_group.casefold(),
+            configured_admin_group.casefold(),
             "instructor",
             "instructors",
             "admin",
@@ -69,6 +73,7 @@ def register_active_session(request):
         defaults={
             "email": str(claims.get("email", "")),
             "name": str(claims.get("name", "")),
+            "account_expires_at": timezone.now() + timedelta(days=30),
         },
     )
     profile.active_session_id = session_id
@@ -92,6 +97,7 @@ def _profile_for_request(request):
             "candidate_number": request.user.username or None,
             "email": str(claims.get("email", "")),
             "name": str(claims.get("name", "")),
+            "account_expires_at": timezone.now() + timedelta(days=30),
         },
     )
     if not profile.candidate_number and request.user.username:
@@ -134,6 +140,9 @@ def learner_profile(request):
             "company": profile.company,
             "location": profile.location,
             "bio": profile.bio,
+            "validityDays": profile.account_validity_days,
+            "expiresAt": profile.account_expires_at.isoformat() if profile.account_expires_at else None,
+            "isEnabled": profile.is_enabled,
         }
     )
 

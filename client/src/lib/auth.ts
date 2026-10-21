@@ -13,6 +13,7 @@ import { Hub } from "aws-amplify/utils";
 const userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID as string | undefined;
 const userPoolClientId = import.meta.env.VITE_COGNITO_CLIENT_ID as string | undefined;
 const instructorGroup = String(import.meta.env.VITE_COGNITO_INSTRUCTOR_GROUP ?? "instructors").toLowerCase();
+const adminGroup = String(import.meta.env.VITE_COGNITO_ADMIN_GROUP ?? "admins").toLowerCase();
 const cognitoRegion = import.meta.env.VITE_COGNITO_REGION as string | undefined;
 const identityPoolId = import.meta.env.VITE_COGNITO_IDENTITY_POOL_ID as string | undefined;
 const s3Bucket = import.meta.env.VITE_S3_BUCKET as string | undefined;
@@ -52,6 +53,7 @@ export type AuthUser = {
   displayName: string;
   groups: string[];
   isInstructor: boolean;
+  isAdmin: boolean;
 };
 
 let currentUser: AuthUser | null = null;
@@ -101,8 +103,9 @@ async function readUser(forceRefresh = false): Promise<AuthUser | null> {
       displayName,
       groups,
       isInstructor: groups.some((group) =>
-        [instructorGroup, "instructors", "instructor", "admins", "admin"].includes(group.toLowerCase()),
+        [instructorGroup, adminGroup, "instructors", "instructor", "admins", "admin"].includes(group.toLowerCase()),
       ),
+      isAdmin: groups.some((group) => [adminGroup, "admins", "admin"].includes(group.toLowerCase())),
     };
     return currentUser;
   } catch {

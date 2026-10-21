@@ -30,6 +30,7 @@ from .assessment_views import (
     instructor_written_answers,
     learner_written_answers,
 )
+from .admin_views import admin_user_detail, admin_users
 from .translation.views import translate_ppt_api, translate_ppt_status
 
 
@@ -143,4 +144,6 @@ urlpatterns = [
     ),
     path("instructor/doubts/<int:doubt_id>/", instructor_reply, name="instructor-reply"),
     path("instructor/dashboard/", instructor_dashboard, name="instructor-dashboard"),
+    path("admin/users/", admin_users, name="admin-users"),
+    path("admin/users/<int:profile_id>/", admin_user_detail, name="admin-user-detail"),
 ]

@@ -124,6 +124,14 @@ export function SiteHeader({
                   {item.label}
                 </Link>
               ))}
+              {currentUser.isAdmin && (
+                <Link
+                  to="/admin/users"
+                  activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}
+                >
+                  Admin
+                </Link>
+              )}
             </>
           ) : (
             <Link to="/login" activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}>
@@ -292,6 +300,16 @@ export function SiteHeader({
                 {item.label}
               </Link>
             ))}
+            {currentUser.isAdmin && (
+              <Link
+                to="/admin/users"
+                onClick={() => setMobileNavOpen(false)}
+                className="border border-transparent px-2 py-2 hover:border-ink/20 hover:bg-paper"
+                activeProps={{ className: "border-ink bg-paper text-ink" }}
+              >
+                Admin
+              </Link>
+            )}
           </div>
         </nav>
       )}

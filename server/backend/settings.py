@@ -148,6 +148,7 @@ COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID", "")
 COGNITO_CLIENT_ID = os.getenv("COGNITO_CLIENT_ID", "")
 COGNITO_JWT_LEEWAY_SECONDS = int(os.getenv("COGNITO_JWT_LEEWAY_SECONDS", "60"))
 COGNITO_INSTRUCTOR_GROUP = os.getenv("COGNITO_INSTRUCTOR_GROUP", "instructors")
+COGNITO_ADMIN_GROUP = os.getenv("COGNITO_ADMIN_GROUP", "admins")
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET", "coating-and-inspection")

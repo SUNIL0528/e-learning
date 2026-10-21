@@ -27,6 +27,9 @@ class LearnerProfile(models.Model):
     location = models.CharField(max_length=240, blank=True)
     bio = models.TextField(blank=True)
     active_session_id = models.CharField(max_length=128, blank=True, null=True)
+    account_validity_days = models.PositiveIntegerField(default=30)
+    account_expires_at = models.DateTimeField(blank=True, null=True)
+    is_enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
