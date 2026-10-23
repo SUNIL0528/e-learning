@@ -10,10 +10,10 @@
  */
 
 @theme inline {
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
 
   --font-display: "Archivo", system-ui, sans-serif;
   --font-mono: "Space Mono", ui-monospace, monospace;
@@ -47,7 +47,7 @@
 }
 
 :root {
-  --radius: 0px;
+  --radius: 0.75rem;
 
   --ink: oklch(0.12 0 0);
   --paper: oklch(1 0 0);
@@ -90,10 +90,30 @@
   body {
     min-width: 0;
     overflow-x: clip;
-    background-color: var(--color-background);
+    background:
+      radial-gradient(circle at 8% -10%, color-mix(in oklch, var(--color-clay) 9%, transparent), transparent 28rem),
+      linear-gradient(180deg, var(--color-background) 0%, color-mix(in oklch, var(--color-sand) 25%, var(--color-background)) 100%);
     color: var(--color-foreground);
     font-family: var(--font-display);
     -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease,
+      box-shadow 180ms ease, transform 180ms ease, opacity 180ms ease;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 3px solid color-mix(in oklch, var(--color-moss) 65%, transparent);
+    outline-offset: 3px;
   }
 
   ::selection {
@@ -118,18 +138,71 @@
 }
 
 @utility panel {
-  border: 2px solid var(--color-ink);
+  border: 1px solid color-mix(in oklch, var(--color-ink) 13%, transparent);
+  border-radius: 1rem;
   background-color: var(--color-paper);
+  box-shadow: 0 10px 30px color-mix(in oklch, var(--color-ink) 7%, transparent);
+}
+
+@utility soft-surface {
+  border: 1px solid color-mix(in oklch, var(--color-ink) 12%, transparent);
+  border-radius: 1rem;
+  background-color: var(--color-paper);
+  box-shadow: 0 10px 30px color-mix(in oklch, var(--color-ink) 7%, transparent);
+}
+
+@utility soft-surface-hover {
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in oklch, var(--color-clay) 42%, transparent);
+    box-shadow: 0 16px 34px color-mix(in oklch, var(--color-ink) 12%, transparent);
+  }
+}
+
+@utility soft-button {
+  border-radius: 999px;
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px color-mix(in oklch, var(--color-ink) 14%, transparent);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 @keyframes lp {
   0% {
-    transform: translateY(-4px);
-    opacity: 0.35;
+    transform: translateY(12px) scale(0.98);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes float-in {
+  0% {
+    transform: translateY(16px);
+    opacity: 0;
   }
   100% {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
   }
 }
 
@@ -231,7 +304,37 @@
 }
 
 @utility lp {
-  animation: lp 0.5s ease both;
+  animation: lp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility float-in {
+  animation: float-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility shimmer {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    width: 45%;
+    background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--color-paper) 20%, transparent), transparent);
+    content: "";
+    animation: shimmer 2.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @media (max-width: 640px) {

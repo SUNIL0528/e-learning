@@ -95,23 +95,24 @@ export function SiteHeader({
     : nav;
 
   return (
-    <header className="sticky top-0 z-20 border-b-2 border-ink bg-paper">
-      <div className="mx-auto flex min-h-14 max-w-[1440px] items-center gap-3 px-3 sm:gap-8 sm:px-6">
+    <header className="sticky top-0 z-20 border-b border-ink/10 bg-paper/90 shadow-[0_8px_24px_rgb(18_8_15_/_5%)] backdrop-blur-xl">
+      <div className="mx-auto flex min-h-16 max-w-[1440px] items-center gap-3 px-3 sm:gap-8 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
           <img src="/hts-logo-black.png" alt="HTS" className="h-10 w-auto max-w-[132px] object-contain sm:h-14 sm:max-w-[180px]" />
         </Link>
-        <nav className="hidden items-center gap-6 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70 md:flex">
+        <nav className="hidden items-center gap-1 rounded-full bg-sand/70 p-1 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70 md:flex">
           {currentUser ? (
             <>
               <Link
                 to="/"
                 activeOptions={{ exact: true }}
-                activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}
+                className="rounded-full px-3 py-2 hover:bg-paper hover:text-ink"
+                activeProps={{ className: "rounded-full bg-paper px-3 py-2 text-ink shadow-sm" }}
               >
                 Dashboard
               </Link>
               {!currentUser.isInstructor && (
-                <Link to="/courses" activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}>
+                <Link to="/courses" className="rounded-full px-3 py-2 hover:bg-paper hover:text-ink" activeProps={{ className: "rounded-full bg-paper px-3 py-2 text-ink shadow-sm" }}>
                   Courses
                 </Link>
               )}
@@ -119,7 +120,8 @@ export function SiteHeader({
                 <Link
                   key={item.label}
                   to={item.to}
-                  activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}
+                  className="rounded-full px-3 py-2 hover:bg-paper hover:text-ink"
+                  activeProps={{ className: "rounded-full bg-paper px-3 py-2 text-ink shadow-sm" }}
                 >
                   {item.label}
                 </Link>
@@ -127,14 +129,15 @@ export function SiteHeader({
               {currentUser.isAdmin && (
                 <Link
                   to="/admin/users"
-                  activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}
+                  className="rounded-full px-3 py-2 hover:bg-paper hover:text-ink"
+                  activeProps={{ className: "rounded-full bg-paper px-3 py-2 text-ink shadow-sm" }}
                 >
                   Admin
                 </Link>
               )}
             </>
           ) : (
-            <Link to="/login" activeProps={{ className: "text-ink border-b-2 border-clay pb-0.5" }}>
+            <Link to="/login" className="rounded-full px-3 py-2 hover:bg-sand hover:text-ink" activeProps={{ className: "rounded-full bg-sand px-3 py-2 text-ink" }}>
               Sign in
             </Link>
           )}
@@ -143,7 +146,7 @@ export function SiteHeader({
           <button
             type="button"
             onClick={() => setMobileNavOpen((open) => !open)}
-            className="grid size-8 place-items-center border border-ink/25 font-mono text-sm md:hidden"
+            className="grid size-9 place-items-center rounded-full border border-ink/15 font-mono text-sm shadow-sm md:hidden"
             aria-label={mobileNavOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileNavOpen}
           >
@@ -171,7 +174,7 @@ export function SiteHeader({
                 )}
               </button>
               {notificationsOpen && (
-                <div className="absolute right-0 top-10 z-30 w-72 border-2 border-ink bg-paper p-3 shadow-lg">
+                <div className="absolute right-0 top-12 z-30 w-72 rounded-2xl border border-ink/10 bg-paper p-3 shadow-xl">
                   <div className="mb-2 flex items-center justify-between">
                     <span className="font-mono text-[10px] font-bold uppercase tracking-widest">Notifications</span>
                     <button
@@ -225,7 +228,7 @@ export function SiteHeader({
             <span className="hidden font-mono text-[11px] text-ink/60 lg:block">Instructor</span>
           )}
           <div
-            className="flex items-center gap-1 border border-ink/25 px-1 py-1 font-mono text-[10px] uppercase tracking-[0.08em]"
+            className="flex items-center gap-1 rounded-full border border-ink/15 bg-sand/60 px-1 py-1 font-mono text-[10px] uppercase tracking-[0.08em]"
             aria-label="Website text size"
           >
             <button
@@ -268,14 +271,14 @@ export function SiteHeader({
         </div>
       </div>
       {mobileNavOpen && currentUser && (
-        <nav className="border-t border-ink/15 bg-sand px-3 py-2 md:hidden" aria-label="Mobile navigation">
+        <nav className="border-t border-ink/10 bg-sand/80 px-3 py-3 backdrop-blur md:hidden" aria-label="Mobile navigation">
           <div className="grid gap-1 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70">
             <Link
               to="/"
               activeOptions={{ exact: true }}
               onClick={() => setMobileNavOpen(false)}
-              className="border border-transparent px-2 py-2 hover:border-ink/20 hover:bg-paper"
-              activeProps={{ className: "border-ink bg-paper text-ink" }}
+              className="rounded-xl border border-transparent px-3 py-2 hover:border-ink/10 hover:bg-paper"
+              activeProps={{ className: "rounded-xl border-ink/10 bg-paper text-ink shadow-sm" }}
             >
               Dashboard
             </Link>
@@ -283,8 +286,8 @@ export function SiteHeader({
               <Link
                 to="/courses"
                 onClick={() => setMobileNavOpen(false)}
-                className="border border-transparent px-2 py-2 hover:border-ink/20 hover:bg-paper"
-                activeProps={{ className: "border-ink bg-paper text-ink" }}
+                className="rounded-xl border border-transparent px-3 py-2 hover:border-ink/10 hover:bg-paper"
+                activeProps={{ className: "rounded-xl border-ink/10 bg-paper text-ink shadow-sm" }}
               >
                 Courses
               </Link>
@@ -294,8 +297,8 @@ export function SiteHeader({
                 key={item.label}
                 to={item.to}
                 onClick={() => setMobileNavOpen(false)}
-                className="border border-transparent px-2 py-2 hover:border-ink/20 hover:bg-paper"
-                activeProps={{ className: "border-ink bg-paper text-ink" }}
+                className="rounded-xl border border-transparent px-3 py-2 hover:border-ink/10 hover:bg-paper"
+                activeProps={{ className: "rounded-xl border-ink/10 bg-paper text-ink shadow-sm" }}
               >
                 {item.label}
               </Link>
@@ -304,8 +307,8 @@ export function SiteHeader({
               <Link
                 to="/admin/users"
                 onClick={() => setMobileNavOpen(false)}
-                className="border border-transparent px-2 py-2 hover:border-ink/20 hover:bg-paper"
-                activeProps={{ className: "border-ink bg-paper text-ink" }}
+                className="rounded-xl border border-transparent px-3 py-2 hover:border-ink/10 hover:bg-paper"
+                activeProps={{ className: "rounded-xl border-ink/10 bg-paper text-ink shadow-sm" }}
               >
                 Admin
               </Link>

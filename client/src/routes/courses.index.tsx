@@ -100,8 +100,8 @@ function CatalogPage() {
 
   return (
     <>
-      <main className="mx-auto max-w-[1440px] px-6 py-5">
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-ink/15 pb-4">
+      <main className="mx-auto max-w-[1440px] px-6 py-7">
+      <div className="float-in flex flex-wrap items-end justify-between gap-4 border-b border-ink/10 pb-5">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-fog">
             Catalogue
@@ -123,7 +123,7 @@ function CatalogPage() {
               key={t.key}
               onClick={() => setTab(t.key)}
               className={
-                tab === t.key ? "bg-ink px-3 py-1.5 text-paper" : "border border-ink/30 px-3 py-1.5"
+              tab === t.key ? "soft-button bg-ink px-4 py-2 text-paper" : "soft-button border border-ink/20 bg-paper/60 px-4 py-2"
               }
             >
               {t.label}
@@ -135,7 +135,7 @@ function CatalogPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search title or instructor…"
-          className="w-56 border border-ink/30 bg-paper px-3 py-1.5 text-sm outline-none focus:border-ink"
+          className="w-56 rounded-full border border-ink/15 bg-paper px-4 py-2 text-sm shadow-sm outline-none focus:border-moss"
         />
       </div>
 
@@ -143,7 +143,7 @@ function CatalogPage() {
         {shown.map((c, i) => (
           <article
             key={c.id}
-            className="lp col-span-12 flex flex-col overflow-hidden border-2 border-ink bg-paper sm:col-span-6 lg:col-span-3"
+            className="lp soft-surface-hover col-span-12 flex flex-col overflow-hidden rounded-2xl border border-ink/10 bg-paper shadow-sm sm:col-span-6 lg:col-span-3"
             style={{ animationDelay: `${i * 50}ms` }}
           >
             <img
@@ -206,8 +206,8 @@ function CatalogPage() {
                   <Link
                     to="/courses/$courseId"
                     params={{ courseId: c.id }}
-                    className={`px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] ${
-                      c.enrolled ? "bg-ink text-paper" : "border-2 border-ink"
+                    className={`soft-button px-4 py-2 font-mono text-[10px] uppercase tracking-[0.15em] ${
+                      c.enrolled ? "bg-ink text-paper" : "border border-ink/20 bg-paper"
                     }`}
                   >
                     {c.enrolled ? "Continue" : "Enroll"}
@@ -216,7 +216,7 @@ function CatalogPage() {
                   <button
                     type="button"
                     disabled
-                    className="cursor-not-allowed border-2 border-ink/30 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] text-fog"
+                    className="cursor-not-allowed rounded-full border border-ink/20 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-fog"
                   >
                     Locked
                   </button>

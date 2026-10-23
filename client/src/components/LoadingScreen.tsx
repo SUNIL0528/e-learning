@@ -14,7 +14,7 @@ export function LoadingScreen({
       aria-live="polite"
       aria-label={label}
     >
-      <div className="w-full max-w-sm border-2 border-ink bg-paper/95 p-8 text-center shadow-[12px_12px_0_var(--color-ink)]">
+      <div className="shimmer w-full max-w-sm rounded-3xl border border-ink/10 bg-paper/95 p-8 text-center shadow-2xl">
         <div className="relative mx-auto size-20" aria-hidden="true">
           <div className="loading-orbit absolute inset-1 border-2 border-clay border-t-transparent" />
           <div className="loading-orbit-reverse absolute inset-3 border-2 border-moss border-b-transparent" />

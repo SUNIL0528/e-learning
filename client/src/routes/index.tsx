@@ -118,7 +118,7 @@ function Dashboard() {
   return (
     <>
       <main>
-      <div className="mx-auto flex max-w-[1440px] items-end justify-between gap-6 border-b border-ink/15 px-6 py-5">
+      <div className="float-in mx-auto flex max-w-[1440px] items-end justify-between gap-6 border-b border-ink/10 px-6 py-7">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-fog">
             Student dashboard
@@ -162,7 +162,7 @@ function Dashboard() {
 
         {resume ? (
           <div className="grid grid-cols-12 gap-3">
-            <div className="relative col-span-12 overflow-hidden border-2 border-ink bg-ink text-paper md:col-span-8">
+            <div className="soft-surface-hover relative col-span-12 overflow-hidden rounded-3xl border border-ink/10 bg-ink text-paper shadow-xl md:col-span-8">
               <img
                 src={heroLecture}
                 alt="Instructor at a whiteboard"
@@ -179,13 +179,13 @@ function Dashboard() {
                 <Link
                   to="/courses/$courseId"
                   params={{ courseId: resume.id }}
-                  className="mt-4 self-start bg-clay px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.15em] text-paper"
+                  className="soft-button mt-4 self-start bg-clay px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.15em] text-paper"
                 >
                   Continue learning →
                 </Link>
               </div>
             </div>
-            <div className="col-span-12 flex flex-col justify-between border-2 border-ink bg-sand p-4 md:col-span-4">
+            <div className="soft-surface-hover col-span-12 flex flex-col justify-between rounded-3xl border border-ink/10 bg-sand p-5 shadow-lg md:col-span-4">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-fog">
                 Continue next
               </div>
@@ -195,7 +195,7 @@ function Dashboard() {
                     key={course.id}
                     to="/courses/$courseId"
                     params={{ courseId: course.id }}
-                    className="border border-ink/20 bg-paper p-2"
+                    className="soft-surface-hover rounded-2xl border border-ink/10 bg-paper p-2 shadow-sm"
                   >
                     <img
                       src={course.thumb}
@@ -215,7 +215,7 @@ function Dashboard() {
             </div>
           </div>
         ) : (
-          <div className="border-2 border-dashed border-ink/30 bg-paper p-8">
+          <div className="float-in rounded-3xl border border-dashed border-ink/25 bg-paper p-8 shadow-sm">
             <div className="rule-label text-clay">Nothing enrolled yet</div>
             <h2 className="mt-2 text-3xl font-black leading-tight">Start your first course.</h2>
             <p className="mt-2 max-w-xl text-sm text-fog">
@@ -223,7 +223,7 @@ function Dashboard() {
             </p>
             <Link
               to="/courses"
-              className="mt-5 inline-flex bg-ink px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.15em] text-paper"
+              className="soft-button mt-5 inline-flex bg-ink px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.15em] text-paper"
             >
               Browse courses →
             </Link>
@@ -242,8 +242,8 @@ function Dashboard() {
                 onClick={() => setFilter(filterOption.key)}
                 className={
                   filter === filterOption.key
-                    ? "bg-ink px-2 py-1 text-paper"
-                    : "border border-ink/30 px-2 py-1"
+                    ? "soft-button bg-ink px-3 py-1.5 text-paper"
+                    : "soft-button border border-ink/20 bg-paper/60 px-3 py-1.5"
                 }
               >
                 {filterOption.label}
@@ -263,7 +263,7 @@ function Dashboard() {
                 key={course.id}
                 to="/courses/$courseId"
                 params={{ courseId: course.id }}
-                className="lp col-span-6 overflow-hidden border-2 border-ink bg-paper md:col-span-3"
+                className="lp soft-surface-hover col-span-6 overflow-hidden rounded-2xl border border-ink/10 bg-paper shadow-sm md:col-span-3"
                 style={{ animationDelay: `${index * 70}ms` }}
               >
                 <img
@@ -300,13 +300,13 @@ function Dashboard() {
 
       {enrolledCourses.length === 0 && (
         <section className="mx-auto max-w-[1440px] px-6 pb-6">
-          <div className="border-2 border-dashed border-ink/30 bg-paper/60 p-5">
+          <div className="rounded-3xl border border-dashed border-ink/25 bg-paper/70 p-6 shadow-sm">
             <div className="rule-label text-clay">Recommended</div>
             <h2 className="mt-1 text-xl font-black">{recommended.title}</h2>
             <p className="text-sm text-fog">{recommended.reason}</p>
             <Link
               to="/courses"
-              className="mt-3 inline-flex border-2 border-ink px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em]"
+              className="soft-button mt-3 inline-flex border border-ink/20 bg-paper px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em]"
             >
               Browse catalogue
             </Link>

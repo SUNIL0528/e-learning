@@ -394,8 +394,8 @@ function CoursePage() {
 
   return (
     <>
-      <main className="mx-auto max-w-[1440px] px-3 py-4 sm:px-6 sm:py-5">
-      <div className="mb-3 flex flex-wrap items-center gap-2 border-b border-ink/15 pb-3 sm:gap-3">
+      <main className="mx-auto max-w-[1440px] px-3 py-5 sm:px-6 sm:py-7">
+      <div className="float-in mb-4 flex flex-wrap items-center gap-2 border-b border-ink/10 pb-4 sm:gap-3">
         <Link to="/" className="font-mono text-[10px] uppercase tracking-[0.2em] text-fog">
           ← Dashboard
         </Link>
@@ -413,7 +413,7 @@ function CoursePage() {
         type="button"
         onClick={() => setModuleSidebarOpen((open) => !open)}
         aria-expanded={moduleSidebarOpen}
-        className="mt-4 flex w-full items-center justify-between border-2 border-ink bg-paper px-3 py-2 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em]"
+        className="soft-button mt-5 flex w-full items-center justify-between border border-ink/15 bg-paper px-4 py-3 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm"
       >
         <span>Course modules</span>
         <span aria-hidden="true">{moduleSidebarOpen ? "Hide" : "Show"}</span>
@@ -455,7 +455,7 @@ function CoursePage() {
                 }
               />
 
-              <div className="mt-3 flex gap-2 border-b-2 border-ink">
+              <div className="mt-4 flex gap-2 rounded-xl border-b border-ink/10 bg-sand/50 p-1">
                 {(
                   [
                     ["qa", `Q&A · ${active.questions.length}`],
@@ -465,8 +465,8 @@ function CoursePage() {
                   <button
                     key={key}
                     onClick={() => setTab(key)}
-                    className={`px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] ${
-                      tab === key ? "bg-ink text-paper" : "text-ink/60"
+                    className={`rounded-lg px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] ${
+                      tab === key ? "bg-ink text-paper shadow-sm" : "text-ink/60 hover:bg-paper hover:text-ink"
                     }`}
                   >
                     {label}
@@ -492,7 +492,7 @@ function CoursePage() {
         </section>
 
         {moduleSidebarOpen && (
-        <aside className="course-modules-sidebar col-span-12 min-w-0 border-2 border-ink bg-paper p-3 sm:p-4 lg:col-span-4">
+        <aside className="course-modules-sidebar soft-surface col-span-12 min-w-0 p-3 sm:p-4 lg:col-span-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="rule-label">Modules</div>
             <button
@@ -511,7 +511,7 @@ function CoursePage() {
               const complete = isModuleComplete(m);
               const passed = passedModules.has(m.id);
               return (
-                <div key={m.id} className={`border border-ink/15 ${unlocked ? "" : "opacity-60"}`}>
+                <div key={m.id} className={`overflow-hidden rounded-xl border border-ink/10 ${unlocked ? "" : "opacity-60"}`}>
                   <button
                     disabled={!unlocked}
                     onClick={() =>
@@ -654,7 +654,7 @@ function LegacyVideoPlayer({ chapter }: { chapter: Chapter }) {
     audioLanguages.find(({ code }) => code === audioLanguage) ?? DEFAULT_AUDIO_LANGUAGES[0]!;
 
   return (
-    <div className="border-2 border-ink bg-ink text-paper">
+    <div className="overflow-hidden rounded-2xl border border-ink/10 bg-ink text-paper shadow-xl">
       <div className="relative grid aspect-video place-items-center overflow-hidden">
         {onVideo ? (
           <div className="text-center">
@@ -1101,7 +1101,7 @@ function BackendVideoPlayer({
   };
 
   return (
-    <div className="border-2 border-ink bg-ink text-paper">
+    <div className="overflow-hidden rounded-2xl border border-ink/10 bg-ink text-paper shadow-xl">
       <div className="relative grid aspect-video place-items-center overflow-hidden bg-black">
         {loading ? (
           <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper/70">
@@ -1893,7 +1893,7 @@ function SlideVideoPlayer({
       ref={containerRef}
       onMouseMove={revealFullscreenControls}
       onTouchStart={revealFullscreenControls}
-      className={`course-video-player border-2 border-ink bg-ink text-paper ${
+      className={`course-video-player overflow-hidden rounded-2xl border border-ink/10 bg-ink text-paper shadow-xl ${
         fullscreen && !fullscreenControlsVisible ? "fullscreen-controls-hidden" : ""
       }`}
     >
