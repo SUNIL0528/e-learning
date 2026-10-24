@@ -167,6 +167,20 @@ async function getTemporaryAudioUrl(
   return null;
 }
 
+async function getTemporaryChineseSlideImageUrl(
+  chapterNumber: number,
+  slideId: string,
+): Promise<string | null> {
+  for (const extension of ["png", "webp", "jpg", "jpeg"]) {
+    const url = await getTemporaryMediaUrl(
+      chapterMediaPath(chapterNumber, "zh", "ppt_slides", `${slideId}.${extension}`),
+      true,
+    );
+    if (url) return url;
+  }
+  return null;
+}
+
 export const Route = createFileRoute("/courses/$courseId")({
   loader: ({ params }) => {
     if (params.courseId !== ENABLED_COURSE_ID) throw notFound();
@@ -1438,6 +1452,7 @@ function SlideVideoPlayer({
       let chapterUrl = backendChapter.video.url;
       let slideVideoUrl = activeSlide.videoUrl;
       let audioUrl = activeAudioSource;
+      let slideImageUrl = activeSlide.imageUrl;
 
       if (!chapterUrl && backendChapter.video.filename) {
         chapterUrl = await getTemporaryMediaUrl(
@@ -1453,6 +1468,10 @@ function SlideVideoPlayer({
 
       if (!audioUrl) {
         audioUrl = await getTemporaryAudioUrl(chapterNumber, audioLanguage, slideId);
+      }
+
+      if (audioLanguage === "zh" && !slideImageUrl) {
+        slideImageUrl = await getTemporaryChineseSlideImageUrl(chapterNumber, slideId);
       }
 
       if (requestId !== mediaUrlRequestIdRef.current) return;
@@ -1471,6 +1490,7 @@ function SlideVideoPlayer({
           const nextSlide = {
             ...slide,
             video: slide.video ?? slideVideoUrl,
+            image: slide.image ?? slideImageUrl,
             audio: {
               ...slide.audio,
               [audioLanguage]: slide.audio[audioLanguage] ?? audioUrl,
@@ -1478,6 +1498,7 @@ function SlideVideoPlayer({
           };
           if (
             nextSlide.video !== slide.video ||
+            nextSlide.image !== slide.image ||
             nextSlide.audio[audioLanguage] !== slide.audio[audioLanguage]
           ) {
             changed = true;
