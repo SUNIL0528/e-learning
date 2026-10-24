@@ -2236,6 +2236,12 @@ function normalizeImageUrls(value: unknown): Record<string, string | null> {
   );
 }
 
+function slideImageFilename(slideId: string): string {
+  const numberMatch = slideId.match(/(\d+)$/);
+  const number = Number(numberMatch?.[1] ?? 1);
+  return `slide_${String(number).padStart(4, "0")}.png`;
+}
+
 function SlideImageAudioPlayer({
   chapter,
   chapterCompleted = false,
@@ -2387,21 +2393,16 @@ function SlideImageAudioPlayer({
         audioUrl = await getTemporaryAudioUrl(chapterNumber, language, activeSlide.id);
       }
 
-      const imageLanguages = language === "en" ? ["en"] : [language, "en"];
-      for (const imageLanguage of imageLanguages) {
-        if (imageUrl) break;
-        for (const extension of ["png", "webp", "jpg", "jpeg"]) {
-          imageUrl = await getTemporaryMediaUrl(
-            chapterMediaPath(
-              chapterNumber,
-              imageLanguage,
-              "ppt_slides",
-              `${activeSlide.id}.${extension}`,
-            ),
-            true,
-          );
-          if (imageUrl) break;
-        }
+      if (!imageUrl) {
+        imageUrl = await getTemporaryMediaUrl(
+          chapterMediaPath(
+            chapterNumber,
+            "en",
+            `ppt-slides/module_${chapterNumber}`,
+            slideImageFilename(activeSlide.id),
+          ),
+          true,
+        );
       }
 
       if (requestId !== mediaRequestIdRef.current) return;
