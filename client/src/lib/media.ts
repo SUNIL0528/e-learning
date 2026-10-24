@@ -66,7 +66,7 @@ export async function getTemporaryMediaUrl(
 export function chapterMediaPath(
   chapterNumber: number,
   language: string,
-  mediaType: "videos" | "audios" | "ppt" | "ppt_slides",
+  mediaType: "videos" | "audios" | "ppt",
   filename: string,
 ) {
   return `chapter${chapterNumber}/${language}/${mediaType}/${filename}`;
