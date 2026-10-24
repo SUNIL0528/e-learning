@@ -167,7 +167,10 @@ def _presentation_image_for_slide(image_urls, slide_id):
         (
             url
             for stem, url in image_urls.items()
-            if stem in {f"slide_{number}", f"slide_{number:04d}"}
+            if (
+                stem_match := re.search(r"(\d+)$", stem)
+            )
+            and int(stem_match.group(1)) == number
         ),
         None,
     )
