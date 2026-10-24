@@ -617,7 +617,7 @@ function VideoPlayer({
   backendChapterId?: string;
 }) {
   return (
-    <SlideVideoPlayer
+    <SlideImageAudioPlayer
       chapter={chapter}
       chapterCompleted={chapterCompleted}
       onComplete={onComplete}
@@ -2191,6 +2191,643 @@ function SlideVideoPlayer({
           Backend media unavailable - showing slide preview
         </div>
       )}
+    </div>
+  );
+}
+
+type ImagePlayerSlide = {
+  id: string;
+  title: string;
+  start: number;
+  end: number;
+  imageUrls: Record<string, string | null>;
+  audio: Record<string, string | null>;
+  captions: Record<string, string>;
+};
+
+type ImageBackendChapter = {
+  id: string;
+  title: string;
+  languages: BackendLanguage[];
+  slides: ImagePlayerSlide[];
+};
+
+type ImageBackendChapterResponse = {
+  id: string;
+  title: string;
+  languages: BackendLanguage[];
+  slides: Array<{
+    id: string;
+    start: number;
+    end: number;
+    images?: unknown;
+    captions?: unknown;
+    [languageCode: string]: unknown;
+  }>;
+};
+
+function normalizeImageUrls(value: unknown): Record<string, string | null> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).map(([language, url]) => [
+      language,
+      typeof url === "string" && url.trim() ? url : null,
+    ]),
+  );
+}
+
+function SlideImageAudioPlayer({
+  chapter,
+  chapterCompleted = false,
+  onComplete,
+  initialSlideIndex,
+  highestCompletedSlideIndex: initialHighestCompletedSlideIndex,
+  onSlideProgress,
+  backendChapterId,
+}: {
+  chapter: Chapter;
+  chapterCompleted?: boolean;
+  onComplete?: () => void;
+  initialSlideIndex?: number;
+  highestCompletedSlideIndex?: number;
+  onSlideProgress?: (
+    slideIndex: number,
+    slideId: string,
+    completed?: boolean,
+    completedSlideIndex?: number,
+  ) => void;
+  backendChapterId?: string;
+}) {
+  const ZOOM_STEPS = [0.75, 1, 1.25, 1.5, 1.75, 2] as const;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const loadedAudioKeyRef = useRef<string | null>(null);
+  const playbackRequestIdRef = useRef(0);
+  const mediaRequestIdRef = useRef(0);
+  const autoplayNextRef = useRef(false);
+  const advancingRef = useRef(false);
+  const fullscreenControlsTimerRef = useRef<number | null>(null);
+  const [backendChapter, setBackendChapter] = useState<ImageBackendChapter | null>(null);
+  const [loading, setLoading] = useState(Boolean(backendChapterId));
+  const [mediaLoading, setMediaLoading] = useState(Boolean(backendChapterId));
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [highestCompletedSlideIndex, setHighestCompletedSlideIndex] = useState(-1);
+  const [slideComplete, setSlideComplete] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [language, setLanguage] = useState("en");
+  const [muted, setMuted] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [fullscreenControlsVisible, setFullscreenControlsVisible] = useState(true);
+  const [contentZoom, setContentZoom] = useState<(typeof ZOOM_STEPS)[number]>(1);
+  const [captionsVisible, setCaptionsVisible] = useState(false);
+
+  const cancelAudio = useCallback(() => {
+    playbackRequestIdRef.current += 1;
+    loadedAudioKeyRef.current = null;
+    setAudioLoading(false);
+    const audio = audioRef.current;
+    audio?.pause();
+    audio?.removeAttribute("src");
+    audio?.load();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    setBackendChapter(null);
+    setError(null);
+    setLoading(Boolean(backendChapterId));
+
+    if (!backendChapterId) return;
+
+    fetch(`${API_BASE_URL}/api/chapter/${backendChapterId}/?media=cloudfront`, {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Chapter request failed (${response.status})`);
+        return (await response.json()) as ImageBackendChapterResponse;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const availableLanguages = mergeAudioLanguages(data.languages);
+        const initialLanguage = availableLanguages.some(({ code }) => code === "en")
+          ? "en"
+          : availableLanguages[0]?.code ?? "en";
+        setLanguage(initialLanguage);
+        setBackendChapter({
+          id: data.id,
+          title: data.title,
+          languages: availableLanguages,
+          slides: data.slides.map((slide) => ({
+            id: slide.id,
+            title: `Slide ${slide.id.replace("slide_", "")}`,
+            start: slide.start,
+            end: slide.end,
+            imageUrls: normalizeImageUrls(slide.images),
+            audio: Object.fromEntries(
+              availableLanguages.map((item) => [
+                item.code,
+                typeof slide[item.code] === "string" ? slide[item.code] : null,
+              ]),
+            ),
+            captions: normalizeCaptions(slide.captions),
+          })),
+        });
+      })
+      .catch((requestError: unknown) => {
+        if (!cancelled && !controller.signal.aborted) {
+          setError(requestError instanceof Error ? requestError.message : "Unable to load media");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+      cancelAudio();
+    };
+  }, [backendChapterId, cancelAudio]);
+
+  const slides = useMemo<ImagePlayerSlide[]>(
+    () =>
+      backendChapter?.slides ??
+      chapter.slides.map((slide, index) => ({
+        id: `${chapter.id}-${index}`,
+        title: slide.title,
+        start: 0,
+        end: 0,
+        imageUrls: {},
+        audio: {},
+        captions: {},
+      })),
+    [backendChapter, chapter],
+  );
+  const activeSlide = slides[slideIndex] ?? slides[0];
+  const languages = backendChapter?.languages ?? DEFAULT_AUDIO_LANGUAGES;
+  const activeAudioSource = activeSlide?.audio[language] ?? null;
+  const activeImageSource = activeSlide?.imageUrls[language] ?? null;
+  const chapterNumber = chapterNumberFromBackendId(backendChapterId ?? "");
+
+  useEffect(() => {
+    if (!backendChapter || !activeSlide || chapterNumber === null || !directS3MediaConfigured) return;
+
+    const requestId = ++mediaRequestIdRef.current;
+    const resolveMedia = async () => {
+      let audioUrl = activeAudioSource;
+      let imageUrl = activeImageSource;
+
+      if (!audioUrl) {
+        audioUrl = await getTemporaryAudioUrl(chapterNumber, language, activeSlide.id);
+      }
+
+      const imageLanguages = language === "en" ? ["en"] : [language, "en"];
+      for (const imageLanguage of imageLanguages) {
+        if (imageUrl) break;
+        for (const extension of ["png", "webp", "jpg", "jpeg"]) {
+          imageUrl = await getTemporaryMediaUrl(
+            chapterMediaPath(
+              chapterNumber,
+              imageLanguage,
+              "ppt_slides",
+              `${activeSlide.id}.${extension}`,
+            ),
+            true,
+          );
+          if (imageUrl) break;
+        }
+      }
+
+      if (requestId !== mediaRequestIdRef.current) return;
+      setBackendChapter((previous) => {
+        if (!previous) return previous;
+        let changed = false;
+        const nextSlides = previous.slides.map((slide) => {
+          if (slide.id !== activeSlide.id) return slide;
+          const nextSlide = {
+            ...slide,
+            imageUrls: {
+              ...slide.imageUrls,
+              [language]: imageUrl ?? slide.imageUrls[language] ?? null,
+            },
+            audio: {
+              ...slide.audio,
+              [language]: audioUrl ?? slide.audio[language] ?? null,
+            },
+          };
+          if (
+            nextSlide.imageUrls[language] === slide.imageUrls[language] &&
+            nextSlide.audio[language] === slide.audio[language]
+          ) {
+            return slide;
+          }
+          changed = true;
+          return nextSlide;
+        });
+        return changed ? { ...previous, slides: nextSlides } : previous;
+      });
+    };
+
+    void resolveMedia();
+    return () => {
+      mediaRequestIdRef.current += 1;
+    };
+  }, [activeAudioSource, activeImageSource, activeSlide, chapterNumber, language, backendChapter]);
+
+  const persistSlideProgress = useCallback(
+    (index: number, completed = false, completedSlideIndex?: number) => {
+      const slide = slides[index];
+      if (slide) onSlideProgress?.(index, slide.id, completed, completedSlideIndex);
+    },
+    [onSlideProgress, slides],
+  );
+
+  const startPlayback = useCallback(async () => {
+    const audio = audioRef.current;
+    if (!audio || !activeSlide || !activeAudioSource) return;
+
+    const requestId = ++playbackRequestIdRef.current;
+    const audioKey = `${activeSlide.id}_${language}`;
+    setAudioLoading(true);
+    try {
+      if (loadedAudioKeyRef.current !== audioKey) {
+        audio.pause();
+        audio.src = activeAudioSource;
+        audio.preload = "auto";
+        audio.playbackRate = speed;
+        audio.muted = muted;
+        loadedAudioKeyRef.current = audioKey;
+        audio.load();
+        await new Promise<void>((resolve) => {
+          let settled = false;
+          const finish = () => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timeoutId);
+            audio.removeEventListener("canplay", finish);
+            audio.removeEventListener("error", finish);
+            resolve();
+          };
+          const timeoutId = window.setTimeout(finish, 15_000);
+          audio.addEventListener("canplay", finish);
+          audio.addEventListener("error", finish);
+          if (audio.readyState >= 3) finish();
+        });
+      }
+
+      if (requestId !== playbackRequestIdRef.current) return;
+      audio.playbackRate = speed;
+      audio.muted = muted;
+      await audio.play();
+      setPlaying(true);
+    } catch {
+      setError("Unable to play this audio. Please try again.");
+    } finally {
+      if (requestId === playbackRequestIdRef.current) setAudioLoading(false);
+    }
+  }, [activeAudioSource, activeSlide, language, muted, speed]);
+
+  useEffect(() => {
+    advancingRef.current = false;
+    setSlideComplete(false);
+    setPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setMediaLoading(Boolean(activeImageSource));
+    cancelAudio();
+
+    if (autoplayNextRef.current && activeAudioSource) {
+      autoplayNextRef.current = false;
+      void startPlayback();
+    }
+  }, [activeAudioSource, activeImageSource, activeSlide?.id, cancelAudio, language, startPlayback]);
+
+  useEffect(() => {
+    setSlideIndex(Math.min(slides.length - 1, Math.max(0, initialSlideIndex ?? 0)));
+    setHighestCompletedSlideIndex(initialHighestCompletedSlideIndex ?? initialSlideIndex ?? -1);
+  }, [initialHighestCompletedSlideIndex, initialSlideIndex, slides.length]);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.muted = muted;
+  }, [muted]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFullscreen = Boolean(document.fullscreenElement);
+      setFullscreen(isFullscreen);
+      setFullscreenControlsVisible(!isFullscreen);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (fullscreenControlsTimerRef.current !== null) {
+        window.clearTimeout(fullscreenControlsTimerRef.current);
+      }
+    };
+  }, []);
+
+  const advanceSlide = useCallback(() => {
+    if (advancingRef.current || !slides.length) return;
+    advancingRef.current = true;
+    const nextIndex = Math.min(slides.length - 1, slideIndex + 1);
+    persistSlideProgress(nextIndex, true, slideIndex);
+    setHighestCompletedSlideIndex((highest) => Math.max(highest, slideIndex));
+    setSlideComplete(true);
+    setPlaying(false);
+    cancelAudio();
+    if (slideIndex === slides.length - 1) {
+      onComplete?.();
+      return;
+    }
+    autoplayNextRef.current = true;
+    setSlideIndex(nextIndex);
+  }, [cancelAudio, onComplete, persistSlideProgress, slideIndex, slides.length]);
+
+  const handleLanguageChange = (nextLanguage: string) => {
+    if (nextLanguage === language) return;
+    autoplayNextRef.current = playing;
+    setSlideComplete(false);
+    setLanguage(nextLanguage);
+  };
+
+  const previousSlide = () => {
+    if (slideIndex === 0) return;
+    autoplayNextRef.current = playing;
+    setSlideIndex((index) => Math.max(0, index - 1));
+  };
+
+  const nextSlide = () => {
+    if (slideIndex >= slides.length - 1) return;
+    if (activeAudioSource && !slideComplete && !chapterCompleted && highestCompletedSlideIndex < slideIndex) {
+      return;
+    }
+    autoplayNextRef.current = Boolean(activeAudioSource);
+    const nextIndex = Math.min(slides.length - 1, slideIndex + 1);
+    setSlideIndex(nextIndex);
+    setSlideComplete(false);
+    persistSlideProgress(nextIndex);
+  };
+
+  const jumpToSlide = (index: number) => {
+    const lastAccessibleSlide = Math.max(0, highestCompletedSlideIndex + 1);
+    if (index < 0 || index >= slides.length || (!chapterCompleted && index > lastAccessibleSlide)) return;
+    if (index === slideIndex) {
+      void startPlayback();
+      return;
+    }
+    autoplayNextRef.current = true;
+    setSlideComplete(false);
+    setSlideIndex(index);
+    persistSlideProgress(index);
+  };
+
+  const handleSeek = (event: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || !duration) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+    audio.currentTime = ratio * duration;
+  };
+
+  const seekBy = (seconds: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const maximum = Number.isFinite(audio.duration) ? audio.duration : duration;
+    audio.currentTime = Math.max(0, Math.min(maximum, audio.currentTime + seconds));
+  };
+
+  const togglePlayback = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) void startPlayback();
+    else {
+      playbackRequestIdRef.current += 1;
+      audio.pause();
+    }
+  };
+
+  const changeSpeed = () => {
+    const nextSpeed = speed === 1 ? 1.5 : speed === 1.5 ? 2 : 1;
+    setSpeed(nextSpeed);
+    if (audioRef.current) audioRef.current.playbackRate = nextSpeed;
+  };
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void containerRef.current?.requestFullscreen();
+  };
+
+  const revealFullscreenControls = useCallback(() => {
+    if (!fullscreen) return;
+    setFullscreenControlsVisible(true);
+    if (fullscreenControlsTimerRef.current !== null) {
+      window.clearTimeout(fullscreenControlsTimerRef.current);
+    }
+    fullscreenControlsTimerRef.current = window.setTimeout(() => {
+      setFullscreenControlsVisible(false);
+      fullscreenControlsTimerRef.current = null;
+    }, 2500);
+  }, [fullscreen]);
+
+  const changeZoom = (direction: -1 | 1) => {
+    setContentZoom((current) => {
+      const index = ZOOM_STEPS.indexOf(current);
+      return ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, Math.max(0, index + direction))] ?? 1;
+    });
+  };
+
+  const caption = activeSlide?.captions[language] ?? firstCaption(activeSlide?.captions);
+
+  return (
+    <div>
+      <div className="mb-2 flex justify-end">
+        <label className="flex items-center gap-2 border border-ink/20 bg-paper px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-ink">
+          <span className="text-ink/60">Language</span>
+          <select
+            value={language}
+            disabled={loading}
+            onChange={(event) => handleLanguageChange(event.target.value)}
+            aria-label="Presentation language"
+            className="cursor-pointer bg-transparent outline-none"
+          >
+            {languages.map((item) => (
+              <option key={item.code} value={item.code}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div
+        ref={containerRef}
+        onMouseMove={revealFullscreenControls}
+        onTouchStart={revealFullscreenControls}
+        className={`course-video-player overflow-hidden rounded-2xl border border-ink/10 bg-ink text-paper shadow-xl ${
+          fullscreen && !fullscreenControlsVisible ? "fullscreen-controls-hidden" : ""
+        }`}
+      >
+        <div className="relative grid aspect-video place-items-center overflow-hidden bg-black">
+          {loading ? (
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper/70">
+              Loading slides...
+            </div>
+          ) : activeImageSource ? (
+            <img
+              key={`${activeSlide?.id}-${language}-${activeImageSource}`}
+              src={activeImageSource}
+              alt={activeSlide?.title ?? "Course slide"}
+              className="size-full object-contain"
+              style={{ transform: `scale(${contentZoom})` }}
+              onLoad={() => setMediaLoading(false)}
+              onError={() => {
+                setMediaLoading(false);
+                setError("Unable to load this slide image.");
+              }}
+              onClick={togglePlayback}
+            />
+          ) : activeSlide ? (
+            <div className="size-full bg-paper p-8 text-left text-ink">
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay">
+                Slide image unavailable
+              </div>
+              <h3 className="mt-2 text-2xl font-black">{activeSlide.title}</h3>
+            </div>
+          ) : (
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay">
+              No slides available
+            </div>
+          )}
+
+          {(mediaLoading || audioLoading) && !loading && (
+            <div className="absolute inset-0 z-20 grid place-items-center bg-black/60">
+              <div className="font-mono text-[10px] uppercase tracking-[0.18em]">
+                {audioLoading ? "Loading audio..." : "Loading image..."}
+              </div>
+            </div>
+          )}
+          {activeImageSource && <CandidateWatermark />}
+          {captionsVisible && caption && (
+            <div className="pointer-events-none absolute bottom-4 left-1/2 max-w-[85%] -translate-x-1/2 bg-black/80 px-3 py-2 text-center text-sm text-white shadow-lg">
+              {caption}
+            </div>
+          )}
+          {activeSlide && activeImageSource && (
+            <div className="pointer-events-none absolute left-3 top-3 bg-ink/75 px-2 py-1 font-mono text-[10px] uppercase tracking-wider">
+              Slide {slideIndex + 1} / {slides.length}
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-paper/20 px-3 py-2" aria-label="Slide navigator">
+          <div className="mb-1 flex items-center justify-between gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-paper/60">
+            <span>Slides</span>
+            <span>Tap a completed slide to review</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {slides.map((slide, index) => {
+              const accessible = chapterCompleted || index <= Math.max(0, highestCompletedSlideIndex + 1);
+              const selected = index === slideIndex;
+              return (
+                <button
+                  key={slide.id}
+                  type="button"
+                  disabled={!accessible}
+                  onClick={() => jumpToSlide(index)}
+                  className={`min-w-24 shrink-0 border px-2 py-1.5 text-left font-mono text-[9px] uppercase tracking-wider transition-colors ${
+                    selected
+                      ? "border-paper bg-paper text-ink"
+                      : accessible
+                        ? "border-paper/30 text-paper hover:border-paper hover:bg-paper/10"
+                        : "cursor-not-allowed border-paper/10 text-paper/30"
+                  }`}
+                >
+                  <span className="block font-bold">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="mt-0.5 block truncate normal-case tracking-normal">{slide.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <audio
+          ref={audioRef}
+          preload="none"
+          className="hidden"
+          onLoadedMetadata={(event) => {
+            setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0);
+            setAudioLoading(false);
+          }}
+          onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={advanceSlide}
+          onError={() => {
+            setAudioLoading(false);
+            setError("Unable to load this narration.");
+          }}
+        />
+
+        <div className="space-y-2 border-t border-paper/20 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em]">
+          <div className="flex flex-wrap items-center gap-3">
+            <button onClick={togglePlayback} disabled={!activeAudioSource} className="bg-clay px-3 py-1 text-paper disabled:opacity-40">
+              {playing ? "Pause" : "Play"}
+            </button>
+            <button onClick={() => seekBy(10)} disabled={!duration} className="border border-paper/40 px-2 py-0.5 disabled:opacity-30">
+              +10s
+            </button>
+            <button onClick={() => seekBy(-10)} disabled={!duration} className="border border-paper/40 px-2 py-0.5 disabled:opacity-30">
+              -10s
+            </button>
+            <div className="h-1 min-w-[80px] flex-1 cursor-pointer bg-paper/20" onClick={handleSeek} role="slider" aria-label="Narration progress" aria-valuemin={0} aria-valuemax={duration} aria-valuenow={currentTime}>
+              <div className="h-full bg-paper/80" style={{ width: `${duration ? Math.min(100, (currentTime / duration) * 100) : 0}%` }} />
+            </div>
+            <span>{formatTime(currentTime)} / {duration ? formatTime(duration) : "0:00"}</span>
+          </div>
+
+          <div className="relative flex flex-wrap items-center justify-between gap-3 sm:min-h-10">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <button onClick={() => setMuted((value) => !value)} className="border border-paper/40 px-2 py-1">
+                {muted ? "Unmute" : "Mute"}
+              </button>
+              <button onClick={changeSpeed} className="border border-paper/40 px-2 py-1">{speed}x</button>
+            </div>
+            <div className="flex items-center justify-center gap-2 sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+              <button onClick={previousSlide} disabled={slideIndex === 0} className="min-w-20 border-2 border-paper/60 px-5 py-2 text-xs font-bold disabled:opacity-30">Prev</button>
+              <button
+                onClick={nextSlide}
+                disabled={slideIndex === slides.length - 1 || Boolean(activeAudioSource && !slideComplete && !chapterCompleted && highestCompletedSlideIndex < slideIndex)}
+                className="min-w-20 border-2 border-paper/60 px-5 py-2 text-xs font-bold disabled:opacity-30"
+              >
+                Next
+              </button>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="flex items-center gap-1 border border-paper/40 px-1 py-1">
+                <span className="px-1 text-paper/60">Zoom</span>
+                <button onClick={() => changeZoom(-1)} disabled={contentZoom === ZOOM_STEPS[0]} className="px-1 disabled:opacity-30">-</button>
+                <button onClick={() => setContentZoom(1)} className="min-w-[3.5rem] border-x border-paper/30 px-1">{Math.round(contentZoom * 100)}%</button>
+                <button onClick={() => changeZoom(1)} disabled={contentZoom === ZOOM_STEPS[ZOOM_STEPS.length - 1]} className="px-1 disabled:opacity-30">+</button>
+              </div>
+              <button onClick={() => setCaptionsVisible((visible) => !visible)} disabled={!CAPTIONS_ENABLED || !caption} className={`border border-paper/40 px-2 py-1 disabled:opacity-30 ${captionsVisible ? "bg-paper text-ink" : ""}`}>CC</button>
+              <button onClick={toggleFullscreen} className="border border-paper/40 px-2 py-1" aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}>[ ]</button>
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-paper/20 px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-paper/60">
+          {slideComplete && slideIndex === slides.length - 1 ? "Module complete" : `Slide ${slideIndex + 1} of ${slides.length} - click Next to continue`}
+        </div>
+        {error && <div className="border-t border-paper/20 px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-clay">{error}</div>}
+      </div>
     </div>
   );
 }

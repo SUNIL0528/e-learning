@@ -602,6 +602,65 @@ def chapter_detail(request, chapter_id):
                     local_audio_path.name,
                 )
 
+        # Language-specific slide images. The course player uses these static
+        # images instead of per-language videos and keeps each image visible
+        # until the selected narration ends.
+        image_urls = {}
+        number_match = re.search(r"(\d+)$", slide_id)
+        number = number_match.group(1) if number_match else str(slide_index + 1)
+        number_value = str(int(number))
+        for language in languages:
+            language_code = language["code"]
+            image_filenames = [
+                f"{slide_id}.png",
+                f"slide_{number}.png",
+                f"slide_{number_value}.png",
+                f"slide_{int(number):03d}.png",
+                f"slide_{int(number):04d}.png",
+            ]
+            image_url = (
+                s3_media.presigned_url(
+                    media_folder,
+                    language_code,
+                    "ppt_slides",
+                    image_filenames,
+                )
+                if s3_media
+                else None
+            )
+
+            if image_url is None:
+                local_image_path = next(
+                    (
+                        chapter_media_path
+                        / language_code
+                        / "ppt_slides"
+                        / filename
+                        for filename in image_filenames
+                        if (
+                            chapter_media_path
+                            / language_code
+                            / "ppt_slides"
+                            / filename
+                        ).exists()
+                    ),
+                    None,
+                )
+                if local_image_path:
+                    image_url = _media_url(
+                        base_url,
+                        media_folder,
+                        language_code,
+                        "ppt_slides",
+                        local_image_path.name,
+                    )
+
+            # If a translated slide image has not been uploaded yet, keep the
+            # selected narration usable with the English slide artwork.
+            image_urls[language_code] = image_url or image_urls.get("en")
+
+        slide["images"] = image_urls
+
         # ====================================================
         # Optional per-slide video
         # ====================================================
