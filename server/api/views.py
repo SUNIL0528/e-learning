@@ -134,6 +134,45 @@ def _media_url(base_url, *parts):
     return f"{base_url}/" + "/".join(quote(str(part), safe="") for part in parts)
 
 
+def _chinese_slide_image_urls(media_folder, base_url, media_store):
+    """Return Chinese slide image URLs from chapterN/zh/ppt_slides/."""
+    image_urls = {}
+    if media_store:
+        for key in media_store.list_keys(media_folder, "zh", "ppt_slides"):
+            if not key.lower().endswith((".png", ".webp", ".jpg", ".jpeg")):
+                continue
+            url = media_store.presigned_key_url(key)
+            if url:
+                image_urls[Path(key).stem.lower()] = url
+
+    local_image_root = Path(settings.MEDIA_ROOT) / media_folder / "zh" / "ppt_slides"
+    if local_image_root.is_dir():
+        for path in local_image_root.iterdir():
+            if path.is_file() and path.suffix.lower() in {".png", ".webp", ".jpg", ".jpeg"}:
+                image_urls.setdefault(
+                    path.stem.lower(),
+                    _media_url(base_url, media_folder, "zh", "ppt_slides", path.name),
+                )
+
+    return image_urls
+
+
+def _presentation_image_for_slide(image_urls, slide_id):
+    number_match = re.search(r"(\d+)$", str(slide_id or ""))
+    if not number_match:
+        return None
+
+    number = int(number_match.group(1))
+    return next(
+        (
+            url
+            for stem, url in image_urls.items()
+            if stem in {f"slide_{number}", f"slide_{number:04d}"}
+        ),
+        None,
+    )
+
+
 def _find_slide_video(chapter_media_path, video_folder, slide_id, slide_index):
     video_paths = [chapter_media_path / video_folder]
     # Older local module 1 media was stored in this nested folder. Keep it as
@@ -550,6 +589,12 @@ def chapter_detail(request, chapter_id):
     # Convert audio paths
     # ========================================================
 
+    presentation_image_urls = _chinese_slide_image_urls(
+        media_folder,
+        base_url,
+        metadata_media_store,
+    )
+
     for slide_index, slide in enumerate(slides):
 
         slide_id = slide.get("id")
@@ -639,6 +684,10 @@ def chapter_detail(request, chapter_id):
                 )
 
         slide["video"] = slide_video_url
+        slide["image"] = _presentation_image_for_slide(
+            presentation_image_urls,
+            slide_id,
+        )
 
     # ========================================================
     # Response

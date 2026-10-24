@@ -51,6 +51,7 @@ type BackendSlide = {
   start: number;
   end: number;
   video: string | null;
+  image: string | null;
   audio: Record<string, string | null>;
   captions: Record<string, string>;
 };
@@ -80,6 +81,7 @@ type PlayerSlide = {
   start?: number;
   end?: number;
   videoUrl: string | null;
+  imageUrl: string | null;
   audio: Record<string, string | null>;
   captions: Record<string, string>;
 };
@@ -864,6 +866,7 @@ function BackendVideoPlayer({
             start: slide.start,
             end: slide.end,
             video: typeof slide.video === "string" ? slide.video : null,
+            image: typeof slide.image === "string" ? slide.image : null,
             audio: Object.fromEntries(
               data.languages.map((language) => [
                 language.code,
@@ -1294,6 +1297,7 @@ function SlideVideoPlayer({
           start: slide.start,
           end: slide.end,
           video: typeof slide.video === "string" ? slide.video : null,
+          image: typeof slide.image === "string" ? slide.image : null,
           audio: Object.fromEntries(
             availableLanguages.map((language) => [
               language.code,
@@ -1340,6 +1344,7 @@ function SlideVideoPlayer({
             start: slide.start,
             end: slide.end,
             videoUrl: slide.video,
+            imageUrl: slide.image,
             audio: slide.audio,
             captions: slide.captions,
           }))
@@ -1348,6 +1353,7 @@ function SlideVideoPlayer({
             title: slide.title,
             bullets: slide.bullets,
             videoUrl: null,
+            imageUrl: null,
             audio: {},
             captions: {},
           })),
@@ -1360,6 +1366,10 @@ function SlideVideoPlayer({
   const chapterVideoUrl = backendChapter?.video.url ?? null;
   const activeVideoSource = activeSlide?.videoUrl ?? chapterVideoUrl;
   const videoSource = mediaTarget.slideId === activeSlide?.id ? mediaTarget.source : null;
+  const usesChineseImageMode = audioLanguage === "zh" && Boolean(activeSlide?.imageUrl);
+  const canPlayCurrentSlide = usesChineseImageMode
+    ? Boolean(activeAudioSource)
+    : Boolean(videoSource);
   const usesChapterSegment = Boolean(activeSlide?.videoUrl === null && chapterVideoUrl);
   const segmentStart = usesChapterSegment ? (activeSlide?.start ?? 0) : 0;
   const segmentEnd = usesChapterSegment ? (activeSlide?.end ?? 0) : duration;
@@ -1368,6 +1378,12 @@ function SlideVideoPlayer({
     if (!activeSlide) {
       setMediaTarget({ slideId: null, source: null });
       setMediaLoading(false);
+      return;
+    }
+
+    if (usesChineseImageMode) {
+      setMediaTarget({ slideId: null, source: null });
+      setMediaLoading(Boolean(activeSlide.imageUrl));
       return;
     }
 
@@ -1381,7 +1397,7 @@ function SlideVideoPlayer({
     }, 120);
 
     return () => window.clearTimeout(timer);
-  }, [activeSlide, activeVideoSource]);
+  }, [activeSlide, activeVideoSource, usesChineseImageMode]);
 
   useEffect(() => {
     videoRetryRef.current = null;
@@ -1575,6 +1591,15 @@ function SlideVideoPlayer({
   );
 
   useEffect(() => {
+    if (usesChineseImageMode) {
+      if (!activeSlide || !activeAudioSource) return;
+
+      const shouldPlay = autoplayNextRef.current;
+      autoplayNextRef.current = false;
+      void loadSlideAudio(activeSlide, audioLanguage, 0, shouldPlay);
+      return;
+    }
+
     const video = videoRef.current;
     if (!video || !activeSlide || !activeAudioSource) return;
 
@@ -1584,9 +1609,29 @@ function SlideVideoPlayer({
       video.currentTime,
       !video.paused,
     );
-  }, [activeAudioSource, activeSlide, audioLanguage, loadSlideAudio]);
+  }, [activeAudioSource, activeSlide, audioLanguage, loadSlideAudio, usesChineseImageMode]);
 
   const startPlayback = useCallback(async () => {
+    const audio = audioRef.current;
+    const slide = activeSlide;
+
+    if (usesChineseImageMode) {
+      const source = slide ? findAudioSource(slide, audioLanguageRef.current) : null;
+      if (!audio || !slide || !source) return;
+
+      const requestId = ++playbackRequestIdRef.current;
+      setAudioLoading(true);
+      try {
+        await loadSlideAudio(slide, audioLanguageRef.current, audio.currentTime, true);
+        if (playbackRequestIdRef.current !== requestId || audioRef.current !== audio) return;
+      } catch {
+        // Browser autoplay policy or a media error can reject playback.
+      } finally {
+        if (playbackRequestIdRef.current === requestId) setAudioLoading(false);
+      }
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
 
@@ -1596,7 +1641,6 @@ function SlideVideoPlayer({
     if (audioRef.current) audioRef.current.playbackRate = speed;
 
     const requestId = ++playbackRequestIdRef.current;
-    const slide = activeSlide;
     const source = slide ? findAudioSource(slide, audioLanguageRef.current) : null;
 
     if (source) setAudioLoading(true);
@@ -1612,7 +1656,7 @@ function SlideVideoPlayer({
     } finally {
       if (playbackRequestIdRef.current === requestId) setAudioLoading(false);
     }
-  }, [activeSlide, loadSlideAudio, speed]);
+  }, [activeSlide, loadSlideAudio, speed, usesChineseImageMode]);
 
   const syncAudio = useCallback(() => {
     const video = videoRef.current;
@@ -1673,7 +1717,7 @@ function SlideVideoPlayer({
     if (videoRef.current) videoRef.current.playbackRate = 1;
     if (audioRef.current) audioRef.current.playbackRate = 1;
     cancelPendingAudio();
-  }, [activeSlide?.id, cancelPendingAudio, videoSource]);
+  }, [activeAudioSource, activeSlide?.id, audioLanguage, cancelPendingAudio, usesChineseImageMode, videoSource]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -1726,6 +1770,19 @@ function SlideVideoPlayer({
     }
   };
 
+  const handleAudioLoadedMetadata = (event: React.SyntheticEvent<HTMLAudioElement>) => {
+    if (!usesChineseImageMode) return;
+    const audio = event.currentTarget;
+    audio.playbackRate = speed;
+    setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+    setAudioLoading(false);
+  };
+
+  const handleAudioTimeUpdate = (event: React.SyntheticEvent<HTMLAudioElement>) => {
+    if (!usesChineseImageMode) return;
+    setCurrentTime(event.currentTarget.currentTime);
+  };
+
   const handleTimeUpdate = (event: React.SyntheticEvent<HTMLVideoElement>) => {
     const video = event.currentTarget;
     const relativeTime = usesChapterSegment
@@ -1753,6 +1810,15 @@ function SlideVideoPlayer({
   };
 
   const handleSeek = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (usesChineseImageMode) {
+      const audio = audioRef.current;
+      if (!audio || !duration) return;
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+      audio.currentTime = ratio * duration;
+      return;
+    }
+
     const video = videoRef.current;
     if (!video || !duration) return;
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -1763,6 +1829,14 @@ function SlideVideoPlayer({
   };
 
   const seekBy = (seconds: number) => {
+    if (usesChineseImageMode) {
+      const audio = audioRef.current;
+      if (!audio) return;
+      const maximum = Number.isFinite(audio.duration) ? audio.duration : duration;
+      audio.currentTime = Math.max(0, Math.min(maximum, audio.currentTime + seconds));
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
     const minimum = usesChapterSegment ? (activeSlide?.start ?? 0) : 0;
@@ -1771,6 +1845,18 @@ function SlideVideoPlayer({
   };
 
   const togglePlayback = () => {
+    if (usesChineseImageMode) {
+      const audio = audioRef.current;
+      if (!audio) return;
+      if (audio.paused) {
+        void startPlayback();
+      } else {
+        playbackRequestIdRef.current += 1;
+        audio.pause();
+      }
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
@@ -1828,7 +1914,7 @@ function SlideVideoPlayer({
 
   const nextSlide = () => {
     cancelPendingAudio();
-    if (!activeSlide?.videoUrl && !chapterVideoUrl) {
+    if (!usesChineseImageMode && !activeSlide?.videoUrl && !chapterVideoUrl) {
       const resumeIndex = Math.min(slides.length - 1, slideIndex + 1);
       persistSlideProgress(resumeIndex, true, slideIndex);
       setHighestCompletedSlideIndex((highest) => Math.max(highest, slideIndex));
@@ -1902,6 +1988,19 @@ function SlideVideoPlayer({
           <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper/70">
             Loading slide videos...
           </div>
+        ) : usesChineseImageMode && activeSlide?.imageUrl ? (
+          <img
+            src={activeSlide.imageUrl}
+            alt={`Slide ${slideIndex + 1}`}
+            className="size-full object-contain"
+            style={{ transform: `scale(${contentZoom})` }}
+            onLoad={() => setMediaLoading(false)}
+            onError={() => {
+              setMediaLoading(false);
+              setError("Unable to load the Chinese slide image.");
+            }}
+            onClick={togglePlayback}
+          />
         ) : videoSource ? (
           <video
             key={`${activeSlide?.id}-${videoSource}`}
@@ -1970,7 +2069,9 @@ function SlideVideoPlayer({
             No slides available
           </div>
         )}
-        {(mediaLoading || audioLoading) && activeVideoSource && !loading && (
+        {(mediaLoading || audioLoading) &&
+          (usesChineseImageMode ? Boolean(activeAudioSource) : Boolean(activeVideoSource)) &&
+          !loading && (
           <div className="absolute inset-0 z-20 grid place-items-center bg-black/60">
             <div className="flex flex-col items-center gap-3 text-center text-paper">
               <div className="relative size-10" aria-hidden="true">
@@ -1983,13 +2084,13 @@ function SlideVideoPlayer({
             </div>
           </div>
         )}
-        {videoSource && <CandidateWatermark />}
+        {(videoSource || usesChineseImageMode) && <CandidateWatermark />}
         {captionsVisible && firstCaption(activeSlide?.captions) && (
           <div className="pointer-events-none absolute bottom-4 left-1/2 max-w-[85%] -translate-x-1/2 bg-black/80 px-3 py-2 text-center text-sm text-white shadow-lg">
             {firstCaption(activeSlide?.captions)}
           </div>
         )}
-        {activeSlide && videoSource && (
+        {activeSlide && (videoSource || usesChineseImageMode) && (
           <div className="pointer-events-none absolute left-3 top-3 bg-ink/75 px-2 py-1 font-mono text-[10px] uppercase tracking-wider">
             Slide {slideIndex + 1} / {slides.length}
           </div>
@@ -2030,20 +2131,41 @@ function SlideVideoPlayer({
         </div>
       </div>
 
-      <audio ref={audioRef} preload="none" className="hidden" />
+      <audio
+        ref={audioRef}
+        preload="none"
+        className="hidden"
+        onLoadedMetadata={handleAudioLoadedMetadata}
+        onTimeUpdate={handleAudioTimeUpdate}
+        onPlay={() => {
+          if (usesChineseImageMode) setPlaying(true);
+        }}
+        onPause={() => {
+          if (usesChineseImageMode) setPlaying(false);
+        }}
+        onEnded={() => {
+          if (usesChineseImageMode) advanceSlide();
+        }}
+        onError={() => {
+          if (usesChineseImageMode) {
+            setAudioLoading(false);
+            setError("Unable to load the Chinese audio.");
+          }
+        }}
+      />
 
       <div className="course-video-player__controls space-y-2 border-t border-paper/20 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em]">
         <div className="course-video-player__transport flex flex-wrap items-center gap-3">
           <button
             onClick={togglePlayback}
-            disabled={!videoSource}
+            disabled={!canPlayCurrentSlide}
             className="order-1 bg-clay px-3 py-1 text-paper disabled:opacity-40"
           >
             {playing ? "Pause" : "Play"}
           </button>
           <button
             onClick={() => seekBy(-10)}
-            disabled={!videoSource}
+            disabled={!canPlayCurrentSlide}
             className="order-3 border border-paper/40 px-2 py-0.5 disabled:opacity-30"
             aria-label="Back 10 seconds"
           >
@@ -2051,7 +2173,7 @@ function SlideVideoPlayer({
           </button>
           <button
             onClick={() => seekBy(10)}
-            disabled={!videoSource}
+            disabled={!canPlayCurrentSlide}
             className="order-2 border border-paper/40 px-2 py-0.5 disabled:opacity-30"
             aria-label="Forward 10 seconds"
           >
@@ -2121,7 +2243,7 @@ function SlideVideoPlayer({
               disabled={
                 slideIndex === slides.length - 1 ||
                 Boolean(
-                  videoSource &&
+                  canPlayCurrentSlide &&
                     !slideComplete &&
                     !chapterCompleted &&
                     highestCompletedSlideIndex < slideIndex,
