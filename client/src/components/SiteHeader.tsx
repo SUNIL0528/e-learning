@@ -91,7 +91,10 @@ export function SiteHeader({
   }, [currentUser, signedIn]);
 
   const visibleNav = currentUser?.isInstructor
-    ? nav.filter((item) => item.to === "/doubts")
+    ? [
+        { to: "/instructor/learners", label: "Learners" },
+        ...nav.filter((item) => item.to === "/doubts"),
+      ]
     : nav;
 
   return (

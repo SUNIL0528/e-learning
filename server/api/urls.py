@@ -21,6 +21,8 @@ from .doubts_views import (
     instructor_attachment_complete,
     instructor_attachment_delete,
     instructor_attachment_upload,
+    instructor_learner_detail,
+    instructor_learners,
     instructor_doubts,
     instructor_reply,
     learner_doubts,
@@ -144,6 +146,8 @@ urlpatterns = [
     ),
     path("instructor/doubts/<int:doubt_id>/", instructor_reply, name="instructor-reply"),
     path("instructor/dashboard/", instructor_dashboard, name="instructor-dashboard"),
+    path("instructor/learners/", instructor_learners, name="instructor-learners"),
+    path("instructor/learners/<int:learner_id>/", instructor_learner_detail, name="instructor-learner-detail"),
     path("admin/users/", admin_users, name="admin-users"),
     path("admin/users/<int:profile_id>/", admin_user_detail, name="admin-user-detail"),
 ]

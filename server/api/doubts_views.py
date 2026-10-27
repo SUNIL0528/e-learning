@@ -13,7 +13,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .authentication import CognitoJWTAuthentication
-from .models import DoubtAttachment, DoubtTicket, Enrollment, LearnerProfile, ModuleProgress
+from .models import (
+    DoubtAttachment,
+    DoubtTicket,
+    Enrollment,
+    LearnerProfile,
+    ModuleProgress,
+)
 from .progress_views import LearnerOnlyPermission, _profile_for_request
 from .storage import S3MediaStore
 
@@ -241,6 +247,211 @@ def instructor_dashboard(request):
             "recentDoubts": [_serialize_doubt(ticket) for ticket in recent_doubts],
         }
     )
+
+
+def _serialize_instructor_answer(answer):
+    return {
+        "id": answer.id,
+        "questionId": answer.question_id,
+        "question": answer.question,
+        "answer": answer.answer,
+        "status": answer.status,
+        "score": answer.score,
+        "maxScore": answer.max_score,
+        "feedback": answer.feedback,
+        "reviewerName": answer.reviewer_name or None,
+        "reviewedAt": answer.reviewed_at.isoformat() if answer.reviewed_at else None,
+    }
+
+
+def _serialize_instructor_submission(answers):
+    first = answers[0]
+    return {
+        "submissionId": str(first.submission_id),
+        "courseId": first.course_id,
+        "courseTitle": first.course_title or first.course_id,
+        "moduleId": first.module_id,
+        "moduleTitle": first.module_title or first.module_id,
+        "submittedAt": first.submitted_at.isoformat(),
+        "status": "reviewed" if all(answer.status == "reviewed" for answer in answers) else "pending",
+        "answers": [_serialize_instructor_answer(answer) for answer in answers],
+    }
+
+
+def _serialize_learner_summary(profile, enrollments, written_submissions):
+    progress_values = [enrollment.progress_percent for enrollment in enrollments]
+    pending_answers = sum(
+        1 for submission in written_submissions for answer in submission if answer.status == "pending"
+    )
+    return {
+        "id": profile.id,
+        "uid": profile.cognito_sub,
+        "candidateNumber": profile.candidate_number or "",
+        "name": profile.name or "",
+        "email": profile.email or "",
+        "phone": profile.phone or "",
+        "gender": profile.gender or "",
+        "position": profile.position or "",
+        "company": profile.company or "",
+        "location": profile.location or "",
+        "courseCount": len(enrollments),
+        "averageProgress": round(sum(progress_values) / len(progress_values)) if progress_values else 0,
+        "pendingDescriptiveAnswers": pending_answers,
+        "descriptiveSubmissionCount": len(written_submissions),
+    }
+
+
+def _serialize_learner_detail(profile, enrollments, written_submissions):
+    grouped_submissions = {}
+    for submission in written_submissions:
+        serialized = _serialize_instructor_submission(submission)
+        grouped_submissions.setdefault((submission[0].course_id, submission[0].module_id), []).append(serialized)
+
+    courses = []
+    known_course_ids = set()
+    for enrollment in enrollments:
+        known_course_ids.add(enrollment.course_id)
+        modules = []
+        module_map = {module.module_id: module for module in enrollment.modules.all()}
+        module_ids = list(module_map)
+        for submission in written_submissions:
+            if submission[0].course_id == enrollment.course_id and submission[0].module_id not in module_map:
+                module_ids.append(submission[0].module_id)
+
+        for module_id in module_ids:
+            module = module_map.get(module_id)
+            attempts = list(module.quiz_attempts.all()) if module else []
+            submissions = grouped_submissions.get((enrollment.course_id, module_id), [])
+            modules.append(
+                {
+                    "moduleId": module_id,
+                    "title": (module.title if module and module.title else submissions[0]["moduleTitle"] if submissions else module_id),
+                    "progressPercent": module.progress_percent if module else 0,
+                    "status": module.status if module else "not-started",
+                    "score": module.qa_score if module else None,
+                    "passed": module.qa_passed if module else False,
+                    "attempts": module.attempts if module else 0,
+                    "quizAttempts": [
+                        {
+                            "score": attempt.score,
+                            "passed": attempt.passed,
+                            "createdAt": attempt.created_at.isoformat(),
+                        }
+                        for attempt in attempts
+                    ],
+                    "descriptiveSubmissions": submissions,
+                }
+            )
+
+        courses.append(
+            {
+                "courseId": enrollment.course_id,
+                "courseTitle": enrollment.course_title or enrollment.course_id,
+                "status": enrollment.status,
+                "progressPercent": enrollment.progress_percent,
+                "enrolledAt": enrollment.enrolled_at.isoformat(),
+                "modules": modules,
+            }
+        )
+
+    # Keep written submissions visible even if an old record has no matching enrollment.
+    standalone_courses = {}
+    for (course_id, module_id), submissions in grouped_submissions.items():
+        if course_id in known_course_ids:
+            continue
+        standalone_course = standalone_courses.setdefault(
+            course_id,
+            {
+                "courseId": course_id,
+                "courseTitle": submissions[0]["courseTitle"],
+                "status": "not-enrolled",
+                "progressPercent": 0,
+                "enrolledAt": None,
+                "modules": [],
+            },
+        )
+        standalone_course["modules"].append(
+            {
+                "moduleId": module_id,
+                "title": submissions[0]["moduleTitle"],
+                "progressPercent": 0,
+                "status": "not-started",
+                "score": None,
+                "passed": False,
+                "attempts": 0,
+                "quizAttempts": [],
+                "descriptiveSubmissions": submissions,
+            }
+        )
+    courses.extend(standalone_courses.values())
+
+    return {
+        "learner": _serialize_learner_summary(profile, enrollments, written_submissions),
+        "courses": courses,
+        "descriptiveSubmissions": [
+            serialized
+            for submissions in written_submissions
+            for serialized in [_serialize_instructor_submission(submissions)]
+        ],
+    }
+
+
+@api_view(["GET"])
+@authentication_classes(AUTHENTICATION)
+@permission_classes(PERMISSIONS)
+def instructor_learners(request):
+    if not _is_instructor(request):
+        return Response({"error": "Instructor access required."}, status=status.HTTP_403_FORBIDDEN)
+
+    search = str(request.query_params.get("search") or "").strip()
+    profiles = LearnerProfile.objects.all()
+    if search:
+        profiles = profiles.filter(
+            name__icontains=search
+        ) | profiles.filter(
+            email__icontains=search
+        ) | profiles.filter(
+            candidate_number__icontains=search
+        )
+    profiles = profiles.order_by("name", "email", "id")
+    response = []
+    for profile in profiles:
+        enrollments = list(
+            profile.enrollments.all().prefetch_related("modules__quiz_attempts")
+        )
+        answer_rows = list(
+            profile.written_answer_submissions.all().order_by("submission_id", "id")
+        )
+        grouped = {}
+        for answer in answer_rows:
+            grouped.setdefault(str(answer.submission_id), []).append(answer)
+        response.append(_serialize_learner_summary(profile, enrollments, list(grouped.values())))
+    return Response(response)
+
+
+@api_view(["GET"])
+@authentication_classes(AUTHENTICATION)
+@permission_classes(PERMISSIONS)
+def instructor_learner_detail(request, learner_id):
+    if not _is_instructor(request):
+        return Response({"error": "Instructor access required."}, status=status.HTTP_403_FORBIDDEN)
+
+    profile = LearnerProfile.objects.filter(pk=learner_id).first()
+    if profile is None:
+        return Response({"error": "Learner not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    enrollments = list(
+        profile.enrollments.all()
+        .prefetch_related("modules__quiz_attempts")
+        .order_by("course_title", "course_id")
+    )
+    answer_rows = list(
+        profile.written_answer_submissions.all().order_by("submission_id", "id")
+    )
+    grouped = {}
+    for answer in answer_rows:
+        grouped.setdefault(str(answer.submission_id), []).append(answer)
+    return Response(_serialize_learner_detail(profile, enrollments, list(grouped.values())))
 
 
 def _instructor_ticket(request, doubt_id):

@@ -171,15 +171,21 @@ function RootComponent() {
   useEffect(() => {
     if (!authReady) return;
     if (!user && !isLoginPage) void navigate({ to: "/login" });
-    if (user && isLoginPage) void navigate({ to: "/" });
+    if (user && isLoginPage) {
+      void navigate({ to: user.isInstructor ? "/instructor/learners" : "/" });
+    }
     if (
       user?.isInstructor &&
       !isLoginPage &&
       location.pathname !== "/" &&
       !location.pathname.startsWith("/doubts") &&
+      !location.pathname.startsWith("/instructor/learners") &&
       !(user.isAdmin && location.pathname.startsWith("/admin"))
     ) {
-      void navigate({ to: "/" });
+      void navigate({ to: "/instructor/learners" });
+    }
+    if (user?.isInstructor && location.pathname === "/") {
+      void navigate({ to: "/instructor/learners" });
     }
   }, [authReady, isLoginPage, location.pathname, navigate, user]);
 
