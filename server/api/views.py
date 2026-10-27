@@ -602,55 +602,65 @@ def chapter_detail(request, chapter_id):
                     local_audio_path.name,
                 )
 
-        # Shared slide images. All modules use the English image folder:
-        # chapterN/en/ppt-slides/module_N/slide_0001.png
-        image_urls = {}
+        # Language-specific slide images:
+        # chapterN/<language>/ppt-slides/module_N/slide_0001.png
         number_match = re.search(r"(\d+)$", slide_id)
         number = number_match.group(1) if number_match else str(slide_index + 1)
         image_filenames = [f"slide_{int(number):04d}.png"]
-        image_url = (
-            s3_media.presigned_url(
-                media_folder,
-                "en",
-                f"ppt-slides/module_{chapter.get('module_number', 1)}",
-                image_filenames,
-            )
-            if s3_media
-            else None
-        )
+        image_urls = {}
+        image_media_type = f"ppt-slides/module_{chapter.get('module_number', 1)}"
 
-        if image_url is None:
-            local_image_path = next(
-                (
-                    chapter_media_path
-                    / "en"
-                    / "ppt-slides"
-                    / f"module_{chapter.get('module_number', 1)}"
-                    / filename
-                    for filename in image_filenames
-                    if (
+        for language in languages:
+            language_code = language["code"]
+            image_url = (
+                s3_media.presigned_url(
+                    media_folder,
+                    language_code,
+                    image_media_type,
+                    image_filenames,
+                )
+                if s3_media
+                else None
+            )
+
+            if image_url is None:
+                local_image_path = next(
+                    (
                         chapter_media_path
-                        / "en"
+                        / language_code
                         / "ppt-slides"
                         / f"module_{chapter.get('module_number', 1)}"
                         / filename
-                    ).exists()
-                ),
-                None,
-            )
-            if local_image_path:
-                image_url = _media_url(
-                    base_url,
-                    media_folder,
-                    "en",
-                    "ppt-slides",
-                    f"module_{chapter.get('module_number', 1)}",
-                    local_image_path.name,
+                        for filename in image_filenames
+                        if (
+                            chapter_media_path
+                            / language_code
+                            / "ppt-slides"
+                            / f"module_{chapter.get('module_number', 1)}"
+                            / filename
+                        ).exists()
+                    ),
+                    None,
                 )
+                if local_image_path:
+                    image_url = _media_url(
+                        base_url,
+                        media_folder,
+                        language_code,
+                        "ppt-slides",
+                        f"module_{chapter.get('module_number', 1)}",
+                        local_image_path.name,
+                    )
 
-        # The same English slide artwork is used while any narration language
-        # is selected, so expose it under every language key for the client.
-        image_urls = {language["code"]: image_url for language in languages}
+            image_urls[language_code] = image_url
+
+        # Keep the player usable when a language has no localized artwork yet.
+        english_image_url = image_urls.get("en")
+        if english_image_url:
+            image_urls = {
+                language_code: image_url or english_image_url
+                for language_code, image_url in image_urls.items()
+            }
 
         slide["images"] = image_urls
 

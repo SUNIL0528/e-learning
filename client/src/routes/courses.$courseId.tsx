@@ -2397,7 +2397,7 @@ function SlideImageAudioPlayer({
         imageUrl = await getTemporaryMediaUrl(
           chapterMediaPath(
             chapterNumber,
-            "en",
+            language,
             `ppt-slides/module_${chapterNumber}`,
             slideImageFilename(activeSlide.id),
           ),
