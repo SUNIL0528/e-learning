@@ -103,7 +103,7 @@ export function SiteHeader({
         <Link to="/" className="flex items-center gap-2">
           <img src="/hts-logo-black.png" alt="HTS" className="h-10 w-auto max-w-[132px] object-contain sm:h-14 sm:max-w-[180px]" />
         </Link>
-        <nav className="hidden items-center gap-1 rounded-full bg-sand/70 p-1 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70 md:flex">
+        <nav className="hidden items-center gap-1 rounded-full bg-sand/70 p-1 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70 lg:flex">
           {currentUser ? (
             <>
               <Link
@@ -115,9 +115,22 @@ export function SiteHeader({
                 Dashboard
               </Link>
               {!currentUser.isInstructor && (
-                <Link to="/courses" className="rounded-full px-3 py-2 hover:bg-paper hover:text-ink" activeProps={{ className: "rounded-full bg-paper px-3 py-2 text-ink shadow-sm" }}>
-                  Courses
-                </Link>
+                <>
+                  <Link
+                    to="/courses"
+                    className="rounded-full px-3 py-2 hover:bg-paper hover:text-ink"
+                    activeProps={{ className: "rounded-full bg-paper px-3 py-2 text-ink shadow-sm" }}
+                  >
+                    Courses
+                  </Link>
+                  <Link
+                    to="/knowledge-check"
+                    className="rounded-full px-3 py-2 hover:bg-paper hover:text-ink"
+                    activeProps={{ className: "rounded-full bg-paper px-3 py-2 text-ink shadow-sm" }}
+                  >
+                    Knowledge check
+                  </Link>
+                </>
               )}
               {visibleNav.map((item) => (
                 <Link
@@ -149,7 +162,7 @@ export function SiteHeader({
           <button
             type="button"
             onClick={() => setMobileNavOpen((open) => !open)}
-            className="grid size-9 place-items-center rounded-full border border-ink/15 font-mono text-sm shadow-sm md:hidden"
+            className="grid size-9 place-items-center rounded-full border border-ink/15 font-mono text-sm shadow-sm lg:hidden"
             aria-label={mobileNavOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileNavOpen}
           >
@@ -274,7 +287,7 @@ export function SiteHeader({
         </div>
       </div>
       {mobileNavOpen && currentUser && (
-        <nav className="border-t border-ink/10 bg-sand/80 px-3 py-3 backdrop-blur md:hidden" aria-label="Mobile navigation">
+        <nav className="border-t border-ink/10 bg-sand/80 px-3 py-3 backdrop-blur lg:hidden" aria-label="Mobile navigation">
           <div className="grid gap-1 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70">
             <Link
               to="/"
@@ -286,14 +299,24 @@ export function SiteHeader({
               Dashboard
             </Link>
             {!currentUser.isInstructor && (
-              <Link
-                to="/courses"
-                onClick={() => setMobileNavOpen(false)}
-                className="rounded-xl border border-transparent px-3 py-2 hover:border-ink/10 hover:bg-paper"
-                activeProps={{ className: "rounded-xl border-ink/10 bg-paper text-ink shadow-sm" }}
-              >
-                Courses
-              </Link>
+              <>
+                <Link
+                  to="/courses"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="rounded-xl border border-transparent px-3 py-2 hover:border-ink/10 hover:bg-paper"
+                  activeProps={{ className: "rounded-xl border-ink/10 bg-paper text-ink shadow-sm" }}
+                >
+                  Courses
+                </Link>
+                <Link
+                  to="/knowledge-check"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="rounded-xl border border-transparent px-3 py-2 hover:border-ink/10 hover:bg-paper"
+                  activeProps={{ className: "rounded-xl border-ink/10 bg-paper text-ink shadow-sm" }}
+                >
+                  Knowledge check
+                </Link>
+              </>
             )}
             {visibleNav.map((item) => (
               <Link

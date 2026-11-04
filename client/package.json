@@ -4,8 +4,11 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/sync-question-bank.mjs",
     "dev": "vite dev",
+    "prebuild": "node scripts/sync-question-bank.mjs",
     "build": "vite build",
+    "prebuild:dev": "node scripts/sync-question-bank.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DoubtsRouteImport } from './routes/doubts'
 import { Route as ForumRouteImport } from './routes/forum'
+import { Route as KnowledgeCheckRouteImport } from './routes/knowledge-check'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -33,6 +34,11 @@ const DoubtsRoute = DoubtsRouteImport.update({
 const ForumRoute = ForumRouteImport.update({
   id: '/forum',
   path: '/forum',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KnowledgeCheckRoute = KnowledgeCheckRouteImport.update({
+  id: '/knowledge-check',
+  path: '/knowledge-check',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/doubts': typeof DoubtsRoute
   '/forum': typeof ForumRoute
+  '/knowledge-check': typeof KnowledgeCheckRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/admin/users': typeof AdminUsersRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/doubts': typeof DoubtsRoute
   '/forum': typeof ForumRoute
+  '/knowledge-check': typeof KnowledgeCheckRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/admin/users': typeof AdminUsersRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/doubts': typeof DoubtsRoute
   '/forum': typeof ForumRoute
+  '/knowledge-check': typeof KnowledgeCheckRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/admin/users': typeof AdminUsersRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/'
     | '/doubts'
     | '/forum'
+    | '/knowledge-check'
     | '/login'
     | '/profile'
     | '/admin/users'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/'
     | '/doubts'
     | '/forum'
+    | '/knowledge-check'
     | '/login'
     | '/profile'
     | '/admin/users'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/doubts'
     | '/forum'
+    | '/knowledge-check'
     | '/login'
     | '/profile'
     | '/admin/users'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DoubtsRoute: typeof DoubtsRoute
   ForumRoute: typeof ForumRoute
+  KnowledgeCheckRoute: typeof KnowledgeCheckRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -181,6 +194,13 @@ declare module '@tanstack/react-router' {
       path: '/forum'
       fullPath: '/forum'
       preLoaderRoute: typeof ForumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/knowledge-check': {
+      id: '/knowledge-check'
+      path: '/knowledge-check'
+      fullPath: '/knowledge-check'
+      preLoaderRoute: typeof KnowledgeCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -250,6 +270,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DoubtsRoute: DoubtsRoute,
   ForumRoute: ForumRoute,
+  KnowledgeCheckRoute: KnowledgeCheckRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   AdminUsersRoute: AdminUsersRoute,
