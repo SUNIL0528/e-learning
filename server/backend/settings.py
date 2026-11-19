@@ -22,8 +22,29 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
+LOCAL_DEV = os.getenv("HTS_LOCAL_DEV", "").lower() in {"1", "true", "yes"}
+AWS_PRODUCTION = os.getenv("HTS_AWS_PRODUCTION", "").lower() in {"1", "true", "yes"}
+ENABLE_PPT_TRANSLATION = os.getenv(
+    "HTS_ENABLE_PPT_TRANSLATION", "false" if AWS_PRODUCTION else "true"
+).lower() in {"1", "true", "yes"}
 
-secret_id = os.getenv("AWS_SECRETS_MANAGER_SECRET_ID")
+if AWS_PRODUCTION and LOCAL_DEV:
+    raise RuntimeError("HTS_AWS_PRODUCTION and HTS_LOCAL_DEV cannot both be enabled.")
+
+USE_SECRETS_MANAGER = os.getenv(
+    "HTS_USE_SECRETS_MANAGER",
+    "true" if AWS_PRODUCTION else "false",
+).lower() in {"1", "true", "yes"}
+
+secret_id = (
+    None
+    if LOCAL_DEV or not USE_SECRETS_MANAGER
+    else os.getenv("AWS_SECRETS_MANAGER_SECRET_ID")
+)
+if AWS_PRODUCTION and USE_SECRETS_MANAGER and not secret_id:
+    raise RuntimeError(
+        "AWS_SECRETS_MANAGER_SECRET_ID is required when Secrets Manager is enabled."
+    )
 
 if secret_id:
     client = boto3.client(
@@ -35,7 +56,10 @@ if secret_id:
     secret_values = json.loads(response["SecretString"])
 
     for key, value in secret_values.items():
-        os.environ.setdefault(key, str(value))
+        if AWS_PRODUCTION:
+            os.environ[key] = str(value)
+        else:
+            os.environ.setdefault(key, str(value))
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -50,12 +74,29 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() in {
     "true",
     "yes",
 }
+if LOCAL_DEV and not DEBUG:
+    raise RuntimeError("HTS_LOCAL_DEV requires DJANGO_DEBUG=true.")
+if AWS_PRODUCTION and (DEBUG or SECRET_KEY.startswith("django-insecure-")):
+    raise RuntimeError("AWS production requires DJANGO_DEBUG=false and a real DJANGO_SECRET_KEY.")
 
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
     if host.strip()
 ]
+if LOCAL_DEV:
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+    DATA_UPLOAD_MAX_MEMORY_SIZE = 51 * 1024 * 1024
+if AWS_PRODUCTION and not ALLOWED_HOSTS:
+    raise RuntimeError("DJANGO_ALLOWED_HOSTS is required in AWS production.")
+
+if AWS_PRODUCTION:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 
 
 
@@ -121,8 +162,14 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 USE_SQLITE = os.getenv("USE_SQLITE", "").lower() in {"1", "true", "yes"}
+if AWS_PRODUCTION and (USE_SQLITE or not os.getenv("POSTGRES_HOST")):
+    raise RuntimeError("AWS production requires POSTGRES_HOST and cannot use SQLite.")
+if AWS_PRODUCTION and not all(
+    os.getenv(name) for name in ("POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD")
+):
+    raise RuntimeError("AWS production requires PostgreSQL database credentials.")
 
-if os.getenv("POSTGRES_HOST") and not USE_SQLITE:
+if os.getenv("POSTGRES_HOST") and not (USE_SQLITE or LOCAL_DEV):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -152,7 +199,12 @@ COGNITO_INSTRUCTOR_GROUP = os.getenv("COGNITO_INSTRUCTOR_GROUP", "instructors")
 COGNITO_ADMIN_GROUP = os.getenv("COGNITO_ADMIN_GROUP", "admins")
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET", "coating-and-inspection")
+AWS_S3_BUCKET = "" if LOCAL_DEV else os.getenv("AWS_S3_BUCKET", "coating-and-inspection")
+if AWS_PRODUCTION:
+    if not AWS_S3_BUCKET or AWS_S3_BUCKET == "coating-and-inspection":
+        raise RuntimeError("Set an explicit AWS_S3_BUCKET for AWS production.")
+    if not all((COGNITO_REGION, COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID)):
+        raise RuntimeError("Cognito user pool settings are required in AWS production.")
 AWS_S3_URL_EXPIRY = int(os.getenv("AWS_S3_URL_EXPIRY", "3600"))
 AWS_S3_UPLOAD_URL_EXPIRY = int(os.getenv("AWS_S3_UPLOAD_URL_EXPIRY", "900"))
 AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL", "")
@@ -201,7 +253,7 @@ APPEND_SLASH=False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = '/media/'
@@ -218,8 +270,10 @@ CORS_ALLOWED_ORIGINS = [
     for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
     if origin.strip()
 ]
+if LOCAL_DEV:
+    CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:5173", "http://localhost:5173"]
 
-CORS_ALLOW_HEADERS = (*default_headers, "x-session-id")
+CORS_ALLOW_HEADERS = (*default_headers, "x-session-id", "x-local-role")
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
