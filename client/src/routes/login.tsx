@@ -1,9 +1,15 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { CloudCompanion } from "@/components/CloudCompanion";
+import coatingWorkArchive from "@/assets/coating-work-archive.jpg";
+import googleMark from "@/assets/google-mark.svg";
 import {
   cognitoConfigured,
   confirmSignUp,
+  localDev,
   refreshAuthUser,
+  signInLocally,
   signInWithCognito,
   signUpWithCognito,
 } from "@/lib/auth";
@@ -53,6 +59,8 @@ function LoginPage() {
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     if (loading) return;
@@ -140,88 +148,183 @@ function LoginPage() {
     setMode((currentMode) => (currentMode === "login" ? "signup" : "login"));
     setAwaitingConfirmation(false);
     setError(null);
+    setPasswordFocused(false);
   };
 
-  return (
-    <main className="min-h-[calc(100vh-56px)] bg-sand px-6 py-10 md:py-16">
-      <div className="mx-auto grid max-w-[1080px] overflow-hidden border-2 border-ink bg-paper md:grid-cols-[1.1fr_0.9fr]">
-        <section className="relative min-h-[300px] overflow-hidden bg-ink p-8 text-paper md:p-12">
-          <div className="absolute -right-12 -top-12 size-48 rounded-full border-[28px] border-clay/80" />
-          <div className="absolute -bottom-20 -left-12 size-64 rounded-full border-[36px] border-moss/80" />
-          <div className="relative z-10 flex h-full flex-col justify-between">
-            <Link
-              to="/"
-              className="flex items-center gap-2"
-            >
-              <img src="/hts-logo-black.png" alt="HTS" className="h-24 w-auto max-w-[240px] object-contain" />
-            </Link>
-            <div className="mt-16 max-w-[28rem]">
-              <div className="rule-label text-clay">Learning platform</div>
-              <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-tight md:text-6xl">
-                Keep your learning moving.
-              </h1>
-              <p className="mt-5 max-w-[30ch] text-sm leading-relaxed text-paper/70">
-                Continue your courses, module assessments, discussions, and progress from one place.
-              </p>
+  const submitLocally = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!email.trim() || !password) {
+      setError("Enter an email and password to continue.");
+      return;
+    }
+    setError(null);
+    signInLocally(email, mode === "signup" ? name : "");
+    void navigate({ to: "/" });
+  };
+
+  const continueWithGoogleLocally = () => {
+    signInLocally("google.preview@localhost.invalid", "Google Learner");
+    void navigate({ to: "/" });
+  };
+
+  if (localDev) {
+    return (
+      <main className="auth-layout">
+        <div className="auth-shell">
+          <section className="auth-visual" aria-label="HTS learning">
+            <img src={coatingWorkArchive} alt="Archive photograph of a worker spraying protective coating on a ship part" className="auth-visual-photo" />
+            <div className="auth-visual-content">
+              <blockquote className="auth-visual-quote">
+                <p>“{mode === "login" ? "Welcome back. Keep your learning moving." : "Your next chapter starts here."}”</p>
+                <cite>— HTS Coatings learning</cite>
+              </blockquote>
+              <p className="auth-photo-credit">Archival photograph: <a href="https://commons.wikimedia.org/wiki/File:A_worker_sprays_protective_(9605228043).jpg" target="_blank" rel="noreferrer">Tyne & Wear Archives &amp; Museums</a></p>
             </div>
+          </section>
+          <section className="auth-form-side" aria-labelledby="local-auth-title">
+            <div className="auth-form-wrap">
+              <CloudCompanion eyesClosed={passwordFocused && !showPassword} />
+              <div className="auth-card">
+                <h1 id="local-auth-title">{mode === "login" ? "Sign in to your account" : "Create an account"}</h1>
+                <p className="auth-subtitle">
+                  {mode === "login"
+                    ? "Enter your email below to sign in"
+                    : "Enter your details below to sign up"}
+                </p>
+                <form onSubmit={submitLocally} className="auth-fields" autoComplete="on">
+                  {mode === "signup" && (
+                    <label className="block">
+                      <span className="auth-label">Full Name</span>
+                      <input type="text" value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" required className="auth-input" placeholder="Your full name" />
+                    </label>
+                  )}
+                  <label className="block">
+                    <span className="auth-label">Email</span>
+                    <input
+                      type="text"
+                      inputMode="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      autoComplete="email"
+                      required
+                      className="auth-input"
+                      placeholder="Your email"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="auth-label">Password</span>
+                    <span className="auth-password-wrap">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        onFocus={() => setPasswordFocused(true)}
+                        onBlur={() => setPasswordFocused(false)}
+                        autoComplete={mode === "login" ? "current-password" : "new-password"}
+                        required
+                        className="auth-input"
+                        placeholder="Password"
+                      />
+                      <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"}>
+                        {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                      </button>
+                    </span>
+                  </label>
+                  {error && <p className="auth-notice" role="alert">{error}</p>}
+                  <button type="submit" className="auth-submit auth-submit-outline">
+                    {mode === "login" ? "Sign In" : "Sign Up"}
+                  </button>
+                </form>
+                <div className="auth-switch">
+                  {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+                  <button type="button" onClick={switchMode}>
+                    {mode === "login" ? "Sign up" : "Sign in"}
+                  </button>
+                </div>
+                <div className="auth-divider"><span>Or continue with</span></div>
+                <button type="button" className="auth-google" onClick={continueWithGoogleLocally}>
+                  <img src={googleMark} alt="" aria-hidden="true" /> Continue with Google
+                </button>
+                <p className="auth-help">Local preview: any details work. Google opens a demo account. No passwords are saved.</p>
+              </div>
+            </div>
+            <p className="auth-footer">HTS Coatings · Knowledge that protects.</p>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="auth-layout">
+      <div className="auth-shell">
+        <section className="auth-visual" aria-label="HTS learning">
+          <img src={coatingWorkArchive} alt="Archive photograph of a worker spraying protective coating on a ship part" className="auth-visual-photo" />
+          <div className="auth-visual-content">
+            <blockquote className="auth-visual-quote">
+              <p>“{mode === "login" ? "Welcome back. Keep your learning moving." : "Your next chapter starts here."}”</p>
+              <cite>— HTS Coatings learning</cite>
+            </blockquote>
+            <p className="auth-photo-credit">Archival photograph: <a href="https://commons.wikimedia.org/wiki/File:A_worker_sprays_protective_(9605228043).jpg" target="_blank" rel="noreferrer">Tyne & Wear Archives &amp; Museums</a></p>
           </div>
         </section>
 
-        <section className="p-6 md:p-10">
-          <div className="rule-label text-clay">
-            {mode === "login" ? "Welcome back" : "New learner"}
-          </div>
-          <h2 className="mt-2 text-3xl font-black tracking-tight">
-            {mode === "login" ? "Sign in" : "Create account"}
-          </h2>
-          <p className="mt-2 text-sm text-fog">
+        <section className="auth-form-side" aria-labelledby="auth-title">
+
+          <div className="auth-form-wrap">
+            <CloudCompanion eyesClosed={passwordFocused && !showPassword} />
+            <div className="auth-card">
+          <h1 id="auth-title">
+            {mode === "login" ? "Sign in to your account" : "Create an account"}
+          </h1>
+          <p className="auth-subtitle">
             {mode === "login"
-              ? "Enter your details to continue."
-              : "Set up your HTS learner account."}
+              ? "Enter your email below to sign in"
+              : "Enter your details below to sign up"}
           </p>
 
           {!cognitoConfigured && (
-            <div className="mt-5 border-2 border-clay bg-sand p-3 text-sm">
+            <div className="auth-notice">
               Cognito is not configured. Add the <code>VITE_COGNITO</code> values to your client
               <code>.env</code> file.
             </div>
           )}
 
-          <form onSubmit={submit} className="mt-6 space-y-4">
+          <form onSubmit={submit} className="auth-fields" autoComplete="on">
             {mode === "signup" && (
               <div className="space-y-4">
                 <label className="block">
-                  <span className="rule-label">Candidate number</span>
+                  <span className="auth-label">Candidate number</span>
                   <input
                     value={candidateNumber}
                     onChange={(event) => setCandidateNumber(event.target.value)}
                     inputMode="numeric"
                     autoComplete="username"
                     required
-                    className="mt-2 w-full border-2 border-ink bg-paper px-3 py-2.5 text-sm outline-none focus:border-clay"
+                    className="auth-input"
                     placeholder="The unique number provided to you"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="rule-label">Full name</span>
+                  <span className="auth-label">Full Name</span>
                   <input
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     autoComplete="name"
                     required
-                    className="mt-2 w-full border-2 border-ink bg-paper px-3 py-2.5 text-sm outline-none focus:border-clay"
+                    className="auth-input"
                     placeholder="Your full name"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="rule-label">Gender</span>
+                  <span className="auth-label">Gender</span>
                   <select
                     value={gender}
                     onChange={(event) => setGender(event.target.value)}
                     required
-                    className="mt-2 w-full border-2 border-ink bg-paper px-3 py-2.5 text-sm outline-none focus:border-clay"
+                    className="auth-input"
                   >
                     <option value="" disabled>
                       Select your gender
@@ -234,14 +337,14 @@ function LoginPage() {
                 </label>
 
                 <label className="block">
-                  <span className="rule-label">Phone number with country code</span>
+                  <span className="auth-label">Phone number with country code</span>
                   <input
                     type="tel"
                     value={phone}
                     onChange={(event) => setPhone(event.target.value)}
                     autoComplete="tel"
                     required
-                    className="mt-2 w-full border-2 border-ink bg-paper px-3 py-2.5 text-sm outline-none focus:border-clay"
+                    className="auth-input"
                     placeholder="+919876543210"
                   />
                 </label>
@@ -250,14 +353,14 @@ function LoginPage() {
 
             {awaitingConfirmation && (
               <label className="block">
-                <span className="rule-label">Confirmation code</span>
+                <span className="auth-label">Confirmation code</span>
                 <input
                   value={confirmationCode}
                   onChange={(event) => setConfirmationCode(event.target.value)}
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   required
-                  className="mt-2 w-full border-2 border-ink bg-paper px-3 py-2.5 text-sm outline-none focus:border-clay"
+                  className="auth-input"
                   placeholder="Code from your email"
                 />
               </label>
@@ -265,51 +368,60 @@ function LoginPage() {
 
             {mode === "signup" ? (
               <label className="block">
-                <span className="rule-label">Email</span>
+                <span className="auth-label">Email</span>
                 <input
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   autoComplete="email"
                   required
-                  className="mt-2 w-full border-2 border-ink bg-paper px-3 py-2.5 text-sm outline-none focus:border-clay"
-                  placeholder="you@example.com"
+                  className="auth-input"
+                  placeholder="Your email"
                 />
               </label>
             ) : (
               <label className="block">
-                <span className="rule-label">Candidate number or email</span>
+                <span className="auth-label">Candidate number or email</span>
                 <input
                   value={loginIdentifier}
                   onChange={(event) => setLoginIdentifier(event.target.value)}
                   autoComplete="username"
                   required
-                  className="mt-2 w-full border-2 border-ink bg-paper px-3 py-2.5 text-sm outline-none focus:border-clay"
+                  className="auth-input"
                   placeholder="Candidate number or email"
                 />
               </label>
             )}
 
             <label className="block">
-              <span className="rule-label">Password</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
-                minLength={8}
-                required
-                className="mt-2 w-full border-2 border-ink bg-paper px-3 py-2.5 text-sm outline-none focus:border-clay"
-                placeholder="8+ chars, upper/lowercase, number, symbol"
-              />
+              <span className="auth-label">Password</span>
+              <span className="auth-password-wrap">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  minLength={8}
+                  required
+                  className="auth-input"
+                  placeholder="Password"
+                  aria-describedby={mode === "signup" ? "auth-password-hint" : undefined}
+                />
+                <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"}>
+                  {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                </button>
+              </span>
             </label>
+            {mode === "signup" && <p id="auth-password-hint" className="auth-help">Use 8+ characters with uppercase and lowercase letters, a number, and a symbol.</p>}
 
-            {error && <p className="border-2 border-clay bg-sand p-3 text-sm text-ink">{error}</p>}
+            {error && <p className="auth-notice" role="alert">{error}</p>}
 
             <button
               type="submit"
               disabled={loading || !cognitoConfigured}
-              className="w-full bg-ink px-4 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-paper transition-colors hover:bg-moss disabled:cursor-not-allowed disabled:opacity-40"
+              className="auth-submit auth-submit-outline"
             >
               {loading
                 ? "Connecting..."
@@ -321,15 +433,23 @@ function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 border-t border-ink/15 pt-4 text-center text-sm text-fog">
-            {mode === "login" ? "New to HTS?" : "Already have an account?"}{" "}
+          <div className="auth-switch">
+            {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
             <button
               onClick={switchMode}
-              className="font-bold text-ink underline underline-offset-4"
+              type="button"
             >
-              {mode === "login" ? "Create an account" : "Sign in"}
+              {mode === "login" ? "Sign up" : "Sign in"}
             </button>
           </div>
+          <div className="auth-divider"><span>Or continue with</span></div>
+          <button type="button" className="auth-google" disabled title="Google sign-in is not configured for this site">
+            <img src={googleMark} alt="" aria-hidden="true" /> Continue with Google
+          </button>
+          <p className="auth-help">Google sign-in is not configured. Use your HTS credentials to continue.</p>
+            </div>
+          </div>
+          <p className="auth-footer">HTS Coatings · Knowledge that protects.</p>
         </section>
       </div>
     </main>

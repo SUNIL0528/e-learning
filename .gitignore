@@ -17,6 +17,7 @@ dist-ssr/
 # Local databases, uploaded media, and Python cache
 server/db.sqlite3
 server/media/
+server/staticfiles/
 **/__pycache__/
 *.py[cod]
 

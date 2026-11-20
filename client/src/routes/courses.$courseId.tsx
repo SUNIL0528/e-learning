@@ -7,7 +7,7 @@ import {
   type Module,
   type Question,
 } from "@/data/platform";
-import { getCurrentAuthUser } from "@/lib/auth";
+import { getCurrentAuthUser, localDev } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
 import { addLearningSeconds } from "@/lib/learning-time";
 import {
@@ -2699,9 +2699,14 @@ function SlideImageAudioPlayer({
           ) : activeSlide ? (
             <div className="size-full bg-paper p-8 text-left text-ink">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay">
-                Slide image unavailable
+                {localDev ? "Local lesson preview" : "Slide image unavailable"}
               </div>
               <h3 className="mt-2 text-2xl font-black">{activeSlide.title}</h3>
+              {localDev && caption && (
+                <p className="mt-5 max-h-[24rem] max-w-3xl overflow-y-auto text-base leading-relaxed">
+                  {caption}
+                </p>
+              )}
             </div>
           ) : (
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay">

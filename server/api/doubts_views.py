@@ -1,6 +1,8 @@
 from datetime import timedelta
+from pathlib import Path
 import re
 import uuid
+from urllib.parse import quote
 
 from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
 from django.conf import settings
@@ -82,7 +84,7 @@ def _serialize_doubt(ticket):
                 "kind": attachment.kind,
                 "fileName": attachment.file_name,
                 "contentType": attachment.content_type,
-                "url": media_store.presigned_key_url(attachment.s3_key),
+                "url": _attachment_url(media_store, attachment.s3_key),
             }
             for attachment in ticket.attachments.all()
         ],
@@ -92,6 +94,12 @@ def _serialize_doubt(ticket):
             "email": ticket.learner.email or "",
         },
     }
+
+
+def _attachment_url(media_store, key):
+    if settings.LOCAL_DEV:
+        return f"http://127.0.0.1:8000/media/{quote(key, safe='/')}"
+    return media_store.presigned_key_url(key)
 
 
 @api_view(["GET", "POST"])
@@ -477,6 +485,39 @@ def _attachment_limits(kind, content_type):
     return None
 
 
+def _local_attachment_path(ticket_id, key):
+    prefix = f"doubts/{ticket_id}/"
+    if not key.startswith(prefix):
+        return None
+    name = key[len(prefix):]
+    if not re.fullmatch(r"[a-f0-9]{32}-[A-Za-z0-9._-]+", name):
+        return None
+    return Path(settings.MEDIA_ROOT) / "doubts" / str(ticket_id) / name
+
+
+@api_view(["PUT"])
+@authentication_classes(AUTHENTICATION)
+@permission_classes(PERMISSIONS)
+def local_attachment_upload(request, doubt_id, file_name):
+    if not settings.LOCAL_DEV:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    _, error = _instructor_ticket(request, doubt_id)
+    if error:
+        return error
+    key = f"doubts/{doubt_id}/{file_name}"
+    path = _local_attachment_path(doubt_id, key)
+    content_type = str(request.content_type or "").split(";", 1)[0].lower()
+    if path is None or content_type not in IMAGE_CONTENT_TYPES | AUDIO_CONTENT_TYPES:
+        return Response({"error": "Invalid local attachment."}, status=status.HTTP_400_BAD_REQUEST)
+    body = request._request.body
+    if not body or len(body) > MAX_AUDIO_BYTES:
+        return Response({"error": "Attachment is empty or too large."}, status=status.HTTP_400_BAD_REQUEST)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("xb") as destination:
+        destination.write(body)
+    return Response(status=status.HTTP_201_CREATED)
+
+
 @api_view(["POST"])
 @authentication_classes(AUTHENTICATION)
 @permission_classes(PERMISSIONS)
@@ -495,6 +536,13 @@ def instructor_attachment_upload(request, doubt_id):
         )
 
     key = f"doubts/{ticket.id}/{uuid.uuid4().hex}-{file_name}"
+    if settings.LOCAL_DEV:
+        return Response({
+            "key": key,
+            "uploadUrl": request.build_absolute_uri(f"/api/local-upload/{ticket.id}/{key.rsplit('/', 1)[-1]}/"),
+            "contentType": content_type,
+            "expiresIn": 900,
+        })
     media_store = S3MediaStore()
     upload_url = media_store.presigned_upload_url(key, content_type)
     if not upload_url:
@@ -528,23 +576,30 @@ def instructor_attachment_complete(request, doubt_id):
         return Response({"error": "Invalid attachment key."}, status=status.HTTP_400_BAD_REQUEST)
 
     media_store = S3MediaStore()
-    client = media_store.client()
-    if client is None:
-        return Response(
-            {"error": "S3 attachment storage is not configured or unavailable."},
-            status=status.HTTP_503_SERVICE_UNAVAILABLE,
-        )
-    try:
-        metadata = client.head_object(Bucket=media_store.bucket, Key=key)
-    except (ClientError, BotoCoreError, NoCredentialsError):
-        return Response(
-            {"error": "The attachment upload was not found in S3."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    content_type = str(metadata.get("ContentType") or "").split(";", 1)[0].strip().lower()
+    if settings.LOCAL_DEV:
+        path = _local_attachment_path(ticket.id, key)
+        if path is None or not path.is_file():
+            return Response({"error": "Local attachment was not found."}, status=status.HTTP_400_BAD_REQUEST)
+        content_type = str(request.data.get("contentType") or "").split(";", 1)[0].strip().lower()
+        content_length = path.stat().st_size
+    else:
+        client = media_store.client()
+        if client is None:
+            return Response(
+                {"error": "S3 attachment storage is not configured or unavailable."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        try:
+            metadata = client.head_object(Bucket=media_store.bucket, Key=key)
+        except (ClientError, BotoCoreError, NoCredentialsError):
+            return Response(
+                {"error": "The attachment upload was not found in S3."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        content_type = str(metadata.get("ContentType") or "").split(";", 1)[0].strip().lower()
+        content_length = int(metadata.get("ContentLength", 0))
     max_size = _attachment_limits(kind, content_type)
-    if max_size is None or int(metadata.get("ContentLength", 0)) > max_size:
+    if max_size is None or content_length > max_size:
         return Response(
             {"error": "The uploaded attachment type or size is not allowed."},
             status=status.HTTP_400_BAD_REQUEST,
@@ -566,7 +621,7 @@ def instructor_attachment_complete(request, doubt_id):
             "kind": attachment.kind,
             "fileName": attachment.file_name,
             "contentType": attachment.content_type,
-            "url": media_store.presigned_key_url(attachment.s3_key),
+            "url": _attachment_url(media_store, attachment.s3_key),
         },
         status=status.HTTP_201_CREATED,
     )
@@ -585,7 +640,11 @@ def instructor_attachment_delete(request, doubt_id, attachment_id):
         pk=attachment_id,
         ticket=ticket,
     )
-    if not S3MediaStore().delete_key(attachment.s3_key):
+    if settings.LOCAL_DEV:
+        path = _local_attachment_path(ticket.id, attachment.s3_key)
+        if path and path.exists():
+            path.unlink()
+    elif not S3MediaStore().delete_key(attachment.s3_key):
         return Response(
             {"error": "Unable to remove the attachment from S3."},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,

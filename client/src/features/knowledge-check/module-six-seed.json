@@ -1,0 +1,1002 @@
+{
+  "schemaVersion": "1.0.0",
+  "moduleId": "frosio-module-6",
+  "moduleTitle": "Paints and Coating Materials",
+  "source": {
+    "filename": "module_6.pptx",
+    "physicalSlideCount": 285
+  },
+  "notice": "Provisional training content based on uploaded PPT. Approval required before graded deployment. Fictional PDS values are for calculation practice only.",
+  "flashcards": [
+    {
+      "id": "m6-fc-001",
+      "gameId": "M6-G29",
+      "deck": "Ingredients",
+      "front": "Name the five main paint ingredient categories.",
+      "back": "Binder, pigment, solvent, additives, extenders.",
+      "sourceSlides": [
+        5
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-002",
+      "gameId": "M6-G29",
+      "deck": "Ingredients",
+      "front": "Which ingredient primarily determines a paint's generic type?",
+      "back": "The binder/resin.",
+      "sourceSlides": [
+        6,
+        7
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-003",
+      "gameId": "M6-G29",
+      "deck": "Ingredients",
+      "front": "What provides paint color and hiding power?",
+      "back": "Pigments.",
+      "sourceSlides": [
+        8
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-004",
+      "gameId": "M6-G29",
+      "deck": "Ingredients",
+      "front": "Give one purpose of solvent in a paint formulation.",
+      "back": "Helps application viscosity and liquid handling.",
+      "sourceSlides": [
+        9
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-005",
+      "gameId": "M6-G29",
+      "deck": "Ingredients",
+      "front": "What is a key purpose of additives?",
+      "back": "Improve targeted properties, such as anti-settling.",
+      "sourceSlides": [
+        10
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-006",
+      "gameId": "M6-G29",
+      "deck": "Ingredients",
+      "front": "Give one example of a paint extender.",
+      "back": "Talc, mica, dolomite, chalk, or clay.",
+      "sourceSlides": [
+        11
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-007",
+      "gameId": "M6-G29",
+      "deck": "Curing",
+      "front": "Which curing category includes many vinyl coatings?",
+      "back": "Physical drying.",
+      "sourceSlides": [
+        15,
+        20
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-008",
+      "gameId": "M6-G29",
+      "deck": "Curing",
+      "front": "Which curing category is associated with alkyd coatings?",
+      "back": "Oxidative curing.",
+      "sourceSlides": [
+        15,
+        20
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-009",
+      "gameId": "M6-G29",
+      "deck": "Curing",
+      "front": "Which curing category is associated with two-pack epoxies?",
+      "back": "Chemical curing.",
+      "sourceSlides": [
+        15,
+        20
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-010",
+      "gameId": "M6-G29",
+      "deck": "Curing",
+      "front": "What does cross-linking describe conceptually?",
+      "back": "Chemical links joining parts of a polymer network.",
+      "sourceSlides": [
+        22,
+        80
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-011",
+      "gameId": "M6-G29",
+      "deck": "Curing",
+      "front": "Where should a coating's specified induction time be found?",
+      "back": "The relevant Product Data Sheet (PDS).",
+      "sourceSlides": [
+        79,
+        83
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-012",
+      "gameId": "M6-G29",
+      "deck": "Curing",
+      "front": "Is induction time included in pot life in this module?",
+      "back": "Yes, as described in the chapter's example.",
+      "sourceSlides": [
+        82,
+        83
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-013",
+      "gameId": "M6-G29",
+      "deck": "Curing",
+      "front": "Can thinning be assumed to extend a mixed paint's pot life?",
+      "back": "No. Follow the manufacturer-approved PDS.",
+      "sourceSlides": [
+        13,
+        82
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-014",
+      "gameId": "M6-G29",
+      "deck": "Corrosion",
+      "front": "What is the main idea of barrier protection?",
+      "back": "Keep water and ions away from the steel.",
+      "sourceSlides": [
+        23
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-015",
+      "gameId": "M6-G29",
+      "deck": "Corrosion",
+      "front": "What is sacrificial protection in a zinc-rich system?",
+      "back": "Zinc preferentially corrodes to protect steel.",
+      "sourceSlides": [
+        24
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-016",
+      "gameId": "M6-G29",
+      "deck": "Corrosion",
+      "front": "What is the central role of an inhibitive pigment?",
+      "back": "Help inhibit corrosion reactions at the substrate.",
+      "sourceSlides": [
+        25
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-017",
+      "gameId": "M6-G29",
+      "deck": "Corrosion",
+      "front": "Give one example of a lamellar barrier pigment.",
+      "back": "Micaceous iron oxide, glass flake, or Al flake.",
+      "sourceSlides": [
+        26,
+        28
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-018",
+      "gameId": "M6-G29",
+      "deck": "Corrosion",
+      "front": "How can lamellar pigments slow water penetration?",
+      "back": "They make the path through the film more tortuous.",
+      "sourceSlides": [
+        26
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-019",
+      "gameId": "M6-G29",
+      "deck": "Corrosion",
+      "front": "Give an example of an inhibitive pigment.",
+      "back": "Zinc phosphate.",
+      "sourceSlides": [
+        25,
+        28
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-020",
+      "gameId": "M6-G29",
+      "deck": "Systems",
+      "front": "Which coating layer directly contacts the prepared steel?",
+      "back": "Primer.",
+      "sourceSlides": [
+        51,
+        52
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-021",
+      "gameId": "M6-G29",
+      "deck": "Systems",
+      "front": "Which coat generally helps build total system thickness?",
+      "back": "Intermediate coat.",
+      "sourceSlides": [
+        51,
+        52,
+        53
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-022",
+      "gameId": "M6-G29",
+      "deck": "Systems",
+      "front": "What can a polyurethane topcoat contribute?",
+      "back": "UV/weathering resistance and appearance.",
+      "sourceSlides": [
+        51,
+        54
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-023",
+      "gameId": "M6-G29",
+      "deck": "Systems",
+      "front": "What is a stripe coat commonly applied to?",
+      "back": "Edges, corners, welds and similar details.",
+      "sourceSlides": [
+        90,
+        219
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-024",
+      "gameId": "M6-G29",
+      "deck": "Systems",
+      "front": "What does a tie coat mainly help with?",
+      "back": "Bonding between otherwise difficult coating layers.",
+      "sourceSlides": [
+        218
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-025",
+      "gameId": "M6-G29",
+      "deck": "Systems",
+      "front": "Is a specified durability range a warranty period?",
+      "back": "No; durability is not a guarantee time.",
+      "sourceSlides": [
+        59
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-026",
+      "gameId": "M6-G29",
+      "deck": "Marine",
+      "front": "What is microfouling?",
+      "back": "Microscopic organisms and biofilm/slime.",
+      "sourceSlides": [
+        31,
+        32
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-027",
+      "gameId": "M6-G29",
+      "deck": "Marine",
+      "front": "Give one example of macrofouling.",
+      "back": "Barnacles, mussels or seaweed.",
+      "sourceSlides": [
+        32
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-028",
+      "gameId": "M6-G29",
+      "deck": "Marine",
+      "front": "Why is fouling undesirable on ship hulls?",
+      "back": "It increases drag and can increase fuel use.",
+      "sourceSlides": [
+        34
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-029",
+      "gameId": "M6-G29",
+      "deck": "Marine",
+      "front": "What is the idea behind a self-polishing antifouling?",
+      "back": "Controlled surface renewal while resisting fouling.",
+      "sourceSlides": [
+        39,
+        40
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-030",
+      "gameId": "M6-G29",
+      "deck": "Marine",
+      "front": "How does a silicone foul-release system work conceptually?",
+      "back": "Low surface energy reduces organism adhesion.",
+      "sourceSlides": [
+        41,
+        42
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-031",
+      "gameId": "M6-G29",
+      "deck": "Spray",
+      "front": "What does HVLP stand for?",
+      "back": "High Volume Low Pressure.",
+      "sourceSlides": [
+        96,
+        102
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-032",
+      "gameId": "M6-G29",
+      "deck": "Spray",
+      "front": "What atomizes paint in a conventional air spray gun?",
+      "back": "Compressed air jets at the gun nozzle.",
+      "sourceSlides": [
+        97
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-033",
+      "gameId": "M6-G29",
+      "deck": "Spray",
+      "front": "Does airless spraying use compressed air for atomization?",
+      "back": "No; high fluid pressure and tip geometry atomize paint.",
+      "sourceSlides": [
+        104
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-034",
+      "gameId": "M6-G29",
+      "deck": "Spray",
+      "front": "What does a 517 tip's '17' signify in the slide example?",
+      "back": "An orifice of about 0.017 inch.",
+      "sourceSlides": [
+        111,
+        112
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-035",
+      "gameId": "M6-G29",
+      "deck": "Spray",
+      "front": "What does a 517 tip's first digit signify in the slide example?",
+      "back": "An approximate 50-degree spray fan angle.",
+      "sourceSlides": [
+        111,
+        112
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-036",
+      "gameId": "M6-G29",
+      "deck": "Spray",
+      "front": "Why are stripe coats useful before broad-area spraying?",
+      "back": "Improve protection at edges, welds and corners.",
+      "sourceSlides": [
+        90,
+        95
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-037",
+      "gameId": "M6-G29",
+      "deck": "Defects",
+      "front": "What is sagging in a wet paint film?",
+      "back": "Paint moves downward, creating runs or curtains.",
+      "sourceSlides": [
+        142,
+        143
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-038",
+      "gameId": "M6-G29",
+      "deck": "Defects",
+      "front": "What appearance often indicates dry spray?",
+      "back": "Rough, sandpaper-like surface.",
+      "sourceSlides": [
+        144,
+        145
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-039",
+      "gameId": "M6-G29",
+      "deck": "Defects",
+      "front": "What do fisheyes look like?",
+      "back": "Small craters exposing the underlying surface.",
+      "sourceSlides": [
+        146,
+        147
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-040",
+      "gameId": "M6-G29",
+      "deck": "Defects",
+      "front": "What does orange peel resemble?",
+      "back": "The dimpled texture of orange skin.",
+      "sourceSlides": [
+        150,
+        151
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-041",
+      "gameId": "M6-G29",
+      "deck": "Defects",
+      "front": "What is a pinhole?",
+      "back": "A tiny hole or passage through the coating film.",
+      "sourceSlides": [
+        152,
+        153,
+        154
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-042",
+      "gameId": "M6-G29",
+      "deck": "Defects",
+      "front": "What can osmotic blistering involve?",
+      "back": "Moisture drawn into film defects by soluble materials.",
+      "sourceSlides": [
+        164,
+        165
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-043",
+      "gameId": "M6-G29",
+      "deck": "Defects",
+      "front": "What does chalking look like?",
+      "back": "Powdery surface residue after binder weathering.",
+      "sourceSlides": [
+        174,
+        175
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-044",
+      "gameId": "M6-G29",
+      "deck": "Defects",
+      "front": "Where does a cohesive failure occur?",
+      "back": "Within one coating layer.",
+      "sourceSlides": [
+        132,
+        133,
+        134
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-045",
+      "gameId": "M6-G29",
+      "deck": "Calculation",
+      "front": "What does WFT stand for?",
+      "back": "Wet Film Thickness.",
+      "sourceSlides": [
+        44
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-046",
+      "gameId": "M6-G29",
+      "deck": "Calculation",
+      "front": "What does DFT stand for?",
+      "back": "Dry Film Thickness.",
+      "sourceSlides": [
+        44
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-047",
+      "gameId": "M6-G29",
+      "deck": "Calculation",
+      "front": "What does NDFT stand for?",
+      "back": "Nominal Dry Film Thickness.",
+      "sourceSlides": [
+        44
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-048",
+      "gameId": "M6-G29",
+      "deck": "Calculation",
+      "front": "What is DFT if WFT=150um and VS=60%?",
+      "back": "Theoretical DFT = 90um.",
+      "sourceSlides": [
+        74,
+        75,
+        76
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-049",
+      "gameId": "M6-G29",
+      "deck": "Calculation",
+      "front": "What is WFT for DFT=180um at VS=60%?",
+      "back": "Theoretical WFT = 300um.",
+      "sourceSlides": [
+        74,
+        75,
+        76
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-050",
+      "gameId": "M6-G29",
+      "deck": "Calculation",
+      "front": "What is 80% of an NDFT of 320um?",
+      "back": "256um.",
+      "sourceSlides": [
+        130
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-051",
+      "gameId": "M6-G29",
+      "deck": "Alternative",
+      "front": "What metal is used in hot-dip galvanizing?",
+      "back": "Zinc.",
+      "sourceSlides": [
+        192
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-052",
+      "gameId": "M6-G29",
+      "deck": "Alternative",
+      "front": "Name two common thermal spray metals in this chapter.",
+      "back": "Zinc and aluminium.",
+      "sourceSlides": [
+        202
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-053",
+      "gameId": "M6-G29",
+      "deck": "Alternative",
+      "front": "What state are powder-coating ingredients usually supplied in?",
+      "back": "Solid powder.",
+      "sourceSlides": [
+        242
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-054",
+      "gameId": "M6-G29",
+      "deck": "Alternative",
+      "front": "What does a sealer coat do on a porous surface?",
+      "back": "Seal pores and support subsequent coating.",
+      "sourceSlides": [
+        217
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-055",
+      "gameId": "M6-G29",
+      "deck": "PFP",
+      "front": "What does PFP stand for?",
+      "back": "Passive Fire Protection.",
+      "sourceSlides": [
+        223
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    },
+    {
+      "id": "m6-fc-056",
+      "gameId": "M6-G29",
+      "deck": "PFP",
+      "front": "What is the key behavior of an intumescent coating in fire?",
+      "back": "It expands to form an insulating char.",
+      "sourceSlides": [
+        237,
+        241
+      ],
+      "difficulty": 1,
+      "instructorReviewStatus": "pending"
+    }
+  ],
+  "matchingSets": [
+    {
+      "id": "m6-g02-ingredient-functions",
+      "gameId": "M6-G02",
+      "sourceSlides": [
+        5,
+        6,
+        8,
+        9,
+        10,
+        11
+      ],
+      "instructorReviewStatus": "pending",
+      "pairs": [
+        {
+          "left": "Binder",
+          "right": "Defines generic family and binds the coating film"
+        },
+        {
+          "left": "Pigment",
+          "right": "Supplies color and hiding power"
+        },
+        {
+          "left": "Solvent",
+          "right": "Controls vehicle/application viscosity and may evaporate"
+        },
+        {
+          "left": "Additive",
+          "right": "Changes a targeted property such as anti-settling"
+        },
+        {
+          "left": "Extender",
+          "right": "Contributes body and reinforcement"
+        }
+      ]
+    },
+    {
+      "id": "m6-g03-cure-class",
+      "gameId": "M6-G03",
+      "sourceSlides": [
+        15,
+        20
+      ],
+      "instructorReviewStatus": "pending",
+      "pairs": [
+        {
+          "left": "Acrylic / Vinyl",
+          "right": "Physical drying (chapter generalization)"
+        },
+        {
+          "left": "Alkyd",
+          "right": "Oxidative curing (chapter generalization)"
+        },
+        {
+          "left": "Two-pack epoxy",
+          "right": "Chemical curing (chapter generalization)"
+        }
+      ]
+    },
+    {
+      "id": "m6-g24-specialty-coats",
+      "gameId": "M6-G24",
+      "sourceSlides": [
+        66,
+        67,
+        90,
+        216,
+        217,
+        218,
+        219
+      ],
+      "instructorReviewStatus": "pending",
+      "pairs": [
+        {
+          "left": "Stripe coat",
+          "right": "Extra coat at edges, welds or hard-to-reach details"
+        },
+        {
+          "left": "Sealer coat",
+          "right": "Seals porous underlying coating material"
+        },
+        {
+          "left": "Tie coat",
+          "right": "Promotes adhesion between dissimilar coating layers"
+        },
+        {
+          "left": "Shop primer",
+          "right": "Temporary protection on prepared steel in fabrication"
+        }
+      ]
+    }
+  ],
+  "fictionalTrainingPDS": {
+    "id": "TRAIN-EPX-02",
+    "synthetic": true,
+    "productType": "two-pack training epoxy",
+    "ratioBasis": "volume",
+    "componentRatio": {
+      "A": 4,
+      "B": 1
+    },
+    "potLifeHours": 4,
+    "inductionMinutes": 15,
+    "recoatMinHours": 6,
+    "recoatMaxHours": 48,
+    "volumeSolidsPct": 60,
+    "noThinningUnlessAuthorized": true,
+    "referenceTemperatureC": 23,
+    "instructorReviewStatus": "pending"
+  },
+  "numericCases": {
+    "wftDft": [
+      {
+        "wftUm": 150,
+        "volumeSolidsPct": 60,
+        "expectedDftUm": 90
+      },
+      {
+        "targetDftUm": 180,
+        "volumeSolidsPct": 60,
+        "expectedWftUm": 300
+      }
+    ],
+    "tipCodes": [
+      {
+        "code": "517",
+        "fanAngleApproxDeg": 50,
+        "orificeInches": 0.017
+      },
+      {
+        "code": "311",
+        "fanAngleApproxDeg": 30,
+        "orificeInches": 0.011
+      }
+    ],
+    "mix": {
+      "totalLitres": 5,
+      "ratioA": 4,
+      "ratioB": 1,
+      "expectedALitres": 4,
+      "expectedBLitres": 1
+    },
+    "paintQuantity": {
+      "areaM2": 500,
+      "targetDftUm": 180,
+      "volumeSolidsPct": 60,
+      "lossFraction": 0.4,
+      "extraPrimerDeadVolumeLPerM2": 0.02,
+      "expectedTheoreticalWftUm": 300,
+      "expectedTheoreticalLitres": 150,
+      "expectedExtraDeadVolumeLitres": 10,
+      "expectedPurchaseLitres": 266.6666666667,
+      "conventionRequiresApproval": true
+    }
+  },
+  "iso19840PracticeCases": [
+    {
+      "id": "m6-g18-A",
+      "readingsUm": [
+        330,
+        325,
+        318,
+        340,
+        330,
+        337,
+        320,
+        321,
+        340,
+        310
+      ],
+      "nominalDftUm": 320,
+      "maxDftUm": 500,
+      "meanUm": 327.1,
+      "countBelowNDFTButAtLeast80Pct": 2,
+      "checks": {
+        "meanAtLeastNDFT": true,
+        "minAtLeast80Pct": true,
+        "lessThan20PctLow": false,
+        "maxAtMostSpecified": true
+      },
+      "expectedPassAccordingToUnreviewedSlideStatement": false,
+      "instructorReviewStatus": "pending",
+      "sourceSlides": [
+        130,
+        131
+      ]
+    },
+    {
+      "id": "m6-g18-B",
+      "readingsUm": [
+        330,
+        325,
+        318,
+        340,
+        330,
+        337,
+        320,
+        321,
+        340,
+        350
+      ],
+      "nominalDftUm": 320,
+      "maxDftUm": 500,
+      "meanUm": 331.1,
+      "countBelowNDFTButAtLeast80Pct": 1,
+      "checks": {
+        "meanAtLeastNDFT": true,
+        "minAtLeast80Pct": true,
+        "lessThan20PctLow": true,
+        "maxAtMostSpecified": true
+      },
+      "expectedPassAccordingToUnreviewedSlideStatement": true,
+      "instructorReviewStatus": "pending",
+      "sourceSlides": [
+        130,
+        131
+      ]
+    },
+    {
+      "id": "m6-g18-C",
+      "readingsUm": [
+        330,
+        335,
+        310,
+        330,
+        345,
+        330,
+        320,
+        330,
+        330,
+        250
+      ],
+      "nominalDftUm": 320,
+      "maxDftUm": 500,
+      "meanUm": 321,
+      "countBelowNDFTButAtLeast80Pct": 1,
+      "checks": {
+        "meanAtLeastNDFT": true,
+        "minAtLeast80Pct": false,
+        "lessThan20PctLow": true,
+        "maxAtMostSpecified": true
+      },
+      "expectedPassAccordingToUnreviewedSlideStatement": false,
+      "instructorReviewStatus": "pending",
+      "sourceSlides": [
+        130,
+        131
+      ]
+    },
+    {
+      "id": "m6-g18-D",
+      "readingsUm": [
+        330,
+        350,
+        320,
+        320,
+        340,
+        330,
+        320,
+        330,
+        350,
+        520
+      ],
+      "nominalDftUm": 320,
+      "maxDftUm": 500,
+      "meanUm": 351,
+      "countBelowNDFTButAtLeast80Pct": 0,
+      "checks": {
+        "meanAtLeastNDFT": true,
+        "minAtLeast80Pct": true,
+        "lessThan20PctLow": true,
+        "maxAtMostSpecified": false
+      },
+      "expectedPassAccordingToUnreviewedSlideStatement": false,
+      "instructorReviewStatus": "pending",
+      "sourceSlides": [
+        130,
+        131
+      ]
+    }
+  ]
+}

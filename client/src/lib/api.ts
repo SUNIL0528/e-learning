@@ -1,5 +1,5 @@
 import { fetchAuthSession } from "aws-amplify/auth";
-import { signOutLocallyFromCognito } from "@/lib/auth";
+import { getCurrentAuthUser, localDev, signOutLocallyFromCognito } from "@/lib/auth";
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
 const TOKEN_REFRESH_WINDOW_MS = 60_000;
@@ -15,6 +15,13 @@ async function getSessionWithProactiveRefresh() {
 
 export async function apiFetch(path: string, init: RequestInit = {}) {
   const request = async (forceRefresh = false) => {
+    if (localDev) {
+      const user = getCurrentAuthUser();
+      const headers = new Headers(init.headers);
+      if (user) headers.set("X-Local-Role", user.isAdmin ? "admin" : user.isInstructor ? "instructor" : "learner");
+      if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+      return fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+    }
     const session = forceRefresh
       ? await fetchAuthSession({ forceRefresh: true })
       : await getSessionWithProactiveRefresh();
@@ -32,7 +39,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
   // Access tokens are short-lived. If a tab was left open or the Identity Pool
   // was added after the session was created, refresh once before reporting an
   // authentication failure to the user.
-  if (response.status === 401 || response.status === 403) {
+  if (!localDev && (response.status === 401 || response.status === 403)) {
     let detail = "";
     try {
       const errorData = (await response.clone().json()) as { detail?: string };

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import heroLecture from "@/assets/hero-lecture.jpg";
+import coatingWorkArchive from "@/assets/coating-work-archive.jpg";
 import {
   courses,
   ENABLED_COURSE_ID,
@@ -10,7 +11,7 @@ import {
   type Status,
 } from "@/data/platform";
 import { getUserEnrollments, getUserProfile } from "@/lib/progress";
-import { getCurrentAuthUser, onAuthStateChanged } from "@/lib/auth";
+import { getCurrentAuthUser, localDev, onAuthStateChanged } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
 import { getTotalLearningSeconds } from "@/lib/learning-time";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -41,6 +42,17 @@ const statusLabel: Record<Status, string> = {
   "not-started": "Not started",
 };
 
+const heroTopics = [
+  "Inspector responsibilities",
+  "Corrosion",
+  "Surface preparation",
+  "Ambient conditions",
+  "Coating materials",
+  "Standards",
+  "Health and safety",
+  "IMO requirements",
+] as const;
+
 function Dashboard() {
   const [currentUser, setCurrentUser] = useState(getCurrentAuthUser());
   const [filter, setFilter] = useState<(typeof filters)[number]["key"]>("all");
@@ -67,7 +79,7 @@ function Dashboard() {
       .then(([nextEnrollments, profile]) => {
         if (cancelled) return;
         setEnrollments(nextEnrollments);
-        setProfileName(profile?.name || user.displayName || "");
+        setProfileName((localDev ? user.displayName : profile?.name) || user.displayName || "");
       })
       .catch((error: unknown) => {
         if (!cancelled) console.error("Unable to load course enrollments", error);
@@ -117,7 +129,7 @@ function Dashboard() {
 
   return (
     <>
-      <main>
+      <main className="learner-dashboard">
       <div className="float-in mx-auto flex max-w-[1440px] items-end justify-between gap-6 border-b border-ink/10 px-6 py-7">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-fog">
@@ -153,6 +165,46 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      <section className="dashboard-cta" aria-labelledby="dashboard-cta-title">
+        <div className="dashboard-cta-content">
+          <p className="dashboard-cta-label">HTS / Coating Inspection</p>
+          <h2 id="dashboard-cta-title">
+            Learn coating inspection <em>from the surface up.</em>
+          </h2>
+          <p className="dashboard-cta-lede">
+            Follow ten focused modules from corrosion and surface preparation through standards and IMO requirements, with Vikash Bavisetty as your instructor.
+          </p>
+          <div className="dashboard-cta-action-row">
+            <Link to="/courses" className="dashboard-cta-primary">
+              <span>Browse Courses</span>
+              <span className="dashboard-cta-arrow" aria-hidden="true">↗</span>
+            </Link>
+            <div className="dashboard-cta-instructor">
+              <span className="dashboard-cta-monogram" aria-hidden="true">VB</span>
+              <span><strong>Learn with Vikash Bavisetty</strong><small>Course instructor</small></span>
+            </div>
+          </div>
+          <div className="dashboard-cta-facts" role="group" aria-label="Course at a glance">
+            <div><strong>10</strong><span>connected modules</span></div>
+            <div><strong>8</strong><span>core topics</span></div>
+            <div><strong>1</strong><span>guided learning path</span></div>
+          </div>
+        </div>
+        <div className="dashboard-cta-topic-rail" role="group" aria-label="Topics covered in the course">
+          <span className="dashboard-cta-topic-heading">A course built around the work</span>
+          <div className="dashboard-cta-topic-window">
+            <div className="dashboard-cta-topic-track">
+              <div className="dashboard-cta-topic-group">
+                {heroTopics.map((topic) => <span key={topic}>{topic}</span>)}
+              </div>
+              <div className="dashboard-cta-topic-group" aria-hidden="true">
+                {heroTopics.map((topic) => <span key={topic}>{topic}</span>)}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="mx-auto max-w-[1440px] px-6 py-5">
         <div className="mb-3 flex items-center gap-3">
@@ -257,42 +309,38 @@ function Dashboard() {
             No enrolled courses match this filter.
           </div>
         ) : (
-          <div className="grid grid-cols-12 gap-3">
+          <div className="enrolled-course-grid">
             {shown.map((course, index) => (
-              <Link
+              <article
                 key={course.id}
-                to="/courses/$courseId"
-                params={{ courseId: course.id }}
-                className="lp soft-surface-hover col-span-6 overflow-hidden rounded-2xl border border-ink/10 bg-paper shadow-sm md:col-span-3"
+                className="enrolled-course-card lp"
                 style={{ animationDelay: `${index * 70}ms` }}
               >
-                <img
-                  src={course.thumb}
-                  alt=""
-                  loading="lazy"
-                  className="aspect-[16/9] w-full object-cover"
-                />
-                <div className="p-3">
-                  <div className="flex justify-between font-mono text-[9px] uppercase tracking-widest text-fog">
-                    <span>{course.track}</span>
-                    <span className="font-bold text-moss">{statusLabel[course.status]}</span>
+                <div className="enrolled-card-heading">
+                  <div>
+                    <h3><Link to="/courses/$courseId" params={{ courseId: course.id }}>{course.title}</Link></h3>
                   </div>
-                  <h3 className="mt-1 text-sm font-black leading-tight">{course.title}</h3>
-                  <div className="text-[10px] text-ink/60">
-                    {course.instructor} · {course.moduleCount} modules
-                  </div>
-                  <div className="mt-2 h-1.5 border border-ink/10 bg-sand">
-                    <div
-                      className={course.progress ? "h-full bg-moss" : "h-full bg-ink/10"}
-                      style={{ width: `${course.progress}%` }}
-                    />
-                  </div>
-                  <div className="mt-1 flex justify-between font-mono text-[10px] text-ink/70">
-                    <span>{course.progress}%</span>
-                    <span>{course.remaining}</span>
-                  </div>
+                  <Link to="/courses/$courseId" params={{ courseId: course.id }} className="enrolled-card-arrow" aria-label={`Open ${course.title}`}>↗</Link>
                 </div>
-              </Link>
+                <div className="enrolled-card-images" aria-hidden="true">
+                  <span className="enrolled-card-image"><img src={heroLecture} alt="" loading="lazy" /></span>
+                  <span className="enrolled-card-image"><img src={coatingWorkArchive} alt="" loading="lazy" /></span>
+                </div>
+                <div className="enrolled-card-meta">
+                  <span>{course.moduleCount} modules</span>
+                  <span>{course.progress}% complete</span>
+                  <span>{statusLabel[course.status]}</span>
+                </div>
+                <p className="enrolled-card-description">Learn with {course.instructor} and continue at your own pace.</p>
+                <div className="enrolled-card-progress" role="progressbar" aria-label={`${course.title} progress`} aria-valuenow={course.progress} aria-valuemin={0} aria-valuemax={100}>
+                  <span style={{ width: `${course.progress}%` }} />
+                </div>
+                <nav className="enrolled-card-actions" aria-label={`${course.title} actions`}>
+                  <Link to="/courses/$courseId" params={{ courseId: course.id }}>Resume <span aria-hidden="true">↗</span></Link>
+                  <Link to="/doubts">Doubts <span aria-hidden="true">↗</span></Link>
+                  <Link to="/knowledge-check">Knowledge Check <span aria-hidden="true">↗</span></Link>
+                </nav>
+              </article>
             ))}
           </div>
         )}

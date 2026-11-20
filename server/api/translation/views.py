@@ -30,6 +30,11 @@ def _input_path(module_no: int) -> Path:
 @authentication_classes(AUTHENTICATION)
 @permission_classes(PERMISSIONS)
 def translate_ppt_api(request):
+    if not settings.ENABLE_PPT_TRANSLATION:
+        return Response(
+            {"error": "PowerPoint translation is not enabled on this server."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
     language = str(request.data.get("language") or "").strip()
     language_code = str(request.data.get("language_code") or "").strip()
     if not language or not language_code:

@@ -98,12 +98,13 @@ export function SiteHeader({
     : nav;
 
   return (
-    <header className="sticky top-0 z-20 border-b border-ink/10 bg-paper/90 shadow-[0_8px_24px_rgb(18_8_15_/_5%)] backdrop-blur-xl">
+    <header className="sticky top-0 z-20 border-b border-[#d3e3f0] bg-paper">
       <div className="mx-auto flex min-h-16 max-w-[1440px] items-center gap-3 px-3 sm:gap-8 sm:px-6">
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/hts-logo-black.png" alt="HTS" className="h-10 w-auto max-w-[132px] object-contain sm:h-14 sm:max-w-[180px]" />
+        <Link to="/" className="flex items-center gap-2 text-ink" aria-label="HTS Coatings home">
+          <span className="grid size-9 place-items-center bg-moss text-[12px] font-black tracking-tight text-paper sm:size-10">HTS</span>
+          <span className="text-sm font-black leading-none tracking-tight sm:text-base">Coatings<span className="mt-1 block text-[10px] font-semibold tracking-normal text-fog">Learning portal</span></span>
         </Link>
-        <nav className="hidden items-center gap-1 rounded-full bg-sand/70 p-1 text-[11px] font-medium uppercase tracking-[0.15em] text-ink/70 lg:flex">
+        <nav className="hidden items-center gap-1 p-1 text-[11px] font-medium uppercase tracking-[0.1em] text-ink/70 lg:flex">
           {currentUser ? (
             <>
               <Link
@@ -277,13 +278,7 @@ export function SiteHeader({
               +
             </button>
           </div>
-          <div className="hidden -space-x-2 sm:flex">
-            <span className="grid size-8 place-items-center rounded-full bg-sand font-mono text-[10px] text-fog">
-              AO
-            </span>
-            <span className="size-8 rounded-full bg-moss" />
-            <span className="size-8 rounded-full bg-clay" />
-          </div>
+          {currentUser && <span className="hidden size-8 place-items-center rounded-full bg-sand text-xs font-bold text-ink sm:grid">{(currentUser.displayName || currentUser.username || "H").slice(0, 1).toUpperCase()}</span>}
         </div>
       </div>
       {mobileNavOpen && currentUser && (

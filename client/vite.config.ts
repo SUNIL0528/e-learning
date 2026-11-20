@@ -7,13 +7,8 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
-  // EC2 runs the generated server with Node.js, not Cloudflare Workers.
-  nitro: {
-    preset: "node-server",
-  },
   tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
+    // Render one client shell so the production frontend can live in S3/CloudFront.
+    spa: { enabled: true },
   },
 });

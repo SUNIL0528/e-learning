@@ -1,0 +1,19 @@
+[Unit]
+Description=HTS Django API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hts
+Group=hts
+WorkingDirectory=/opt/hts/online-hts/server
+EnvironmentFile=/etc/hts/backend.env
+ExecStart=/opt/hts/venv/bin/gunicorn backend.wsgi:application --bind 127.0.0.1:8000 --workers 1 --threads 4 --timeout 120 --access-logfile - --error-logfile -
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

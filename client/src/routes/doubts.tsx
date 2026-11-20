@@ -9,6 +9,7 @@ import {
 import { courses } from "@/data/platform";
 import {
   getCurrentAuthUser,
+  localDev,
   onAuthStateChanged,
   type AuthUser,
 } from "@/lib/auth";
@@ -600,7 +601,10 @@ function Doubts() {
       };
       const stored = await fetch(upload.uploadUrl, {
         method: "PUT",
-        headers: { "Content-Type": upload.contentType },
+        headers: {
+          "Content-Type": upload.contentType,
+          ...(localDev ? { "X-Local-Role": "instructor" } : {}),
+        },
         body: attachment.file,
       });
       if (!stored.ok) throw new Error(`Unable to upload ${attachment.file.name}`);
@@ -611,6 +615,7 @@ function Doubts() {
           key: upload.key,
           kind: attachment.kind,
           fileName: attachment.file.name,
+          contentType: upload.contentType,
         }),
       });
     }

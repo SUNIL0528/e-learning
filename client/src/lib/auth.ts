@@ -18,12 +18,17 @@ const cognitoRegion = import.meta.env.VITE_COGNITO_REGION as string | undefined;
 const identityPoolId = import.meta.env.VITE_COGNITO_IDENTITY_POOL_ID as string | undefined;
 const s3Bucket = import.meta.env.VITE_S3_BUCKET as string | undefined;
 const s3Region = import.meta.env.VITE_S3_REGION as string | undefined;
+export const localDev = import.meta.env.DEV && import.meta.env["VITE_LOCAL_DEV"] === "true";
+export type LocalRole = "learner" | "instructor" | "admin";
+const LOCAL_ROLE_KEY = "hts-local-dev-role";
+const LOCAL_EMAIL_KEY = "hts-local-dev-email";
+const LOCAL_NAME_KEY = "hts-local-dev-name";
 
-export const cognitoConfigured = Boolean(
+export const cognitoConfigured = localDev || Boolean(
   cognitoRegion && userPoolId && userPoolClientId,
 );
 
-if (cognitoConfigured) {
+if (cognitoConfigured && !localDev) {
   Amplify.configure({
     Auth: {
       Cognito: {
@@ -59,6 +64,30 @@ export type AuthUser = {
 let currentUser: AuthUser | null = null;
 let signOutInProgress = false;
 const signOutListeners = new Set<(inProgress: boolean) => void>();
+const localAuthListeners = new Set<(user: AuthUser | null) => void>();
+
+function localUser(role: LocalRole, email?: string, name?: string): AuthUser {
+  const localEmail = email?.trim() || `${role}@localhost.invalid`;
+  const localName = name?.trim() || (email?.split("@")[0]?.trim() || `Local ${role.charAt(0).toUpperCase()}${role.slice(1)}`);
+  return {
+    uid: `local-dev-${role}`,
+    username: `local-${role}`,
+    email: localEmail,
+    displayName: localName,
+    groups: role === "learner" ? [] : [role === "admin" ? adminGroup : instructorGroup],
+    isInstructor: role !== "learner",
+    isAdmin: role === "admin",
+  };
+}
+
+export function signInLocally(email: string, name = "") {
+  if (!localDev || typeof window === "undefined") return;
+  window.localStorage.setItem(LOCAL_ROLE_KEY, "learner");
+  window.localStorage.setItem(LOCAL_EMAIL_KEY, email.trim());
+  window.localStorage.setItem(LOCAL_NAME_KEY, name.trim());
+  currentUser = localUser("learner", email, name);
+  localAuthListeners.forEach((listener) => listener(currentUser));
+}
 
 function setSignOutInProgress(inProgress: boolean) {
   signOutInProgress = inProgress;
@@ -76,6 +105,13 @@ export function onSignOutStateChanged(listener: (inProgress: boolean) => void) {
 }
 
 async function readUser(forceRefresh = false): Promise<AuthUser | null> {
+  if (localDev) {
+    const role = typeof window === "undefined" ? null : window.localStorage.getItem(LOCAL_ROLE_KEY);
+    currentUser = role === "learner" || role === "instructor" || role === "admin"
+      ? localUser(role, window.localStorage.getItem(LOCAL_EMAIL_KEY) ?? undefined, window.localStorage.getItem(LOCAL_NAME_KEY) ?? undefined)
+      : null;
+    return currentUser;
+  }
   if (!cognitoConfigured) return null;
 
   try {
@@ -129,6 +165,7 @@ export async function signInWithCognito(username: string, password: string) {
 }
 
 export async function changePasswordWithCognito(oldPassword: string, newPassword: string) {
+  if (localDev) throw new Error("Local demo accounts have no password.");
   return updatePassword({ oldPassword, newPassword });
 }
 
@@ -168,6 +205,16 @@ async function waitForLocalSessionToClear(timeoutMs = 5000) {
 }
 
 export async function signOutFromCognito() {
+  if (localDev) {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(LOCAL_ROLE_KEY);
+      window.localStorage.removeItem(LOCAL_EMAIL_KEY);
+      window.localStorage.removeItem(LOCAL_NAME_KEY);
+    }
+    currentUser = null;
+    localAuthListeners.forEach((listener) => listener(null));
+    return;
+  }
   setSignOutInProgress(true);
   currentUser = null;
 
@@ -183,6 +230,7 @@ export async function signOutFromCognito() {
 }
 
 export async function signOutLocallyFromCognito() {
+  if (localDev) return signOutFromCognito();
   setSignOutInProgress(true);
   currentUser = null;
   try {
@@ -196,6 +244,11 @@ export async function signOutLocallyFromCognito() {
 export { confirmSignUp };
 
 export function onAuthStateChanged(listener: (user: AuthUser | null) => void) {
+  if (localDev) {
+    void readUser().then(listener);
+    localAuthListeners.add(listener);
+    return () => localAuthListeners.delete(listener);
+  }
   let cancelled = false;
   void readUser().then((user) => {
     if (!cancelled) listener(user);

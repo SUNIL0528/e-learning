@@ -21,6 +21,7 @@ from .doubts_views import (
     instructor_attachment_complete,
     instructor_attachment_delete,
     instructor_attachment_upload,
+    local_attachment_upload,
     instructor_learner_detail,
     instructor_learners,
     instructor_doubts,
@@ -33,6 +34,7 @@ from .assessment_views import (
     learner_written_answers,
 )
 from .admin_views import admin_user_detail, admin_users
+from .leaderboard_views import course_leaderboard
 from .translation.views import translate_ppt_api, translate_ppt_status
 
 
@@ -87,6 +89,7 @@ urlpatterns = [
     path("me/session/", register_active_session, name="register-active-session"),
     path("me/session/validate/", validate_active_session, name="validate-active-session"),
     path("me/enrollments/", learner_enrollments, name="learner-enrollments"),
+    path("me/courses/<str:course_id>/leaderboard/", course_leaderboard, name="course-leaderboard"),
     path(
         "me/courses/<str:course_id>/structure/",
         ensure_course_structure,
@@ -133,6 +136,11 @@ urlpatterns = [
         "instructor/doubts/<int:doubt_id>/attachments/upload/",
         instructor_attachment_upload,
         name="instructor-doubt-attachment-upload",
+    ),
+    path(
+        "local-upload/<int:doubt_id>/<str:file_name>/",
+        local_attachment_upload,
+        name="local-attachment-upload",
     ),
     path(
         "instructor/doubts/<int:doubt_id>/attachments/complete/",

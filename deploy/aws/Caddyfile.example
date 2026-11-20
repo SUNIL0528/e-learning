@@ -1,0 +1,10 @@
+api.example.com {
+    encode zstd gzip
+    handle_path /static/* {
+        root * /opt/hts/online-hts/server/staticfiles
+        file_server
+    }
+    handle {
+        reverse_proxy 127.0.0.1:8000
+    }
+}

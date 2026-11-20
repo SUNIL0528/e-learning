@@ -1,655 +1,789 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import type { SVGProps } from "react";
-import { courses, ENABLED_COURSE_ID } from "@/data/platform";
-import { getCurrentAuthUser } from "@/lib/auth";
-import questionBank from "@/data/question_bank.json";
+import { useEffect, useMemo, useState } from "react";
+import { courses, ENABLED_COURSE_ID, type Course } from "@/data/platform";
+import coatingWorkArchive from "@/assets/coating-work-archive.jpg";
+import { getCurrentAuthUser, onAuthStateChanged } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
+import {
+  getCourseProgress,
+  getUserEnrollments,
+  type SavedCourseProgress,
+  type UserEnrollment,
+} from "@/lib/progress";
+import { ModuleOneArcade, readGameRecord } from "@/features/knowledge-check/ModuleOneArcade";
+import { moduleOneGames, type GameId } from "@/features/knowledge-check/module-one-data";
+import { ModuleSixArcade } from "@/features/knowledge-check/ModuleSixArcade";
+import { readModuleSixRecord } from "@/features/knowledge-check/module-six-progress";
+import {
+  moduleSixGames,
+  type ModuleSixGameId,
+  type ModuleSixFilter,
+} from "@/features/knowledge-check/module-six-data";
+import { Hero3DInspectionHologram } from "@/features/knowledge-check/Hero3DInspectionHologram";
+import {
+  loadProfile,
+  calculateLevel,
+  ACHIEVEMENTS,
+  type InspectorProfile,
+} from "@/features/knowledge-check/gamification";
+import { isSoundEnabled, setSoundEnabled, playClick } from "@/features/knowledge-check/audio";
 import "@/knowledge-check.css";
 
-type Question = { question: string; answer: string };
-type Bank = Record<string, Question[]>;
-type Grade = "known" | "review";
-type Progress = { grades: Record<string, Grade>; missions: Record<string, boolean> };
-type MissionId = "sequence" | "weather" | "dft";
-
-const emptyProgress = (): Progress => ({ grades: {}, missions: {} });
-const course = courses.find((item) => item.id === ENABLED_COURSE_ID)!;
-const chapters = course.modules.map((module, index) => ({
-  id: String(index + 1),
-  title:
-    (
-      {
-        8: "Standards, Specifications and Procedures",
-        9: "Health, Safety and Environment",
-        10: "IMO Requirements",
-      } as Record<number, string>
-    )[index + 1] ?? module.title.replace(/^Module \d+ — /, ""),
-}));
-const missionForChapter: Record<string, MissionId> = {
-  "1": "sequence",
-  "5": "weather",
-  "7": "dft",
+type LeaderboardRow = {
+  id: number;
+  rank: number;
+  name: string;
+  score: number;
+  completedLessons: number;
+  streak: number;
+  thisWeek: number;
+  current: boolean;
 };
-const missionNames: Record<MissionId, string> = {
-  sequence: "Arrange the inspection sequence",
-  weather: "Go / No-Go inspection",
-  dft: "Virtual DFT measurement",
-};
-const ranks = [
-  { name: "Trainee", min: 0 },
-  { name: "Field Observer", min: 150 },
-  { name: "Coating Inspector", min: 400 },
-  { name: "Lead Inspector", min: 850 },
-  { name: "Master Inspector", min: 1500 },
-];
-
-function Icon({ children, size = 16, ...props }: SVGProps<SVGSVGElement> & { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...props}
-    >
-      {children}
-    </svg>
-  );
-}
-function ArrowRight({ size = 16 }: { size?: number }) {
-  return (
-    <Icon size={size}>
-      <path d="M5 12h14m-6-6 6 6-6 6" />
-    </Icon>
-  );
-}
-function ArrowLeft({ size = 16 }: { size?: number }) {
-  return (
-    <Icon size={size}>
-      <path d="M19 12H5m6-6-6 6 6 6" />
-    </Icon>
-  );
-}
-function Check({ size = 16 }: { size?: number }) {
-  return (
-    <Icon size={size}>
-      <path d="m5 12 4 4L19 6" />
-    </Icon>
-  );
-}
-function RotateCcw({ size = 16 }: { size?: number }) {
-  return (
-    <Icon size={size}>
-      <path d="M3 11a9 9 0 1 1 3 7M3 4v7h7" />
-    </Icon>
-  );
-}
-function Trophy({ size = 20 }: { size?: number }) {
-  return (
-    <Icon size={size}>
-      <path d="M8 21h8m-4-4v4M7 3h10v6a5 5 0 0 1-10 0V3ZM7 5H4v3a4 4 0 0 0 4 4m9-7h3v3a4 4 0 0 1-4 4" />
-    </Icon>
-  );
-}
-
-function readProgress(key: string): Progress {
-  try {
-    const value = JSON.parse(window.localStorage.getItem(key) || "null") as Progress | null;
-    if (value && typeof value.grades === "object" && typeof value.missions === "object")
-      return value;
-  } catch {
-    /* Start fresh if local data is invalid. */
-  }
-  return emptyProgress();
-}
+type Leaderboard = { courseId: string; basis: string; rows: LeaderboardRow[] };
+type Screen = "courses" | "chapters" | "arcade" | "game";
 
 export const Route = createFileRoute("/knowledge-check")({
   head: () => ({
     meta: [
       { title: "Knowledge check — HTS" },
-      {
-        name: "description",
-        content: "Chapter-wise coating inspection practice and field missions.",
-      },
+      { name: "description", content: "Interactive 3D practice and inspector missions." },
     ],
   }),
   component: KnowledgeCheck,
 });
 
 function KnowledgeCheck() {
-  const bank = questionBank as Bank;
-  const [selectedChapter, setSelectedChapter] = useState("1");
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const [mode, setMode] = useState<"path" | "practice" | "mission">("path");
-  const [reviewOnly, setReviewOnly] = useState(false);
-  const userId = getCurrentAuthUser()?.uid ?? "guest";
-  const storageKey = `hts-knowledge-check-v1:${userId}`;
-  const [progress, setProgress] = useState<Progress>(emptyProgress);
+  const [user, setUser] = useState(getCurrentAuthUser());
+  const [enrollments, setEnrollments] = useState<UserEnrollment[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [courseProgress, setCourseProgress] = useState<SavedCourseProgress | null>(null);
+  const [leaderboard, setLeaderboard] = useState<Leaderboard | null>(null);
+  const [screen, setScreen] = useState<Screen>("courses");
+  const [gameId, setGameId] = useState<GameId>("first-day");
+  const [moduleSixGameId, setModuleSixGameId] = useState<ModuleSixGameId>("G02");
+  const [moduleSixFilter, setModuleSixFilter] = useState<ModuleSixFilter>("All");
+  const [activeModuleIndex, setActiveModuleIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [courseLoading, setCourseLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showBadges, setShowBadges] = useState(false);
+  const [soundOn, setSoundOn] = useState(() => isSoundEnabled());
 
-  useEffect(() => setProgress(readProgress(storageKey)), [storageKey]);
+  const [profile, setProfile] = useState<InspectorProfile>(() => loadProfile(user?.uid ?? "guest"));
 
-  const save = (next: Progress) => {
-    setProgress(next);
-    window.localStorage.setItem(storageKey, JSON.stringify(next));
-  };
-  const totalQuestions = Object.values(bank).reduce((sum, items) => sum + items.length, 0);
-  const practiced = Object.keys(progress.grades).length;
-  const known = Object.values(progress.grades).filter((grade) => grade === "known").length;
-  const completedMissions = Object.values(progress.missions).filter(Boolean).length;
-  const xp = known * 10 + (practiced - known) * 5 + completedMissions * 40;
-  const rank = [...ranks].reverse().find((item) => xp >= item.min)!;
-  const nextRank = ranks.find((item) => item.min > xp);
-  const selected = chapters.find((chapter) => chapter.id === selectedChapter)!;
-  const questions = bank[selectedChapter] ?? [];
-  const activeQuestions = reviewOnly
-    ? questions
-        .map((item, index) => ({ ...item, index }))
-        .filter((item) => progress.grades[`${selectedChapter}:${item.index}`] === "review")
-    : questions.map((item, index) => ({ ...item, index }));
-  const active = activeQuestions[questionIndex];
+  useEffect(() => onAuthStateChanged(setUser), []);
 
-  const openPractice = (id: string, onlyReview = false) => {
-    setSelectedChapter(id);
-    setReviewOnly(onlyReview);
-    const firstUnpracticed = (bank[id] ?? []).findIndex(
-      (_, index) => !progress.grades[`${id}:${index}`],
-    );
-    setQuestionIndex(onlyReview ? 0 : Math.max(0, firstUnpracticed));
-    setRevealed(false);
-    setMode("practice");
+  // Sync profile when user changes or custom event fires
+  useEffect(() => {
+    setProfile(loadProfile(user?.uid ?? "guest"));
+    const handleProfileUpdate = () => {
+      setProfile(loadProfile(user?.uid ?? "guest"));
+    };
+    window.addEventListener("hts-profile-updated", handleProfileUpdate);
+    return () => window.removeEventListener("hts-profile-updated", handleProfileUpdate);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || user.isInstructor) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    getUserEnrollments(user.uid)
+      .then((data) => {
+        if (!cancelled) {
+          setEnrollments(Object.values(data).filter((entry) => entry.status !== "expired"));
+          setError("");
+        }
+      })
+      .catch(() => {
+        if (!cancelled)
+          setError("We couldn't load your enrolled courses. Refresh this page to try again.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const activeCourseId = selectedCourseId ?? enrollments[0]?.courseId ?? null;
+  const selectedCourse = useMemo(
+    () => courses.find((course) => course.id === selectedCourseId),
+    [selectedCourseId],
+  );
+
+  useEffect(() => {
+    if (!activeCourseId || !user) {
+      setLeaderboard(null);
+      return;
+    }
+    let cancelled = false;
+    apiFetch(`/api/me/courses/${encodeURIComponent(activeCourseId)}/leaderboard/`)
+      .then((response) => response.json() as Promise<Leaderboard>)
+      .then((data) => {
+        if (!cancelled) setLeaderboard(data);
+      })
+      .catch(() => {
+        if (!cancelled) setLeaderboard(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCourseId, user, courseProgress]);
+
+  const openCourse = (courseId: string) => {
+    playClick();
+    const course = courses.find((entry) => entry.id === courseId);
+    setSelectedCourseId(courseId);
+    setCourseProgress(null);
+    setScreen("chapters");
+    if (!course || !user) return;
+    setCourseLoading(true);
+    getCourseProgress(user.uid, courseId, course.modules)
+      .then((next) => {
+        setCourseProgress(next);
+        setError("");
+      })
+      .catch(() => setError("We couldn't load your lesson progress. Please retry."))
+      .finally(() => setCourseLoading(false));
   };
-  const markAnswer = (grade: Grade) => {
-    if (!active) return;
-    save({
-      ...progress,
-      grades: { ...progress.grades, [`${selectedChapter}:${active.index}`]: grade },
-    });
-    setRevealed(false);
-    if (questionIndex < activeQuestions.length - 1)
-      setQuestionIndex((index) => (reviewOnly && grade === "known" ? index : index + 1));
-    else setMode("path");
+
+  const openArcade = (module: Course["modules"][number], index: number) => {
+    playClick();
+    const finishedLearning =
+      module.chapters.length > 0 &&
+      module.chapters.every((chapter) => courseProgress?.chapters[chapter.id]?.completed);
+    if (selectedCourseId !== ENABLED_COURSE_ID || ![0, 5].includes(index) || !finishedLearning)
+      return;
+    setActiveModuleIndex(index);
+    setScreen("arcade");
   };
-  const completeMission = (id: MissionId) => {
-    save({ ...progress, missions: { ...progress.missions, [id]: true } });
+
+  const canPlayActiveModule = Boolean(
+    selectedCourseId === ENABLED_COURSE_ID &&
+    selectedCourse?.modules[activeModuleIndex]?.chapters.length &&
+    selectedCourse.modules[activeModuleIndex].chapters.every(
+      (chapter) => courseProgress?.chapters[chapter.id]?.completed,
+    ),
+  );
+
+  const levelInfo = calculateLevel(profile.xp);
+
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundEnabled(next);
+    if (next) playClick();
   };
 
   return (
     <main className="kc-page">
       <div className="kc-wrap">
-        <div className="kc-heading">
+        {/* Header with Title & Inspector Gamification HUD */}
+        <header className="kc-heading">
           <div>
-            <p className="kc-breadcrumb">
-              <Link to="/">Dashboard</Link> <span>/</span> Knowledge check
-            </p>
-            <h1>Knowledge check</h1>
+            <nav className="kc-breadcrumb" aria-label="Breadcrumb">
+              <Link to="/">Dashboard</Link>
+              <span>/</span>
+              <button
+                type="button"
+                onClick={() => {
+                  playClick();
+                  setScreen("courses");
+                }}
+              >
+                Knowledge check
+              </button>
+              {screen !== "courses" && (
+                <>
+                  <span>/</span>
+                  <span>{selectedCourse?.title ?? "Course"}</span>
+                </>
+              )}
+            </nav>
+            <h1>
+              {screen === "courses"
+                ? "Knowledge check"
+                : screen === "chapters"
+                  ? (selectedCourse?.title ?? "Course chapters")
+                  : screen === "arcade"
+                    ? activeModuleIndex === 5
+                      ? "Coating Technology Academy"
+                      : "Inspector Arcade & 3D Labs"
+                    : activeModuleIndex === 5
+                      ? moduleSixGames.find((game) => game.id === moduleSixGameId)?.title
+                      : moduleOneGames.find((game) => game.id === gameId)?.title}
+            </h1>
             <p className="kc-subtitle">
-              Practice the real chapter questions. Make decisions like an inspector.
+              {screen === "courses"
+                ? "Choose an enrolled course. Complete lessons to unlock 3D simulations, interactive flashcards, and arcade missions."
+                : screen === "chapters"
+                  ? "Your chapter path follows completed lessons. Interactive practice unlocks after each chapter."
+                  : activeModuleIndex === 5
+                    ? "Practice coating materials through evidence puzzles, animated cards and process challenges."
+                    : "Explore 3D site missions, inspect workbench tools, test micro-defects, and boost recall."}
             </p>
           </div>
-          <div className="kc-rank" aria-label={`${rank.name} rank, ${xp} experience points`}>
-            <Trophy size={20} aria-hidden="true" />
-            <div>
-              <strong>{rank.name}</strong>
-              <span>
-                {xp} XP{nextRank ? ` · ${nextRank.min - xp} to ${nextRank.name}` : " · top rank"}
-              </span>
+
+          {/* Gamification Level Badge Bar */}
+          <div className="kc-hud-bar">
+            <div className="kc-hud-level">
+              <span className="kc-hud-badge-icon">{levelInfo.badge}</span>
+              <div>
+                <span className="kc-hud-level-tag">LEVEL {levelInfo.level}</span>
+                <strong>{levelInfo.title}</strong>
+              </div>
+            </div>
+
+            <div className="kc-hud-xp-box">
+              <div className="kc-hud-xp-labels">
+                <span>{profile.xp} XP</span>
+                <small>{levelInfo.maxXp} XP</small>
+              </div>
+              <div className="kc-hud-xp-track">
+                <span style={{ width: `${levelInfo.progressPercent}%` }} />
+              </div>
+            </div>
+
+            <div className="kc-hud-controls">
+              {profile.streak > 0 && (
+                <div className="kc-hud-streak" title={`${profile.streak} correct answer streak`}>
+                  🔥 {profile.streak}
+                </div>
+              )}
+              <button
+                type="button"
+                className="kc-hud-btn"
+                onClick={() => {
+                  playClick();
+                  setShowBadges(true);
+                }}
+                title="View Unlocked Achievements"
+              >
+                🏆 Badges ({profile.achievements.length})
+              </button>
+              <button
+                type="button"
+                className="kc-hud-btn"
+                onClick={toggleSound}
+                title={soundOn ? "Mute audio" : "Unmute audio"}
+              >
+                {soundOn ? "🔊" : "🔇"}
+              </button>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="kc-layout">
-          <section className="kc-main" aria-label="Chapter practice">
-            {mode === "path" ? (
+        {error && (
+          <div className="kc-error" role="alert">
+            {error}
+            <button type="button" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
+        )}
+
+        <div className={`kc-layout ${screen === "game" ? "is-game" : ""}`}>
+          <section className="kc-main" aria-label="Knowledge check content">
+            {loading ? (
+              <div className="kc-loading" role="status">
+                Loading your courses…
+              </div>
+            ) : screen === "courses" ? (
               <>
-                <div className="kc-progress-head">
+                {/* 3D Interactive Specimen Hero Card */}
+                <Hero3DInspectionHologram />
+
+                <div className="kc-section-head">
                   <div>
-                    <h2>Your practice path</h2>
+                    <h2>Your courses</h2>
                     <p>
-                      {practiced} of {totalQuestions} questions practiced
+                      {enrollments.length
+                        ? `${enrollments.length} enrolled ${enrollments.length === 1 ? "course" : "courses"}`
+                        : "Your course list will appear after enrollment."}
                     </p>
                   </div>
-                  <strong>{Math.round((practiced / totalQuestions) * 100)}%</strong>
+                  <span>Learning first. Practice next.</span>
                 </div>
-                <div className="kc-track">
-                  <span style={{ width: `${(practiced / totalQuestions) * 100}%` }} />
-                </div>
-                <div className="kc-chapters">
-                  {chapters.map((chapter, index) => {
-                    const count = bank[chapter.id]?.length ?? 0;
-                    const done = Array.from(
-                      { length: count },
-                      (_, i) => progress.grades[`${chapter.id}:${i}`],
-                    ).filter(Boolean).length;
-                    const reviewCount = Array.from(
-                      { length: count },
-                      (_, i) => progress.grades[`${chapter.id}:${i}`],
-                    ).filter((grade) => grade === "review").length;
-                    const mission = missionForChapter[chapter.id];
-                    return (
-                      <article className="kc-chapter" key={chapter.id}>
-                        <div
-                          className={`kc-node ${done === count && count ? "is-done" : ""}`}
-                          aria-hidden="true"
+
+                {enrollments.length ? (
+                  <>
+                    <div className="kc-course-list">
+                      {enrollments.map((enrollment) => (
+                        <button
+                          type="button"
+                          className="kc-course-card"
+                          key={enrollment.courseId}
+                          onClick={() => openCourse(enrollment.courseId)}
                         >
-                          {done === count && count ? <Check size={19} /> : index + 1}
-                        </div>
-                        <div className="kc-chapter-body">
-                          <div className="kc-chapter-top">
-                            <div>
-                              <span className="kc-chapter-caption">Chapter {chapter.id}</span>
-                              <h3>{chapter.title}</h3>
-                            </div>
-                            <strong>
-                              {done}/{count}
-                            </strong>
-                          </div>
-                          <div className="kc-mini-track">
-                            <span style={{ width: `${(done / count) * 100}%` }} />
-                          </div>
-                          <div className="kc-actions">
-                            <button
-                              className="kc-start"
-                              disabled={!count}
-                              onClick={() => openPractice(chapter.id)}
-                            >
-                              {done ? "Continue practice" : "Start practice"}{" "}
-                              <ArrowRight size={16} />
-                            </button>
-                            {reviewCount > 0 && (
-                              <button
-                                className="kc-text-button"
-                                onClick={() => openPractice(chapter.id, true)}
-                              >
-                                Review {reviewCount} again
-                              </button>
+                          <div className="kc-course-image">
+                            {enrollment.courseId === ENABLED_COURSE_ID && (
+                              <img src={coatingWorkArchive} alt="Coating inspection work" />
                             )}
                           </div>
-                          {mission && (
+                          <div className="kc-course-copy">
+                            <span>Enrolled course</span>
+                            <h3>
+                              {enrollment.courseTitle ||
+                                courses.find((course) => course.id === enrollment.courseId)
+                                  ?.title ||
+                                enrollment.courseId}
+                            </h3>
+                            <p>{enrollment.progressPercent}% learning complete</p>
+                            <div className="kc-course-track">
+                              <span style={{ width: `${enrollment.progressPercent}%` }} />
+                            </div>
+                          </div>
+                          <span className="kc-course-arrow" aria-hidden="true">
+                            ↗
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="kc-path-note">
+                      <span>How it opens</span>
+                      <h3>Learn the chapter. Then test your recall with interactive practice.</h3>
+                      <p>
+                        Each chapter has its own knowledge check. Complete its lesson first, then
+                        return here for cards, evidence puzzles and 3D missions where available.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="kc-empty">
+                    <h3>No enrolled courses yet</h3>
+                    <p>Browse the course catalog and open a course to begin learning.</p>
+                    <Link to="/courses" className="kc-button">
+                      Browse courses →
+                    </Link>
+                  </div>
+                )}
+              </>
+            ) : screen === "chapters" ? (
+              <>
+                <button
+                  type="button"
+                  className="kc-back"
+                  onClick={() => {
+                    playClick();
+                    setScreen("courses");
+                  }}
+                >
+                  ← Your courses
+                </button>
+                {courseLoading ? (
+                  <div className="kc-loading" role="status">
+                    Checking lesson completion…
+                  </div>
+                ) : selectedCourse ? (
+                  <>
+                    <div className="kc-section-head">
+                      <div>
+                        <h2>Course chapters</h2>
+                        <p>Finish a chapter's learning material to open its practice.</p>
+                      </div>
+                      <span>{selectedCourse.modules.length} chapters</span>
+                    </div>
+                    <div className="kc-chapter-list">
+                      {selectedCourse.modules.map((module, index) => {
+                        const learned =
+                          module.chapters.length > 0 &&
+                          module.chapters.every(
+                            (chapter) => courseProgress?.chapters[chapter.id]?.completed,
+                          );
+                        const available =
+                          [0, 5].includes(index) && selectedCourseId === ENABLED_COURSE_ID;
+                        return (
+                          <article
+                            className={`kc-chapter-row ${learned ? "is-learned" : ""}`}
+                            key={module.id}
+                          >
+                            <div className="kc-chapter-number">{index + 1}</div>
+                            <div className="kc-chapter-copy">
+                              <span
+                                className={`kc-chapter-status ${learned && available ? "is-ready" : ""}`}
+                              >
+                                {learned ? (available ? "Ready" : "Content pending") : "Locked"}
+                              </span>
+                              <h3>{module.title.replace(/^Module \d+ — /, "")}</h3>
+                              <p>
+                                {learned
+                                  ? available
+                                    ? "Learning complete · Knowledge check ready"
+                                    : "Learning complete · Knowledge check content coming later"
+                                  : "Complete the lesson to open the knowledge check"}
+                              </p>
+                            </div>
+                            <div className="kc-chapter-action">
+                              {learned && available ? (
+                                <button
+                                  type="button"
+                                  className="kc-button"
+                                  onClick={() => openArcade(module, index)}
+                                >
+                                  Open practice →
+                                </button>
+                              ) : (
+                                <Link
+                                  to="/courses/$courseId"
+                                  params={{ courseId: selectedCourse.id }}
+                                  className="kc-chapter-learn"
+                                >
+                                  {learned ? "Review lesson" : "Continue learning"} ↗
+                                </Link>
+                              )}
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="kc-empty">
+                    <h3>Course outline unavailable</h3>
+                    <p>
+                      This enrollment does not have a course outline in this version of the LMS.
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : !canPlayActiveModule ? (
+              <div className="kc-empty">
+                <h3>Finish the lesson first</h3>
+                <p>Chapter practice unlocks when its learning chapter is marked complete.</p>
+                <button
+                  type="button"
+                  className="kc-button"
+                  onClick={() => {
+                    playClick();
+                    setScreen("chapters");
+                  }}
+                >
+                  Back to chapters
+                </button>
+              </div>
+            ) : screen === "arcade" ? (
+              <>
+                <button
+                  type="button"
+                  className="kc-back"
+                  onClick={() => {
+                    playClick();
+                    setScreen("chapters");
+                  }}
+                >
+                  ← Course chapters
+                </button>
+                {activeModuleIndex === 5 ? (
+                  <>
+                    <div className="m6-hub-hero">
+                      <span>CHAPTER 06 / COATING TECHNOLOGY ACADEMY</span>
+                      <h2>Explore the material. Trace the evidence.</h2>
+                      <p>
+                        Eight interactive practice labs are open. Work through ingredient functions,
+                        fictional product data, time windows, process decisions and the 56-card
+                        knowledge vault.
+                      </p>
+                      <div>
+                        <strong>08</strong>
+                        <span>playable labs</span>
+                        <strong>56</strong>
+                        <span>source cards</span>
+                      </div>
+                    </div>
+                    <div className="m6-hub-note">
+                      <strong>Review status: pending</strong>
+                      <span>
+                        These are ungraded learning activities. Instructor approval is required
+                        before technical answers become scored course mastery.
+                      </span>
+                    </div>
+                    <div
+                      className="m6-hub-filters"
+                      role="group"
+                      aria-label="Filter Chapter 6 games"
+                    >
+                      {(["All", "Cards", "Evidence", "Sequence", "Flashcards"] as const).map(
+                        (filter) => (
+                          <button
+                            type="button"
+                            key={filter}
+                            aria-pressed={moduleSixFilter === filter}
+                            onClick={() => setModuleSixFilter(filter)}
+                          >
+                            {filter}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                    <div className="m6-game-grid">
+                      {moduleSixGames
+                        .filter(
+                          (game) => moduleSixFilter === "All" || game.filter === moduleSixFilter,
+                        )
+                        .map((game, index) => {
+                          const record = readModuleSixRecord(user?.uid ?? "guest", game.id);
+                          return (
                             <button
-                              className="kc-mission-link"
+                              type="button"
+                              key={game.id}
+                              className="m6-hub-card"
+                              style={{ animationDelay: `${index * 55}ms` }}
                               onClick={() => {
-                                setSelectedChapter(chapter.id);
-                                setMode("mission");
+                                playClick();
+                                setModuleSixGameId(game.id);
+                                setScreen("game");
                               }}
                             >
-                              <span>
-                                {progress.missions[mission] ? "Mission complete" : "Field mission"}
+                              <span className="m6-hub-card-top">
+                                <b>{game.id}</b>
+                                <small>{game.kind}</small>
                               </span>
-                              <strong>{missionNames[mission]}</strong>
-                              <ArrowRight size={17} />
+                              <h3>{game.title}</h3>
+                              <p>{game.objective}</p>
+                              <span className="m6-hub-card-foot">
+                                {game.slides} ·{" "}
+                                {record.completed
+                                  ? "Practice complete"
+                                  : record.updatedAt
+                                    ? "In progress"
+                                    : "Start"}{" "}
+                                <b>↗</b>
+                              </span>
                             </button>
-                          )}
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </>
-            ) : mode === "practice" ? (
-              <>
-                <button className="kc-back" onClick={() => setMode("path")}>
-                  <ArrowLeft size={16} /> Practice path
-                </button>
-                <div className="kc-exercise-head">
-                  <span>
-                    Chapter {selectedChapter} · {selected.title}
-                  </span>
-                  <strong>
-                    {questionIndex + 1} / {activeQuestions.length}
-                  </strong>
-                </div>
-                <div className="kc-track">
-                  <span
-                    style={{
-                      width: `${((questionIndex + 1) / Math.max(1, activeQuestions.length)) * 100}%`,
-                    }}
-                  />
-                </div>
-                {active ? (
-                  <div className="kc-exercise">
-                    <h2>{active.question}</h2>
-                    {!revealed ? (
-                      <div className="kc-reveal-zone">
-                        <p>Think through your answer, then compare it with the question bank.</p>
-                        <button className="kc-primary" onClick={() => setRevealed(true)}>
-                          Reveal answer
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="kc-answer">
-                        <span>
-                          {active.answer.trim().endsWith("?")
-                            ? "Reference note · incomplete in source"
-                            : "Reference answer"}
-                        </span>
-                        <p>{active.answer}</p>
-                        {active.answer.trim().endsWith("?") && (
-                          <p className="kc-source-warning">
-                            This answer is cut off in the supplied question bank. Check the chapter
-                            lesson before marking your understanding.
-                          </p>
-                        )}
-                        <div className="kc-answer-actions">
-                          <button className="kc-secondary" onClick={() => markAnswer("review")}>
-                            <RotateCcw size={16} /> Review again
-                          </button>
-                          <button className="kc-primary" onClick={() => markAnswer("known")}>
-                            <Check size={17} /> I got it
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                          );
+                        })}
+                    </div>
+                  </>
                 ) : (
-                  <div className="kc-exercise">
-                    <h2>No questions to review</h2>
-                    <button className="kc-primary" onClick={() => setMode("path")}>
-                      Back to path
-                    </button>
-                  </div>
+                  <>
+                    <div className="kc-section-head">
+                      <div>
+                        <h2>Module 1 Practice Arcade & 3D Labs</h2>
+                        <p>
+                          Seven activities ready: Three interactive 3D simulations, animated 3D
+                          flashcards, and technical decision missions.
+                        </p>
+                      </div>
+                      <span>3D Sites · Instruments · Defect Lab · Flashcards</span>
+                    </div>
+
+                    <div className="arc-game-list">
+                      {moduleOneGames.map((game, index) => {
+                        const record = readGameRecord(user?.uid ?? "guest", game.id);
+                        const hasProgress =
+                          record.answers.length > 0 ||
+                          Object.keys(record.matches).length > 0 ||
+                          Object.keys(record.ratings).length > 0 ||
+                          record.cardIndex > 0 ||
+                          record.order.join("|") !== "Report|Observation|Document|Assessment";
+
+                        const is3D = game.kind.includes("3D");
+
+                        return (
+                          <button
+                            type="button"
+                            key={game.id}
+                            className={`arc-game-card ${is3D ? "is-3d" : ""}`}
+                            style={{ animationDelay: `${index * 55}ms` }}
+                            onClick={() => {
+                              playClick();
+                              setGameId(game.id);
+                              setScreen("game");
+                            }}
+                          >
+                            <span className="arc-game-index">{index + 1}</span>
+                            <div>
+                              <div className="arc-game-card-tags">
+                                <span className="arc-kind-pill">{game.kind}</span>
+                                <span className="arc-time-pill">{game.minutes}</span>
+                              </div>
+                              <h3>{game.title}</h3>
+                              <p>{game.objective}</p>
+                              <small>
+                                {game.slides} ·{" "}
+                                {record.completed
+                                  ? "✓ Completed"
+                                  : hasProgress
+                                    ? "In progress"
+                                    : "Not started"}
+                              </small>
+                            </div>
+                            <span className="arc-game-arrow" aria-hidden="true">
+                              ↗
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </>
+            ) : activeModuleIndex === 5 ? (
+              <ModuleSixArcade
+                key={moduleSixGameId}
+                gameId={moduleSixGameId}
+                userId={user?.uid ?? "guest"}
+                onBack={() => {
+                  playClick();
+                  setScreen("arcade");
+                }}
+              />
             ) : (
-              <>
-                <button className="kc-back" onClick={() => setMode("path")}>
-                  <ArrowLeft size={16} /> Practice path
-                </button>
-                <div className="kc-exercise-head">
-                  <span>Chapter {selectedChapter} · Field mission</span>
-                  <strong>
-                    {missionForChapter[selectedChapter] &&
-                    progress.missions[missionForChapter[selectedChapter]!]
-                      ? "Completed"
-                      : "+40 XP"}
-                  </strong>
-                </div>
-                {missionForChapter[selectedChapter] === "sequence" && (
-                  <SequenceMission onComplete={() => completeMission("sequence")} />
-                )}
-                {missionForChapter[selectedChapter] === "weather" && (
-                  <WeatherMission onComplete={() => completeMission("weather")} />
-                )}
-                {missionForChapter[selectedChapter] === "dft" && (
-                  <DftMission onComplete={() => completeMission("dft")} />
-                )}
-              </>
+              <ModuleOneArcade
+                key={gameId}
+                gameId={gameId}
+                userId={user?.uid ?? "guest"}
+                onBack={() => {
+                  playClick();
+                  setScreen("arcade");
+                }}
+              />
             )}
           </section>
-          <aside className="kc-side" aria-label="Your progress">
-            <h2>Inspector record</h2>
-            <div className="kc-stat">
-              <strong>{xp}</strong>
-              <span>Experience points</span>
-            </div>
-            <div className="kc-stat">
-              <strong>{known}</strong>
-              <span>Answers understood</span>
-            </div>
-            <div className="kc-stat">
-              <strong>{completedMissions}/3</strong>
-              <span>Field missions</span>
-            </div>
-            <p>
-              Earn XP when you check an answer for the first time or complete a field mission. Your
-              progress stays on this device.
-            </p>
-            <Link
-              to="/courses/$courseId"
-              params={{ courseId: ENABLED_COURSE_ID }}
-              className="kc-course-link"
-            >
-              Back to course <ArrowRight size={16} />
-            </Link>
-          </aside>
+
+          <LeaderboardTable
+            data={leaderboard}
+            courseTitle={
+              courses.find((course) => course.id === activeCourseId)?.title ?? "Your course"
+            }
+          />
         </div>
       </div>
+
+      {/* Badges & Achievements Modal */}
+      {showBadges && (
+        <div className="kc-modal-overlay" onClick={() => setShowBadges(false)}>
+          <div className="kc-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="kc-modal-head">
+              <div>
+                <h2>Inspector Achievements</h2>
+                <p>Collect badges by testing instruments, finding defects, and building streaks!</p>
+              </div>
+              <button
+                type="button"
+                className="kc-modal-close"
+                onClick={() => setShowBadges(false)}
+                aria-label="Close achievements dialog"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="kc-badges-grid">
+              {ACHIEVEMENTS.map((ach) => {
+                const unlocked = profile.achievements.includes(ach.id);
+                return (
+                  <div
+                    key={ach.id}
+                    className={`kc-badge-card ${unlocked ? "is-unlocked" : "is-locked"}`}
+                  >
+                    <span className="kc-badge-icon">{ach.icon}</span>
+                    <div className="kc-badge-body">
+                      <h4>{ach.title}</h4>
+                      <p>{ach.description}</p>
+                      <small>{unlocked ? "✓ Unlocked (+50 XP)" : "Locked"}</small>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
 
-const initialSequence = [
-  "Record final inspection",
-  "Apply the coating",
-  "Check ambient conditions",
-  "Prepare and assess the surface",
-];
-const correctSequence = [
-  "Check ambient conditions",
-  "Prepare and assess the surface",
-  "Apply the coating",
-  "Record final inspection",
-];
-
-function SequenceMission({ onComplete }: { onComplete: () => void }) {
-  const [cards, setCards] = useState(initialSequence);
-  const [message, setMessage] = useState("");
-  const move = (from: number, to: number) => {
-    const next = [...cards];
-    next.splice(to, 0, next.splice(from, 1)[0]!);
-    setCards(next);
-    setMessage("");
-  };
-  return (
-    <div className="kc-exercise kc-mission">
-      <h2>Arrange the inspection sequence</h2>
-      <p>Put these project activities in a sensible order. Drag cards, or use the move buttons.</p>
-      <div className="kc-sequence">
-        {cards.map((card, index) => (
-          <div
-            key={card}
-            className="kc-sequence-card"
-            draggable
-            onDragStart={(event) => event.dataTransfer.setData("text/plain", String(index))}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault();
-              const from = Number(event.dataTransfer.getData("text/plain"));
-              if (Number.isInteger(from) && from >= 0 && from < cards.length) move(from, index);
-            }}
-          >
-            <span>{card}</span>
-            <div>
-              <button
-                disabled={index === 0}
-                aria-label={`Move ${card} up`}
-                onClick={() => move(index, index - 1)}
-              >
-                ↑
-              </button>
-              <button
-                disabled={index === cards.length - 1}
-                aria-label={`Move ${card} down`}
-                onClick={() => move(index, index + 1)}
-              >
-                ↓
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <button
-        className="kc-primary"
-        onClick={() => {
-          const correct = cards.every((card, index) => card === correctSequence[index]);
-          setMessage(
-            correct
-              ? "Correct. Confirm conditions and surface readiness before application, then document the final result."
-              : "Not quite. Check what must be verified before coating is applied.",
-          );
-          if (correct) onComplete();
-        }}
-      >
-        Check sequence
-      </button>
-      {message && (
-        <p className="kc-feedback" role="status">
-          {message}
-        </p>
-      )}
-    </div>
+function LeaderboardTable({
+  data,
+  courseTitle,
+}: {
+  data: Leaderboard | null;
+  courseTitle: string;
+}) {
+  const [sort, setSort] = useState<"rank" | "score" | "streak" | "thisWeek">("rank");
+  const rows = useMemo(
+    () =>
+      [...(data?.rows ?? [])].sort((a, b) =>
+        sort === "rank" ? a.rank - b.rank : b[sort] - a[sort] || a.rank - b.rank,
+      ),
+    [data, sort],
   );
-}
-
-function WeatherMission({ onComplete }: { onComplete: () => void }) {
-  const [choice, setChoice] = useState<"go" | "no-go" | null>(null);
-  const [checked, setChecked] = useState(false);
   return (
-    <div className="kc-exercise kc-mission">
-      <h2>Can coating proceed?</h2>
-      <p>Read the project condition and make the inspection call.</p>
-      <div className="kc-readings">
+    <aside className="kc-leaderboard" aria-label="Course leaderboard">
+      <div className="kc-leaderboard-head">
         <div>
-          <strong>30°C</strong>
-          <span>Air</span>
-        </div>
-        <div>
-          <strong>50%</strong>
-          <span>Relative humidity</span>
-        </div>
-        <div>
-          <strong>20°C</strong>
-          <span>Steel</span>
-        </div>
-        <div>
-          <strong>18°C</strong>
-          <span>Dew point</span>
+          <h2>Leaderboard</h2>
+          <p>{courseTitle}</p>
         </div>
       </div>
-      <p className="kc-spec">
-        Project requirement: steel temperature at least 3°C above dew point; relative humidity at or
-        below 85%.
+      <p className="kc-leaderboard-basis">
+        {data?.basis ?? "Completed lessons and passed module quizzes"}
       </p>
-      <div className="kc-choice">
-        <button
-          className={choice === "go" ? "selected" : ""}
-          onClick={() => {
-            setChoice("go");
-            setChecked(false);
-          }}
-        >
-          Go — proceed
-        </button>
-        <button
-          className={choice === "no-go" ? "selected" : ""}
-          onClick={() => {
-            setChoice("no-go");
-            setChecked(false);
-          }}
-        >
-          No-go — hold work
-        </button>
+      <div className="kc-table-wrap">
+        <table>
+          <caption className="sr-only">Course leaderboard ordered by {sort}</caption>
+          <thead>
+            <tr>
+              <th scope="col">
+                <button onClick={() => setSort("rank")}>#</button>
+              </th>
+              <th scope="col">Learner</th>
+              <th scope="col">
+                <button onClick={() => setSort("score")}>Score</button>
+              </th>
+              <th scope="col">
+                <button onClick={() => setSort("streak")}>Streak</button>
+              </th>
+              <th scope="col">
+                <button onClick={() => setSort("thisWeek")}>This week</button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id} className={row.current ? "is-current" : ""}>
+                <td>
+                  <span className={`kc-medal kc-medal-${row.rank <= 3 ? row.rank : "other"}`}>
+                    {row.rank}
+                  </span>
+                </td>
+                <td>
+                  <span className="kc-learner">
+                    <span className="kc-avatar" aria-hidden="true">
+                      {row.name.slice(0, 1).toUpperCase()}
+                    </span>
+                    <span>
+                      <strong>{row.name}</strong>
+                      <small>
+                        {row.current ? "You" : `${row.completedLessons} lessons complete`}
+                      </small>
+                    </span>
+                  </span>
+                </td>
+                <td className="kc-numeric">{row.score.toLocaleString()}</td>
+                <td className="kc-numeric">{row.streak ? `${row.streak}d` : "—"}</td>
+                <td className="kc-numeric">{row.thisWeek ? `+${row.thisWeek}` : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <button
-        className="kc-primary"
-        disabled={!choice}
-        onClick={() => {
-          setChecked(true);
-          if (choice === "no-go") onComplete();
-        }}
-      >
-        Check decision
-      </button>
-      {checked && (
-        <p className="kc-feedback" role="status">
-          {choice === "no-go"
-            ? "Correct. Steel is only 2°C above dew point, below the project's 3°C margin. Hold work and recheck conditions."
-            : "Hold work. The 50% RH passes, but the steel is only 2°C above dew point; the project requires 3°C."}
-        </p>
+      {!data?.rows.length && (
+        <div className="kc-leaderboard-empty">
+          {data
+            ? "No course scores yet. Finish a lesson to take the first place."
+            : "Leaderboard loads when you enroll in a course."}
+        </div>
       )}
-    </div>
-  );
-}
-
-const dftReadings = [198, 205, 172, 214, 183];
-function DftMission({ onComplete }: { onComplete: () => void }) {
-  const [measured, setMeasured] = useState<number[]>([]);
-  const [average, setAverage] = useState("");
-  const [decision, setDecision] = useState<"pass" | "hold" | null>(null);
-  const [checked, setChecked] = useState(false);
-  const correct = Number(average) === 194.4 && decision === "hold";
-  return (
-    <div className="kc-exercise kc-mission">
-      <h2>Measure the coating</h2>
-      <p>
-        Place the gauge on all five locations. Calculate the average DFT and decide whether the area
-        passes.
+      <p className="kc-leaderboard-foot">
+        Only enrolled learners appear. Scores reflect completed lessons and passed course quizzes;
+        arcade practice stays on this device.
       </p>
-      <p className="kc-spec">
-        Project requirement: average 180–240 μm, with no individual reading below 180 μm.
-      </p>
-      <div className="kc-steel" aria-label="Five simulated gauge locations">
-        {dftReadings.map((reading, index) => (
-          <button
-            key={index}
-            className={measured.includes(index) ? "measured" : ""}
-            onClick={() =>
-              setMeasured((current) => (current.includes(index) ? current : [...current, index]))
-            }
-            aria-label={`Measure location ${index + 1}`}
-          >
-            {measured.includes(index) ? `${reading} μm` : `Measure ${index + 1}`}
-          </button>
-        ))}
-      </div>
-      <div className="kc-dft-form">
-        <label>
-          Average DFT (μm)
-          <input
-            inputMode="decimal"
-            type="number"
-            step="0.1"
-            value={average}
-            onChange={(event) => {
-              setAverage(event.target.value);
-              setChecked(false);
-            }}
-            placeholder="e.g. 194.4"
-          />
-        </label>
-        <div className="kc-choice">
-          <button
-            className={decision === "pass" ? "selected" : ""}
-            onClick={() => {
-              setDecision("pass");
-              setChecked(false);
-            }}
-          >
-            Pass
-          </button>
-          <button
-            className={decision === "hold" ? "selected" : ""}
-            onClick={() => {
-              setDecision("hold");
-              setChecked(false);
-            }}
-          >
-            Hold for correction
-          </button>
-        </div>
-      </div>
-      <button
-        className="kc-primary"
-        disabled={measured.length < 5 || !average || !decision}
-        onClick={() => {
-          setChecked(true);
-          if (correct) onComplete();
-        }}
-      >
-        Check readings
-      </button>
-      {checked && (
-        <p className="kc-feedback" role="status">
-          {correct
-            ? "Correct. The average is 194.4 μm, but location 3 is 172 μm. It fails the individual minimum, so hold for correction."
-            : "Recheck the arithmetic and the individual minimum. The average is 194.4 μm; one location is below 180 μm."}
-        </p>
-      )}
-    </div>
+    </aside>
   );
 }

@@ -7,7 +7,7 @@ import {
   type UserEnrollment,
   type UserProfile,
 } from "@/lib/progress";
-import { changePasswordWithCognito, getCurrentAuthUser } from "@/lib/auth";
+import { changePasswordWithCognito, getCurrentAuthUser, localDev } from "@/lib/auth";
 import { getLearningActivity, getTotalLearningSeconds } from "@/lib/learning-time";
 import { LoadingScreen } from "@/components/LoadingScreen";
 
@@ -290,7 +290,7 @@ function Profile() {
                 </span>
               </button>
             ))}
-            <button
+            {!localDev && <button
               type="button"
               onClick={() => {
                 setPasswordError(null);
@@ -300,7 +300,7 @@ function Profile() {
               className="w-full border-2 border-ink px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em]"
             >
               Change password
-            </button>
+            </button>}
           </div>
         </section>
       </div>

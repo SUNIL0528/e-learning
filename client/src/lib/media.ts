@@ -1,10 +1,11 @@
 import { getUrl } from "aws-amplify/storage";
+import { localDev } from "@/lib/auth";
 
 const identityPoolId = import.meta.env.VITE_COGNITO_IDENTITY_POOL_ID as string | undefined;
 const s3Bucket = import.meta.env.VITE_S3_BUCKET as string | undefined;
 const s3Region = import.meta.env.VITE_S3_REGION as string | undefined;
 
-export const directS3MediaConfigured = Boolean(identityPoolId && s3Bucket && s3Region);
+export const directS3MediaConfigured = !localDev && Boolean(identityPoolId && s3Bucket && s3Region);
 
 type CachedUrl = {
   url: string;

@@ -65,6 +65,29 @@ class CognitoJWTAuthentication(BaseAuthentication):
         cls._jwks_clients.pop(cls._issuer(), None)
 
     def authenticate(self, request):
+        if settings.LOCAL_DEV:
+            role = request.headers.get("X-Local-Role", "").strip().lower()
+            if not role:
+                return None
+            if role not in {"learner", "instructor", "admin"}:
+                raise AuthenticationFailed("Invalid local development role.")
+            if request.META.get("REMOTE_ADDR") not in {"127.0.0.1", "::1"}:
+                raise AuthenticationFailed("Local development access is loopback only.")
+            groups = [] if role == "learner" else [
+                settings.COGNITO_ADMIN_GROUP if role == "admin" else settings.COGNITO_INSTRUCTOR_GROUP
+            ]
+            principal = CognitoPrincipal(
+                user_id=f"local-dev-{role}",
+                username=f"local-{role}",
+                email=f"{role}@localhost.invalid",
+            )
+            return principal, {
+                "sub": principal.user_id,
+                "name": f"Local {role.title()}",
+                "email": principal.email,
+                "cognito:groups": groups,
+            }
+
         authorization = request.headers.get("Authorization", "")
         scheme, _, token = authorization.partition(" ")
         token = token.strip()
